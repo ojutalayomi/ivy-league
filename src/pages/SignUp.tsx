@@ -74,7 +74,7 @@ export default function SignUp() {
               <span className="truncate text-xl font-semibold">IVY LEAGUE ASSOCIATES</span>
             </div>
             <div className="max-[640px]:hidden flex sm:w-full sm:h-full sm:max-w-sm">
-              <img src={Logo} alt="Ivy League" className="w-80 h-80 mx-auto logo" />
+              <img src={Logo} alt="Ivy League" className="w-80 h-80 mx-auto" />
             </div>
 
             <div className="max-[640px]:mt-8 sm:w-full sm:max-w-sm">
