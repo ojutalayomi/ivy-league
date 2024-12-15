@@ -5,9 +5,9 @@ import { toast } from "@/hooks/use-toast";
 // import axios, { AxiosError } from "axios";
 import { Loader2, UsersRound } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useState, useEffect } from "react";
+import { useState } from "react";
 // import { useDispatch } from "react-redux";
-import { Link, useNavigate /*,useSearchParams*/ } from "react-router-dom";
+import { Link /*,useSearchParams*/ } from "react-router-dom";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from "react-hook-form";
 import { FormSchemaType, SignUpData, formSchema } from "@/lib/types";
@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 
 export default function SignUp() {
     // const dispatch = useDispatch()
-    const navigate = useNavigate()
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState('');
     const { register, handleSubmit, formState: { errors, isValid }, watch, setValue } = useForm<FormSchemaType>({
