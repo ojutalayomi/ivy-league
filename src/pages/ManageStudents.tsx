@@ -2,17 +2,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { students } from '@/lib/data';
-import { BookText, ChevronDown, ChevronUp, EditIcon, UserIcon } from 'lucide-react';
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { BookText, ChevronDown, ChevronUp, EditIcon, EyeIcon, UserIcon } from 'lucide-react';
+import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Student } from '@/lib/types';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
+import ManageStudentsMenu from './ManageStudentsMenu';
 
-export default function ManageUsers() {
+export default function ManageStudents() {
     const location = useLocation()
     const navigate = useNavigate()
     const type = location.pathname.split('/').pop()
+    console.log(location.pathname, type)
     
     return (
         <div className='flex'>
@@ -21,23 +23,69 @@ export default function ManageUsers() {
                     <CardTitle>Ivy League Associates | Manage Students</CardTitle>
                 </CardHeader>
                 <CardContent className='px-2'>
-                    <Tabs defaultValue={type || 'intensive'} value={type || 'intensive'} onValueChange={(value) => navigate(`/manage-users/${value}`)}>
+                    <Tabs defaultValue={'menu'} onValueChange={(value) => navigate(`/manage-students/${value}`)}>
                         <TabsList className="justify-around">
-                            <TabsTrigger className="px-2 text-xs" value="intensive" onClick={() => navigate('/manage-users/intensive')}>
+                            <TabsTrigger className="px-2 text-xs" value="menu" onClick={() => navigate('/manage-students')}>
+                                <UserIcon className="size-4 text-muted-foreground mr-1" />
+                                Menu
+                            </TabsTrigger>
+                            <TabsTrigger className="px-2 text-xs" value="intensive" onClick={() => navigate('/manage-students/intensive')}>
                                 <UserIcon className="size-4 text-muted-foreground mr-1" />
                                 Intensive
                             </TabsTrigger>
-                            <TabsTrigger className="px-2 text-xs" value="standard" onClick={() => navigate('/manage-users/standard')}>
+                            <TabsTrigger className="px-2 text-xs" value="standard" onClick={() => navigate('/manage-students/standard')}>
                                 <BookText className="size-4 text-muted-foreground mr-1" />
                                 Standard
                             </TabsTrigger>
+                            <TabsTrigger className="px-2 text-xs" value="view" onClick={() => navigate('/manage-students/view')}>
+                                <EyeIcon className="size-4 text-muted-foreground mr-1" />
+                                View
+                            </TabsTrigger>
+                            <TabsTrigger className="px-2 text-xs" value="edit" onClick={() => navigate('/manage-students/edit')}>
+                                <EditIcon className="size-4 text-muted-foreground mr-1" />
+                                Edit
+                            </TabsTrigger>
                         </TabsList>
                         <Routes>
-                            <Route path="/" element={<div>Manage Users</div>} />
-                            <Route path="/:type" element={
-                                <TabsContent value={type || 'intensive'}>
+                            <Route path="" element={
+                                <TabsContent value="menu">
+                                    <ManageStudentsMenu />
+                                </TabsContent>
+                            } />
+                            <Route path="intensive" element={
+                                <TabsContent value="intensive">
                                     <StudentList />
-                                </TabsContent>} />
+                                </TabsContent>
+                            } />
+                            <Route path="standard" element={
+                                <TabsContent value="standard">
+                                    <StudentList />
+                                </TabsContent>
+                            } />
+                            <Route path="view" element={
+                                <TabsContent value="view">
+                                    <StudentList />
+                                </TabsContent>
+                            } />
+                            <Route path="add" element={
+                                <TabsContent value="add">
+                                    <StudentList />
+                                </TabsContent>
+                            } />
+                            <Route path="edit/*" element={
+                                <Routes>
+                                    <Route path=":registrationNumber" element={
+                                        <TabsContent value="edit">
+                                            <StudentList />
+                                        </TabsContent>
+                                    } />
+                                </Routes>
+                            } />
+                            <Route path="delete" element={
+                                <TabsContent value="delete">
+                                    <StudentList />
+                                </TabsContent>
+                            } />
                         </Routes>
                     </Tabs>
                 </CardContent>
@@ -95,9 +143,11 @@ const StudentCard = ({student}: {student: Student}) => {
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" size="icon">
-                                <EditIcon className="size-4" />
-                            </Button>
+                            <Link to={`/manage-students/edit/${student.registrationNumber}`}>
+                                <Button variant="outline" size="icon">
+                                    <EditIcon className="size-4" />
+                                </Button>
+                            </Link>
                         </div>
                     </div>
 
