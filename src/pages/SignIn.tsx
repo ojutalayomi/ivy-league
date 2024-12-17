@@ -35,6 +35,10 @@ export default function SignIn() {
     const [usersList, setUsersList] = useState<User[]>([])
 
     useEffect(() => {
+      document.title = "Sign In - Ivy League Associates";
+    }, []);
+
+    useEffect(() => {
         const storedUsers = localStorage.getItem('users_list')
         if (storedUsers) {
             setUsersList(JSON.parse(storedUsers))

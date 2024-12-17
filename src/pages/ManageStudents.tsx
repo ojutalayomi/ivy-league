@@ -11,13 +11,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { format } from 'date-fns';
 
 export default function ManageStudents() {
     const location = useLocation()
     const navigate = useNavigate()
     const [edit, setEdit] = useState('')
     const type = location.pathname.split('/').pop()
-    console.log(location.pathname, type)
+
+    useEffect(() => {
+        document.title = "Manage Students - Ivy League Associates";
+    }, []);
 
     useEffect(() => {
         if (location.pathname.includes('edit')) setEdit(location.pathname.split('/').pop() || '')
@@ -105,6 +109,9 @@ const StudentList = ({setEdit}: {setEdit: React.Dispatch<React.SetStateAction<st
     const [search, setSearch] = useState('')
     const location = useLocation()
     const type = location.pathname.split('/').pop()
+    useEffect(() => {
+      document.title = (type ? type[0].toUpperCase() + type.slice(1) : "All") + " Students - Ivy League Associates";
+    }, [type]);
 
     const filteredStudents = () => {
         if (type !== 'all') return students.filter(student => student.type === type).filter(student => student.name.toLowerCase().includes(search.toLowerCase()) || student.registrationNumber.toLowerCase().includes(search.toLowerCase()))
@@ -131,7 +138,7 @@ const StudentCard = ({student, setEdit}: {student: Student, setEdit: React.Dispa
     const [isExpanded, setIsExpanded] = useState(false)
 
     useEffect(() => {
-        if (isExpanded) cardRef.current?.focus()
+        if (isExpanded) cardRef.current?.scrollIntoView({behavior: 'smooth', block: 'center'})
     }, [isExpanded])
 
     return (
@@ -172,9 +179,9 @@ const StudentCard = ({student, setEdit}: {student: Student, setEdit: React.Dispa
                                 <div className="text-sm text-muted-foreground">
                                     <div className="flex flex-col gap-1">
                                         <span>Level: {student.preferences.level.toLocaleUpperCase()}</span>
-                                        {/* <span>Type: {student.type.toLocaleUpperCase()}</span> */}
+                                        <span>Type: {student.type.toLocaleUpperCase()}</span>
                                         <span>Gender: {student.gender.toLocaleUpperCase()}</span>
-                                        <span>Date of Birth: {student.dateOfBirth}</span>
+                                        <span>Date of Birth: {format(new Date(student.dateOfBirth), 'dd MMMM yyyy')}</span>
                                         <span>Email: {student.email}</span>
                                     </div>
                                 </div>
@@ -196,14 +203,29 @@ const StudentCard = ({student, setEdit}: {student: Student, setEdit: React.Dispa
                             <div>
                                 <p className="text-sm font-medium">Payment Information</p>
                                 <p className="text-sm text-muted-foreground">
-                                Total Fee: ${student.totalFee}
+                                Total Fee: #{student.totalFee}
                                 </p>
-                                {/* <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground">
+                                Discount: #{student.discount}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                Outstanding: #{student.outstanding}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                Surplus: #{student.surplus}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                Price: #{student.price}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                Paid: #{student.paid}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
                                 Payment Method: {student.paymentDetails.paymentMethod}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                 Payment Status: {student.paymentDetails.paymentStatus}
-                                </p> */}
+                                </p>
                             </div>
                         </div>
                     )}
@@ -215,19 +237,36 @@ const StudentCard = ({student, setEdit}: {student: Student, setEdit: React.Dispa
 
 const EditStudent = () => {
     const location = useLocation()
+    const navigate = useNavigate()
     const id = location.pathname.split('/').pop()
-    const student = students.find(student => student.registrationNumber === id)
-    const [level, setLevel] = useState<Student['preferences']['level'] | undefined>(student?.preferences.level)
+    const filteredStudent = students.find(student => student.registrationNumber === id)
+    const [student, setStudent] = useState<Student | undefined>(undefined)
 
     useEffect(() => {
-        setLevel(student?.preferences.level)
-    }, [student])
+        document.title = student?.name + " - Ivy League Associates";
+    }, [student?.name]);
+
+    useEffect(() => {
+        if (filteredStudent) setStudent(filteredStudent)
+    }, [filteredStudent])
+
+    const handleSave = () => {
+        console.log(student)
+    }
+
+    const handleCancel = () => {
+        navigate('/manage-students/all')
+    }
+
+    const handleReset = () => {
+        setStudent(filteredStudent)
+    }
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">Edit Student</h1>
-                <Button variant="outline">Cancel</Button>
+                <Button variant="outline" onClick={handleCancel}>Cancel</Button>
             </div>
 
             <Card>
@@ -241,20 +280,29 @@ const EditStudent = () => {
                             <h3 className="text-lg font-medium">Personal Details</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="firstName">First Name</Label>
-                                    <Input id="firstName" defaultValue={student?.name.split(' ')[0]} placeholder="Enter first name" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="lastName">Last Name</Label>
-                                    <Input id="lastName" defaultValue={student?.name.split(' ')[1]} placeholder="Enter last name" />
+                                    <Label htmlFor="name">Name</Label>
+                                    <Input id="name" defaultValue={student?.name} placeholder="Enter full name" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="email">Email</Label>
                                     <Input id="email" type="email" defaultValue={student?.email} placeholder="Enter email" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="dob">Date of Birth</Label>
-                                    <Input id="dob" type="date" defaultValue={student?.dateOfBirth} />
+                                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                                    <Input id="dateOfBirth" type="date" defaultValue={student?.dateOfBirth} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="gender">Gender</Label>
+                                    <Select defaultValue={student?.gender}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select gender" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="male">Male</SelectItem>
+                                            <SelectItem value="female">Female</SelectItem>
+                                            <SelectItem value="other">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
                         </div>
@@ -263,28 +311,35 @@ const EditStudent = () => {
                             <h3 className="text-lg font-medium">Academic Information</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="regNumber">Registration Number</Label>
-                                    <Input id="regNumber" defaultValue={student?.registrationNumber} placeholder="Enter registration number" />
+                                    <Label htmlFor="registrationNumber">Registration Number</Label>
+                                    <Input id="registrationNumber" defaultValue={student?.registrationNumber} placeholder="Enter registration number" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="level">Level</Label>
-                                    <Select value={level} onValueChange={(value) => setLevel(value as Student['preferences']['level'])}>
+                                    <Label htmlFor="type">Student Type</Label>
+                                    <Select defaultValue={student?.type}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select level" />
+                                            <SelectValue placeholder="Select type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="beginner">Beginner</SelectItem>
-                                            <SelectItem value="intermediate">Intermediate</SelectItem>
-                                            <SelectItem value="advanced">Advanced</SelectItem>
+                                            <SelectItem value="intensive">Intensive</SelectItem>
+                                            <SelectItem value="standard">Standard</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Label htmlFor="newStudent">New Student</Label>
+                                    <Checkbox id="newStudent" checked={student?.newStudent} />
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Label htmlFor="revision">Revision</Label>
+                                    <Checkbox id="revision" checked={student?.revision} />
                                 </div>
                                 <div className="col-span-2 space-y-2">
                                     <Label>Papers</Label>
                                     <div className="grid grid-cols-2 gap-2">
                                         {student?.papers.map(paper => (
                                             <div className="flex items-center space-x-2" key={paper}>
-                                                <Checkbox id={paper} />
+                                                <Checkbox id={paper} defaultChecked />
                                                 <Label htmlFor={paper}>{paper}</Label>
                                             </div>
                                         ))}
@@ -293,9 +348,39 @@ const EditStudent = () => {
                             </div>
                         </div>
 
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-medium">Payment Details</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="totalFee">Total Fee</Label>
+                                    <Input id="totalFee" type="number" defaultValue={student?.totalFee} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="discount">Discount</Label>
+                                    <Input id="discount" type="number" defaultValue={student?.discount} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="outstanding">Outstanding</Label>
+                                    <Input id="outstanding" type="number" defaultValue={student?.outstanding} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="surplus">Surplus</Label>
+                                    <Input id="surplus" type="number" defaultValue={student?.surplus} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="price">Price</Label>
+                                    <Input id="price" type="number" defaultValue={student?.price} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="paid">Paid</Label>
+                                    <Input id="paid" type="number" defaultValue={student?.paid} />
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="flex justify-end space-x-4">
-                            <Button variant="outline">Reset</Button>
-                            <Button>Save Changes</Button>
+                            <Button variant="outline" onClick={handleReset}>Reset</Button>
+                            <Button onClick={handleSave}>Save Changes</Button>
                         </div>
                     </form>
                 </CardContent>

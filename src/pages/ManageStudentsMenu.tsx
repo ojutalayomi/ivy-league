@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import Logo from "@/assets/ivyLight.png"
 import { UsersRound } from "lucide-react"
+import { useEffect } from "react";
 
 /**
  * ManageStudentsMenu Component
@@ -19,6 +20,10 @@ import { UsersRound } from "lucide-react"
  * - Delete Students: Remove student accounts from the system
  */
 export default function ManageStudentsMenu() {
+  useEffect(() => {
+    document.title = "Manage Students Menu - Ivy League Associates";
+  }, []);
+
   const menuItems = [
     {
       title: "View Students",

@@ -1,11 +1,11 @@
-import ManageStudents from './pages/ManageStudents'
-import ManageStudentsMenu from './pages/ManageStudentsMenu'
-import Menu from './pages/Menu'
-import SignIn from './pages/SignIn'
-import SignUp from './pages/SignUp'
+import ManageStudents from '@/pages/ManageStudents'
+import ManageStudentsMenu from '@/pages/ManageStudentsMenu'
+import Menu from '@/pages/Menu'
+import SignIn from '@/pages/SignIn'
+import SignUp from '@/pages/SignUp'
 import * as reactRouterDom from 'react-router-dom'
-import { ThemeProvider } from './providers/theme-provider'
-import { ModeToggle } from './components/mode-toggle'
+import { ThemeProvider } from '@/providers/theme-provider'
+import { ModeToggle } from '@/components/mode-toggle'
 import { Toaster } from "@/components/ui/toaster";
 // import './App.css'
 

@@ -3,8 +3,14 @@ import { UsersRound } from "lucide-react"
 import { Link } from "react-router-dom"
 import Logo from "@/assets/ivyLight.png"
 import LogoDark from "@/assets/ivyDark.png"
+import { useEffect } from "react"
 
 export default function Menu() {
+
+  useEffect(() => {
+    document.title = "Home - Ivy League Associates";
+  }, []);
+  
   const menuItems = [
     {
       title: "Sign In",

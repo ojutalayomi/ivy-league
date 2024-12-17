@@ -4,7 +4,7 @@
 // import axios, { AxiosError } from "axios";
 import { Loader2, UsersRound } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // import { useDispatch } from "react-redux";
 import { Link /*,useSearchParams*/ } from "react-router-dom";
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +25,10 @@ export default function SignUp() {
       resolver: zodResolver(formSchema),
       mode: 'onChange'
     });
+
+    useEffect(() => {
+      document.title = "Sign Up - Ivy League Associates";
+    }, []);
 
     const stepProps = { register, errors, watch, setValue };
     
