@@ -1,14 +1,21 @@
 import ManageStudents from './pages/ManageStudents'
+import ManageStudentsMenu from './pages/ManageStudentsMenu'
 import Menu from './pages/Menu'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
 import * as reactRouterDom from 'react-router-dom'
+import { ThemeProvider } from './providers/theme-provider'
+import { ModeToggle } from './components/mode-toggle'
+import { Toaster } from "@/components/ui/toaster";
 // import './App.css'
 
 function App() {
   return (
     <reactRouterDom.BrowserRouter>
-      <Router />
+      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+        <Router />
+        <Toaster />
+      </ThemeProvider>
     </reactRouterDom.BrowserRouter>
   )
 }
@@ -20,13 +27,23 @@ function Router() {
   const state = location.state as { backgroundLocation?: Location }
   const backgroundLocation = state?.backgroundLocation
   return (
-    <div className="w-screen h-screen bg-greybg-light-gradient bg-cover bg-center bg-no-repeat ">
-      <reactRouterDom.Routes location={backgroundLocation || location}>
-        <reactRouterDom.Route path="/" element={<Menu />} />
-        <reactRouterDom.Route path="/manage-students/*" element={<ManageStudents />} />
-        <reactRouterDom.Route path="/accounts/signin" element={<SignIn />} />
-        <reactRouterDom.Route path="/accounts/signup" element={<SignUp />} />
-      </reactRouterDom.Routes>
+    <div className="w-screen h-screen bg-greybg-light bg-cover bg-center bg-fixed bg-no-repeat">
+      <div className="relative backdrop-blur-sm z-10 w-full h-full overflow-y-auto">
+        <reactRouterDom.Routes location={backgroundLocation || location}>
+          <reactRouterDom.Route path="/" element={<Menu />} />
+          <reactRouterDom.Route path="/manage-students/*" element={
+            <reactRouterDom.Routes>
+              <reactRouterDom.Route path='/' element={<ManageStudentsMenu />} />
+              <reactRouterDom.Route path='/*' element={<ManageStudents />} />
+            </reactRouterDom.Routes>
+          } />
+          <reactRouterDom.Route path="/accounts/signin" element={<SignIn />} />
+          <reactRouterDom.Route path="/accounts/signup" element={<SignUp />} />
+        </reactRouterDom.Routes>
+        <div className="absolute bottom-0 mb-4 mr-4 right-0 z-50">
+          <ModeToggle />
+        </div>
+      </div>
     </div>
   )
 }

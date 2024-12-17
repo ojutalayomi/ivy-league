@@ -71,6 +71,7 @@ export type SignUpData = {
     lastName: string;
     role: 'admin' | 'student';
     email: string;
+    dob: string;
     phoneNumber: string;
     password: string;
 }
@@ -79,6 +80,9 @@ export const formSchema = z.object({
     firstName: z.string().min(2, 'First name must be at least 2 characters'),
     lastName: z.string().min(2, 'Last name must be at least 2 characters'),
     email: z.string().email('Invalid email address'),
+    dob: z.string({
+        required_error: "A date of birth is required.",
+    }),
     phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
     password: z.string()
       .min(8, 'Password must be at least 8 characters')

@@ -1,4 +1,3 @@
-import { toast } from "@/hooks/use-toast";
 // import { setCookie, UserList, switchUser } from "@/lib/utils";
 // import { useFetchDetails } from "@/providers/fetch-details"
 // import { setUser } from "@/redux/userSlice";
@@ -16,10 +15,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { User } from "@/lib/types";
-import Logo from "@/assets/ivyLight.jpeg";
+import Logo from "@/assets/ivyLight.png";
+import LogoDark from "@/assets/ivyDark.png";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SignIn() {
     // const dispatch = useDispatch()
+    const { toast } = useToast()
     const navigate = useNavigate()
     // const [searchParams] = useSearchParams()
     // const redirect = searchParams.get('redirect')
@@ -160,7 +163,7 @@ export default function SignIn() {
     }
     
     return (
-      <div className={`bg-greybg-light-gradient bg-cover bg-center bg-no-repeat flex min-h-full flex-1 flex-col items-center justify-center px-6 py-12 lg:px-8 bg-cyan-500/20`}>
+      <div className={`flex min-h-full flex-1 flex-col items-center justify-center px-6 py-12 lg:px-8`}>
         <Card className="min-[641px]:min-w-[640px] mx-auto">
           <CardHeader>
             <CardTitle className="text-2xl/9 font-bold tracking-tight text-center text-cyan-500">Sign in to your account</CardTitle>
@@ -171,13 +174,14 @@ export default function SignIn() {
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <UsersRound className="size-4" />
               </div>
-              <span className="truncate font-semibold">IVY LEAGUE ASSOCIATES</span>
+              <span className="truncate text-xl font-semibold">IVY LEAGUE ASSOCIATES</span>
             </div>
             <div className="max-[640px]:hidden flex sm:w-full sm:h-full sm:max-w-sm">
-              <img src={Logo} alt="Ivy League" className="w-80 h-80 mx-auto" />
+              <img src={Logo} alt="Ivy League" className="dark:hidden w-80 h-80 mx-auto" />
+              <img src={LogoDark} alt="Ivy League" className="hidden dark:block h-80 mx-auto" />
             </div>
 
-            <div className="max-[640px]:mt-8 sm:w-full sm:max-w-sm">
+            <div className="sm:w-full sm:max-w-sm">
               {usersList.length > 0 && (
                 <div className="mb-6">
                   <h3 className="text-sm font-medium mb-2 text-cyan-500">Sign in as:</h3>
@@ -232,12 +236,12 @@ export default function SignIn() {
                     Email address
                   </label>
                   <div className="mt-2">
-                    <input
+                    <Input
                       disabled={loading}
                       id="email"
                       name="email"
                       type="email"
-                      value={email}
+                      defaultValue={email}
                       onChange={e => setEmail(e.target.value)}
                       required
                       autoComplete="email"
@@ -258,12 +262,12 @@ export default function SignIn() {
                     </div>
                   </div>
                   <div className="mt-2 relative">
-                    <input
+                    <Input
                       disabled={loading}
                       id="password"
                       name="password"
                       type={showPassword ? "text" : "password"}
-                      value={password}
+                      defaultValue={password}
                       onChange={e => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"

@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom"
+import Logo from "@/assets/ivyLight.png"
+import { UsersRound } from "lucide-react"
 
 /**
  * ManageStudentsMenu Component
@@ -21,7 +23,17 @@ export default function ManageStudentsMenu() {
     {
       title: "View Students",
       description: "See all registered students",
-      path: "/manage-students/view"
+      path: "/manage-students/all"
+    },
+    {
+      title: "Intensive Students",
+      description: "See all intensive students",
+      path: "/manage-students/intensive"
+    },
+    {
+      title: "Standard Students",
+      description: "See all standard students",
+      path: "/manage-students/standard"
     },
     {
       title: "Add Student", 
@@ -41,11 +53,23 @@ export default function ManageStudentsMenu() {
   ]
 
   return (
-    <div className={`flex flex-1 flex-col items-center justify-center px-6 py-12 lg:px-8 bg-cyan-500/20`}>
+    <div className={`flex flex-1 flex-col gap-3 h-full items-center justify-center overflow-y-scroll px-6 py-12 lg:px-8`}>
+      <div className="absolute blur-sm flex items-center inset-0 z-0 h-full w-full">
+        <img src={Logo} alt="Ivy League" className="opacity-70 mx-auto" />
+      </div>
 
-      <div className="prose dark:prose-invert max-w-none">
+      <div className="flex items-center justify-center gap-2 sm:mx-auto sm:w-full sm:max-w-sm z-10">
+        <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+          <UsersRound className="size-4" />
+        </div>
+        <span className="bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text dark:drop-shadow-lg text-transparent animate-gradient-x truncate font-semibold">IVY LEAGUE ASSOCIATES</span>
+      </div>
+      
+      <h1 className="text-center text-4xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text dark:drop-shadow-lg text-transparent animate-gradient-x my-2 z-10">What would you like to do today?</h1>
+
+      <div className="flex flex-col max-[639px]:px-4 sm:grid gap-3 pt-3 max-h-[70vh] sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 w-full sm:justify-center items-center z-10 overflow-x-scroll">
         {menuItems.map((item, index) => (
-          <article key={index} className="mb-6">
+          <div key={index} className={`w-full p-6 min-w-60 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700`}>
             <h3 className="text-xl font-bold mb-2">
               <Link 
                 to={item.path}
@@ -61,7 +85,7 @@ export default function ManageStudentsMenu() {
             >
               Learn more →
             </Link>
-          </article>
+          </div>
         ))}
       </div>
     </div>
