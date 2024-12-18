@@ -2,8 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { students } from '@/lib/data';
-import { BookText, ChevronDown, ChevronUp, EditIcon, EyeIcon, UserIcon } from 'lucide-react';
-import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { BookText, ChevronDown, ChevronUp, EditIcon, EyeIcon, SearchIcon, UserIcon, Users } from 'lucide-react';
+import { Link, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Student } from '@/lib/types';
 import { useEffect, useRef, useState } from 'react';
@@ -16,16 +16,11 @@ import { format } from 'date-fns';
 export default function ManageStudents() {
     const location = useLocation()
     const navigate = useNavigate()
-    const [edit, setEdit] = useState('')
     const type = location.pathname.split('/').pop()
-
+    
     useEffect(() => {
         document.title = "Manage Students - Ivy League Associates";
     }, []);
-
-    useEffect(() => {
-        if (location.pathname.includes('edit')) setEdit(location.pathname.split('/').pop() || '')
-    }, [location.pathname])
     
     return (
         <div className='flex'>
@@ -34,70 +29,78 @@ export default function ManageStudents() {
                     <CardTitle>Ivy League Associates | Manage Students</CardTitle>
                 </CardHeader>
                 <CardContent className='px-2'>
-                    <Tabs defaultValue={'menu'} value={type} onValueChange={(value) => navigate(`/manage-students/${value}`)}>
-                        <TabsList className="justify-around">
-                            <TabsTrigger className="px-2 text-xs" value="all" onClick={() => navigate('/manage-students/all')}>
-                                <UserIcon className="size-4 text-muted-foreground mr-1" />
-                                All
-                            </TabsTrigger>
-                            <TabsTrigger className="px-2 text-xs" value="intensive" onClick={() => navigate('/manage-students/intensive')}>
-                                <UserIcon className="size-4 text-muted-foreground mr-1" />
-                                Intensive
-                            </TabsTrigger>
-                            <TabsTrigger className="px-2 text-xs" value="standard" onClick={() => navigate('/manage-students/standard')}>
-                                <BookText className="size-4 text-muted-foreground mr-1" />
-                                Standard
-                            </TabsTrigger>
-                            <TabsTrigger className="px-2 text-xs" value="view" onClick={() => navigate('/manage-students/view')}>
-                                <EyeIcon className="size-4 text-muted-foreground mr-1" />
-                                View
-                            </TabsTrigger>
-                            <TabsTrigger className="px-2 text-xs" value={edit} onClick={() => navigate(`/manage-students/edit/${edit}`)}>
-                                <EditIcon className="size-4 text-muted-foreground mr-1" />
-                                Edit
-                            </TabsTrigger>
-                        </TabsList>
-                        <Routes>
-                            <Route path="all" element={
-                                <TabsContent value="all">
-                                    <StudentList setEdit={setEdit}/>
-                                </TabsContent>
-                            } />
-                            <Route path="intensive" element={
-                                <TabsContent value="intensive">
-                                    <StudentList setEdit={setEdit}/>
-                                </TabsContent>
-                            } />
-                            <Route path="standard" element={
-                                <TabsContent value="standard">
-                                    <StudentList setEdit={setEdit}/>
-                                </TabsContent>
-                            } />
-                            <Route path="view" element={
-                                <TabsContent value="view">
-                                    <StudentList setEdit={setEdit}/>
-                                </TabsContent>
-                            } />
-                            <Route path="add" element={
-                                <TabsContent value="add">
-                                    <StudentList setEdit={setEdit}/>
-                                </TabsContent>
-                            } />
-                            <Route path="edit/*" element={
-                                <Routes>
-                                    <Route path=":registrationNumber" element={
-                                        <TabsContent value={edit}>
-                                            <EditStudent/>
-                                        </TabsContent>
-                                    } />
-                                </Routes>
-                            } />
-                            <Route path="delete" element={
-                                <TabsContent value="delete">
-                                    <StudentList setEdit={setEdit}/>
-                                </TabsContent>
-                            } />
-                        </Routes>
+                    <Tabs defaultValue={'all'} value={type} onValueChange={(value) => navigate(`/manage-students/${value}`)}>
+                        <div>
+                            <TabsList className="grid grid-cols-6 max-[570px]:grid-cols-3 h-auto gap-2">
+                                <TabsTrigger className="flex items-center justify-center px-2 text-xs" value="all" onClick={() => navigate('/manage-students/all')}>
+                                    <UserIcon className="size-4 text-muted-foreground mr-1" />
+                                    All
+                                </TabsTrigger>
+                                <TabsTrigger className="flex items-center justify-center px-2 text-xs" value="intensive" onClick={() => navigate('/manage-students/intensive')}>
+                                    <UserIcon className="size-4 text-muted-foreground mr-1" />
+                                    Intensive
+                                </TabsTrigger>
+                                <TabsTrigger className="flex items-center justify-center px-2 text-xs" value="standard" onClick={() => navigate('/manage-students/standard')}>
+                                    <BookText className="size-4 text-muted-foreground mr-1" />
+                                    Standard
+                                </TabsTrigger>
+                                <TabsTrigger className="flex items-center justify-center px-2 text-xs" value="view">
+                                    <EyeIcon className="size-4 text-muted-foreground mr-1" />
+                                    View
+                                </TabsTrigger>
+                                <TabsTrigger className="flex items-center justify-center px-2 text-xs" value="edit">
+                                    <EditIcon className="size-4 text-muted-foreground mr-1" />
+                                    Edit
+                                </TabsTrigger>
+                                <TabsTrigger className="flex items-center justify-center px-2 text-xs" value="search">
+                                    <SearchIcon className="size-4 text-muted-foreground mr-1" />
+                                    Search
+                                </TabsTrigger>
+                            </TabsList>
+
+                            <Routes>
+                                <Route path="all" element={
+                                    <TabsContent value="all">
+                                        <StudentList/>
+                                    </TabsContent>
+                                } />
+                                <Route path="intensive" element={
+                                    <TabsContent value="intensive">
+                                        <StudentList/>
+                                    </TabsContent>
+                                } />
+                                <Route path="standard" element={
+                                    <TabsContent value="standard">
+                                        <StudentList/>
+                                    </TabsContent>
+                                } />
+                                <Route path="view" element={
+                                    <TabsContent value="view">
+                                        <StudentCard/>
+                                    </TabsContent>
+                                } />
+                                <Route path="add" element={
+                                    <TabsContent value="add">
+                                        <StudentList/>
+                                    </TabsContent>
+                                } />
+                                <Route path="edit" element={
+                                    <TabsContent value="edit">
+                                        <EditStudent/>
+                                    </TabsContent>
+                                } />
+                                <Route path="delete" element={
+                                    <TabsContent value="delete">
+                                        <StudentList/>
+                                    </TabsContent>
+                                } />
+                                <Route path="search" element={
+                                    <TabsContent value="search">
+                                        <SearchStudent/>
+                                    </TabsContent>
+                                } />
+                            </Routes>
+                        </div>
                     </Tabs>
                 </CardContent>
             </Card>
@@ -105,8 +108,7 @@ export default function ManageStudents() {
     )
 }
 
-const StudentList = ({setEdit}: {setEdit: React.Dispatch<React.SetStateAction<string>>}) => {
-    const [search, setSearch] = useState('')
+const StudentList = () => {
     const location = useLocation()
     const type = location.pathname.split('/').pop()
     useEffect(() => {
@@ -114,37 +116,56 @@ const StudentList = ({setEdit}: {setEdit: React.Dispatch<React.SetStateAction<st
     }, [type]);
 
     const filteredStudents = () => {
-        if (type !== 'all') return students.filter(student => student.type === type).filter(student => student.name.toLowerCase().includes(search.toLowerCase()) || student.registrationNumber.toLowerCase().includes(search.toLowerCase()))
+        if (type !== 'all') return students.filter(student => student.type === type)
         else return students    
     }
 
     return (
         <div className='space-y-2'>
-            <Input placeholder="Search by name or registration number" className="w-full" value={search} onChange={(e) => setSearch(e.target.value)} />
             <div className="bg-white dark:bg-gray-900 text-2xl font-bold sticky top-0 z-10">
                 {type === 'intensive' ? 'Intensive' : 'Standard'} Students ({filteredStudents().length})
             </div>
             <div className="flex flex-col gap-2">
             {filteredStudents().map(student => (
-                <StudentCard key={student.registrationNumber} student={student} setEdit={setEdit}/>
+                <StudentCard key={student.registrationNumber} theStudent={student}/>
             ))}
             </div>
         </div>
     );
 };
 
-const StudentCard = ({student, setEdit}: {student: Student, setEdit: React.Dispatch<React.SetStateAction<string>>}) => {
+const StudentCard = ({theStudent}: {theStudent?: Student}) => {
+    const location = useLocation()
+    const navigate = useNavigate()
     const cardRef = useRef<HTMLDivElement>(null)
+    const [searchParams] = useSearchParams()
     const [isExpanded, setIsExpanded] = useState(false)
+    const [student, setStudent] = useState<Student | undefined>(undefined)
+
+    useEffect(() => {
+        if (location.pathname.includes('view')) setTimeout(() => setIsExpanded(true), 500)
+    }, [location.pathname])
+
+    useEffect(() => {
+        if (theStudent) setStudent(theStudent)
+        else if (searchParams.get('regNo')) setStudent(students.find(student => student.registrationNumber === searchParams.get('regNo')))
+        else navigate('/manage-students/all')
+    }, [searchParams, theStudent, navigate])
+
+
+    useEffect(() => {
+        if (student) document.title = student.name + " - Ivy League Associates";
+    }, [student, student?.name]);
 
     useEffect(() => {
         if (isExpanded) cardRef.current?.scrollIntoView({behavior: 'smooth', block: 'center'})
     }, [isExpanded])
 
+    if (!student) return null
     return (
-        <Card ref={cardRef} className='dark:bg-gray-900 dark:border dark:border-gray-700'>
+        <Card ref={cardRef} className='dark:bg-gray-900 dark:border dark:border-gray-700' onClick={() => setIsExpanded(!isExpanded)}>
             <CardHeader className='hidden'>
-                <CardTitle>{student.name}</CardTitle>
+                <CardTitle>{student?.name}</CardTitle>
             </CardHeader>
             <CardContent className='mt-4'>
                 <div className="space-y-4">
@@ -163,10 +184,11 @@ const StudentCard = ({student, setEdit}: {student: Student, setEdit: React.Dispa
                             {student.registrationNumber} • {student.newStudent ? 'New Student' : 'Returning Student'}
                             </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Link to={`/manage-students/edit/${student.registrationNumber}`} onClick={() => setEdit(student.registrationNumber)}>
-                                <Button variant="outline" size="icon">
-                                    <EditIcon className="size-4" />
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <Link to={`/manage-students/view?regNo=${student.registrationNumber}`}>
+                                <Button variant="link" size="icon">
+                                    <span>View</span>
+                                    {/* <EyeIcon className="size-4" /> */}
                                 </Button>
                             </Link>
                         </div>
@@ -175,7 +197,14 @@ const StudentCard = ({student, setEdit}: {student: Student, setEdit: React.Dispa
                     {isExpanded && (
                         <div className="space-y-4 transition-all duration-300">
                             <div>
-                                <p className="text-sm font-medium">Student Details</p>
+                                <div className="flex items-center justify-start">
+                                    <p className="text-sm font-medium">Student Details</p>
+                                    <Link to={`/manage-students/edit?regNo=${student.registrationNumber}`}>
+                                        <Button variant="link" size="icon">
+                                            <EditIcon className="size-4" />
+                                        </Button>
+                                    </Link>
+                                </div>
                                 <div className="text-sm text-muted-foreground">
                                     <div className="flex flex-col gap-1">
                                         <span>Level: {student.preferences.level.toLocaleUpperCase()}</span>
@@ -220,12 +249,12 @@ const StudentCard = ({student, setEdit}: {student: Student, setEdit: React.Dispa
                                 <p className="text-sm text-muted-foreground">
                                 Paid: #{student.paid}
                                 </p>
-                                <p className="text-sm text-muted-foreground">
+                                {/* <p className="text-sm text-muted-foreground">
                                 Payment Method: {student.paymentDetails.paymentMethod}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                 Payment Status: {student.paymentDetails.paymentStatus}
-                                </p>
+                                </p> */}
                             </div>
                         </div>
                     )}
@@ -236,19 +265,24 @@ const StudentCard = ({student, setEdit}: {student: Student, setEdit: React.Dispa
 }
 
 const EditStudent = () => {
-    const location = useLocation()
+    const [searchParams] = useSearchParams()
     const navigate = useNavigate()
-    const id = location.pathname.split('/').pop()
-    const filteredStudent = students.find(student => student.registrationNumber === id)
+    const id = searchParams.get('regNo')
     const [student, setStudent] = useState<Student | undefined>(undefined)
+    const initialStudent = students.find(student => student.registrationNumber === id)
+
+    useEffect(() => {
+        if (id) setStudent(students.find(student => student.registrationNumber === id))
+        else navigate('/manage-students/all')
+    }, [id, navigate])
 
     useEffect(() => {
         document.title = student?.name + " - Ivy League Associates";
     }, [student?.name]);
 
     useEffect(() => {
-        if (filteredStudent) setStudent(filteredStudent)
-    }, [filteredStudent])
+        if (student) setStudent(student)
+    }, [student])
 
     const handleSave = () => {
         console.log(student)
@@ -259,11 +293,11 @@ const EditStudent = () => {
     }
 
     const handleReset = () => {
-        setStudent(filteredStudent)
+        setStudent(initialStudent)
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-2">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">Edit Student</h1>
                 <Button variant="outline" onClick={handleCancel}>Cancel</Button>
@@ -289,7 +323,7 @@ const EditStudent = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                                    <Input id="dateOfBirth" type="date" defaultValue={student?.dateOfBirth} />
+                                    <Input id="dateOfBirth" type="date" defaultValue={student?.dateOfBirth ? format(new Date(student.dateOfBirth), 'yyyy-MM-dd') : undefined} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="gender">Gender</Label>
@@ -385,6 +419,52 @@ const EditStudent = () => {
                     </form>
                 </CardContent>
             </Card>
+        </div>
+    )
+}
+
+const SearchStudent = () => {
+    const [search, setSearch] = useState('')
+    const [results, setResults] = useState<Student[]>([])
+
+    useEffect(() => {
+        document.title = "Search Students - Ivy League Associates"
+    }, [])
+
+    const handleSearch = (value: string) => {
+        setSearch(value)
+        const filtered = students.filter(student => 
+            student.name.toLowerCase().includes(value.toLowerCase()) || 
+            student.registrationNumber.toLowerCase().includes(value.toLowerCase())
+        )
+        setResults(filtered)
+    }
+
+    return (
+        <div className='space-y-4'>
+            <Input 
+                placeholder="Search by name or registration number" 
+                className="w-full"
+                value={search}
+                onChange={(e) => handleSearch(e.target.value)}
+            />
+            
+            {search && (
+                <div className="flex flex-col gap-2">
+                    <div className="text-muted-foreground text-sm">
+                        Found {results.length} student{results.length !== 1 ? 's' : ''}
+                    </div>
+                    {results.map(student => (
+                        <StudentCard key={student.registrationNumber} theStudent={student} />
+                    ))}
+                </div>
+            )}
+            {!search && (
+                <div className="flex flex-col items-center justify-center gap-2 py-8 text-muted-foreground">
+                    <Users className="size-16 opacity-50" />
+                    <p className="text-sm">Enter a name or registration number to search for students</p>
+                </div>
+            )}
         </div>
     )
 }
