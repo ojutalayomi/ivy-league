@@ -267,7 +267,7 @@ const StudentCard = ({theStudent}: {theStudent?: Student}) => {
         if (isExpanded) cardRef.current?.scrollIntoView({behavior: 'smooth', block: 'center'})
     }, [isExpanded])
 
-    if (!student) return null
+    if (!student) return <Error404Page title='Student'/>
     return (
         <Card ref={cardRef} className='dark:bg-gray-900 dark:border dark:border-gray-700' onClick={() => setIsExpanded(!isExpanded)}>
             <CardHeader className='hidden'>
@@ -387,7 +387,7 @@ const StudentView = () => {
         else document.title = "Student - Ivy League Associates";
     }, [student, student?.name]);
 
-    if (!student) return <Error404Page />
+    if (!student) return <Error404Page title='Student'/>
 
     return (
         <Card ref={cardRef} className='border-none'>
