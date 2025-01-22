@@ -14,7 +14,7 @@ export type User = {
     paymentDetails: UserPaymentDetails;
 }
 
-export type UserType = 'intensive' | 'standard'
+export type UserType = 'all' | 'intensive' | 'standard'
 
 export type Student = {
     registrationNumber: string;
@@ -33,7 +33,7 @@ export type Student = {
     gender: 'male' | 'female' | 'other';
     preferences: UserPreferences;
     role: 'student';
-    type: UserType;
+    type: UserType[];
     paymentDetails: UserPaymentDetails;
 }
 

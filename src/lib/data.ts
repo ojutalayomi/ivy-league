@@ -29,7 +29,7 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: "intensive",
+        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -65,7 +65,7 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: "standard",
+        type: ["standard"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",
@@ -101,7 +101,7 @@ export const students: Student[] = [
             emailTime: "afternoon"
         },
         role: "student",
-        type: "intensive",
+        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "bankTransfer",
             paymentStatus: "active",
@@ -137,7 +137,7 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: "standard",
+        type: ["standard"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -173,7 +173,7 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: "intensive",
+        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",
@@ -209,7 +209,7 @@ export const students: Student[] = [
             emailTime: "afternoon"
         },
         role: "student",
-        type: "standard",
+        type: ["standard"],
         paymentDetails: {
             paymentMethod: "bankTransfer",
             paymentStatus: "active",
@@ -245,7 +245,7 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: "intensive",
+        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -281,7 +281,7 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: "standard",
+        type: ["standard"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",
@@ -317,7 +317,7 @@ export const students: Student[] = [
             emailTime: "afternoon"
         },
         role: "student",
-        type: "intensive",
+        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "bankTransfer",
             paymentStatus: "active",
@@ -353,7 +353,7 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: "standard",
+        type: ["standard"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -389,7 +389,7 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: "intensive",
+        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",
@@ -425,7 +425,7 @@ export const students: Student[] = [
             emailTime: "afternoon"
         },
         role: "student",
-        type: "standard",
+        type: ["standard"],
         paymentDetails: {
             paymentMethod: "bankTransfer",
             paymentStatus: "active",
@@ -461,7 +461,7 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: "intensive",
+        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -497,7 +497,7 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: "standard",
+        type: ["standard"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",
@@ -533,7 +533,7 @@ export const students: Student[] = [
             emailTime: "afternoon"
         },
         role: "student",
-        type: "intensive",
+        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "bankTransfer",
             paymentStatus: "active",
@@ -569,7 +569,7 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: "standard",
+        type: ["standard"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -605,7 +605,7 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: "intensive",
+        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",
@@ -641,7 +641,7 @@ export const students: Student[] = [
             emailTime: "afternoon"
         },
         role: "student",
-        type: "standard",
+        type: ["standard"],
         paymentDetails: {
             paymentMethod: "bankTransfer",
             paymentStatus: "active",
@@ -677,7 +677,7 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: "intensive",
+        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -713,7 +713,7 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: "standard",
+        type: ["standard"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",

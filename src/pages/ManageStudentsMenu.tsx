@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import Logo from "@/assets/ivyLight.png"
-import { UsersRound } from "lucide-react"
+import { ArrowUpRight, UsersRound } from "lucide-react"
 import { useEffect } from "react";
 
 /**
@@ -28,17 +28,19 @@ export default function ManageStudentsMenu() {
     {
       title: "View Students",
       description: "See all registered students",
-      path: "/manage-students/all"
-    },
-    {
-      title: "Intensive Students",
-      description: "See all intensive students",
-      path: "/manage-students/intensive"
-    },
-    {
-      title: "Standard Students",
-      description: "See all standard students",
-      path: "/manage-students/standard"
+      path: "/manage-students/all",
+      sub: [
+        {
+          title: "Intensive Students",
+          description: "See all intensive students",
+          path: "/manage-students/intensive"
+        },
+        {
+          title: "Standard Students",
+          description: "See all standard students",
+          path: "/manage-students/standard"
+        }
+      ],
     },
     {
       title: "Add Student", 
@@ -46,7 +48,7 @@ export default function ManageStudentsMenu() {
       path: "/manage-students/add"
     },
     {
-      title: "Edit Students",
+      title: "Edit Students details",
       description: "Modify existing student accounts", 
       path: "/manage-students/edit"
     },
@@ -67,12 +69,12 @@ export default function ManageStudentsMenu() {
         <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
           <UsersRound className="size-4" />
         </div>
-        <span className="bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text dark:drop-shadow-lg text-transparent animate-gradient-x truncate font-semibold">IVY LEAGUE ASSOCIATES</span>
+        <span className="bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text dark:drop-shadow-lg text-transparent animate-gradient-x truncate font-semibold shadow-md">IVY LEAGUE ASSOCIATES</span>
       </div>
       
-      <h1 className="text-center text-4xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text dark:drop-shadow-lg text-transparent animate-gradient-x my-2 z-10">What would you like to do today?</h1>
+      <h1 className="text-center text-4xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text dark:drop-shadow-lg text-transparent animate-gradient-x my-2 shadow-md z-10">What would you like to do today?</h1>
 
-      <div className="flex flex-col max-[639px]:px-4 sm:grid gap-3 pt-3 max-h-[70vh] sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 w-full sm:justify-center items-center z-10 overflow-x-scroll">
+      <div className="flex flex-col max-[639px]:px-4 sm:grid gap-3 pt-3 max-h-[70vh] sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 w-full sm:justify-center z-10 overflow-x-scroll">
         {menuItems.map((item, index) => (
           <div key={index} className={`w-full p-6 min-w-60 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700`}>
             <h3 className="text-xl font-bold mb-2">
@@ -84,11 +86,21 @@ export default function ManageStudentsMenu() {
               </Link>
             </h3>
             <p className="text-gray-600 dark:text-gray-300 mb-2">{item.description}</p>
+            {item.sub && (
+              <ul className="mb-2 space-y-2">
+                {item.sub.map(i => (
+                  <li className="list-disc text-xs hover:underline" key={i.path}>
+                    <Link to={i.path}>{i.title}</Link>
+                    <ArrowUpRight className="size-2 inline-block ml-1" />
+                  </li>
+                ))}
+              </ul>
+            )}
             <Link 
               to={item.path}
               className="text-sm text-cyan-500 hover:text-cyan-600"
             >
-              Learn more →
+              Visit →
             </Link>
           </div>
         ))}
