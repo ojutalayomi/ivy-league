@@ -2,7 +2,7 @@ import { Card, CardContent, } from '@/components/ui/card';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { students } from '@/lib/data';
 import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Search, Settings, User, Users, Menu } from 'lucide-react';
-import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Student } from '@/lib/types';
 import { forwardRef, useCallback, useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
@@ -253,39 +253,40 @@ export default function Dashboard() {
 
                   <Tabs defaultValue={'home'} value={type} onValueChange={(value) => navigate(`/student-dashboard/${value}`)}>
                       <Routes>
-                          <Route path="home" element={
-                            <TabsContent value="home">
-                              <CoursesPage menuItems={HomePageItems}/>
-                            </TabsContent>
-                          } />
-                          <Route path="courses/*" element={
-                            <Routes>
-                              <Route path="/" element={<CoursesPage menuItems={CoursePageItems}/>} />
-                              <Route path="register" element={
-                                <TabsContent value="register">
-                                  <CourseRegistration/>
-                                </TabsContent>
-                              } />
-                              <Route path="view" element={
-                                <TabsContent value="view">
-                                  <CoursesPage menuItems={CoursePageItems}/>
-                                </TabsContent>
-                              } />
-                              <Route path="print" element={
-                                <TabsContent value="print">
-                                  <CoursesPage menuItems={CoursePageItems}/>
-                                </TabsContent>
-                              } />
-                            </Routes>
-                          } />
-                          <Route path="search" element={
-                            <TabsContent value="search">
-                              <SearchPage/>
-                            </TabsContent>
-                          } />
-                          <Route path="*" element={
-                            <Error404Page/>
-                          } />
+                        <Route path="/" element={<Navigate to="/student-dashboard/home" />} />
+                        <Route path="home" element={
+                          <TabsContent value="home">
+                            <CoursesPage menuItems={HomePageItems}/>
+                          </TabsContent>
+                        } />
+                        <Route path="courses/*" element={
+                          <Routes>
+                            <Route path="/" element={<CoursesPage menuItems={CoursePageItems}/>} />
+                            <Route path="register" element={
+                              <TabsContent value="register">
+                                <CourseRegistration/>
+                              </TabsContent>
+                            } />
+                            <Route path="view" element={
+                              <TabsContent value="view">
+                                <CoursesPage menuItems={CoursePageItems}/>
+                              </TabsContent>
+                            } />
+                            <Route path="print" element={
+                              <TabsContent value="print">
+                                <CoursesPage menuItems={CoursePageItems}/>
+                              </TabsContent>
+                            } />
+                          </Routes>
+                        } />
+                        <Route path="search" element={
+                          <TabsContent value="search">
+                            <SearchPage/>
+                          </TabsContent>
+                        } />
+                        <Route path="*" element={
+                          <Error404Page/>
+                        } />
                       </Routes>
                   </Tabs>
                   
