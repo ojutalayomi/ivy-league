@@ -523,6 +523,8 @@ const EditStudent = () => {
         setStudent(initialStudent)
     }
 
+    if(!student) return <Error404Page title='Student'/>
+
     return (
         <div className="space-y-2">
             <div className="flex items-center justify-between">

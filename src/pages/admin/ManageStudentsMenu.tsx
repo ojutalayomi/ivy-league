@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import Logo from "@/assets/ivyLight.png"
-import { ArrowUpRight, UsersRound } from "lucide-react"
+import { ArrowUpRight } from "lucide-react"
 import { useEffect } from "react";
 
 /**
@@ -66,13 +66,10 @@ export default function ManageStudentsMenu() {
       </div>
 
       <div className="flex items-center justify-center gap-2 sm:mx-auto sm:w-full sm:max-w-sm z-10">
-        <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-          <UsersRound className="size-4" />
-        </div>
-        <span className="bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text dark:drop-shadow-lg text-transparent animate-gradient-x truncate font-semibold shadow-md">IVY LEAGUE ASSOCIATES</span>
+        <span className="bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-3xl drop-shadow-2xl text-transparent animate-gradient-x truncate font-semibold">IVY LEAGUE ASSOCIATES</span>
       </div>
       
-      <h1 className="text-center text-4xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text dark:drop-shadow-lg text-transparent animate-gradient-x my-2 shadow-md z-10">What would you like to do today?</h1>
+      <h1 className="text-center text-4xl text-primary font-bold drop-shadow-2xl my-2 z-10">What would you like to do today?</h1>
 
       <div className="flex flex-col max-[639px]:px-4 sm:grid gap-3 pt-3 max-h-[70vh] sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 w-full sm:justify-center z-10 overflow-x-scroll">
         {menuItems.map((item, index) => (

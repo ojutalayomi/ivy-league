@@ -7,10 +7,9 @@ import {
     BreadcrumbSeparator,
   } from "@/components/ui/breadcrumb"
   import React from "react"
-  import { useLocation, useNavigate } from 'react-router-dom'
+  import { Link, useLocation } from 'react-router-dom'
   
   export function BreadcrumbNav() {
-    const navigate = useNavigate()
     const location = useLocation()
   
     const pathSegments = location.pathname.split('/').filter(Boolean)
@@ -32,20 +31,15 @@ import {
     })
     
     return (
-      <Breadcrumb>
-        <BreadcrumbList className="text-md">
+      <Breadcrumb className="w-full">
+        <BreadcrumbList className="text-md flex-nowrap">
           {breadcrumbItems.map((item, index) => (
             <React.Fragment key={index}>
               {index > 0 && <BreadcrumbSeparator />}
-              <BreadcrumbItem className="cursor-pointer">
+              <BreadcrumbItem className={`cursor-pointer ${index !== breadcrumbItems.length - 1 && 'truncate'}`}>
                 {item.path ? (
-                  <BreadcrumbLink
-                    onClick={(e) => {
-                      e.preventDefault()
-                      navigate(item.path!)
-                    }}
-                  >
-                    {item.label}
+                  <BreadcrumbLink asChild>
+                    <Link to={item.path} className="truncate">{item.label}</Link>
                   </BreadcrumbLink>
                 ) : (
                   <BreadcrumbPage>{item.label}</BreadcrumbPage>

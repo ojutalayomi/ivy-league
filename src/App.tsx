@@ -1,5 +1,5 @@
-import ManageStudents from '@/pages/ManageStudents'
-import ManageStudentsMenu from '@/pages/ManageStudentsMenu'
+import ManageStudents from '@/pages/admin/ManageStudents'
+import ManageStudentsMenu from '@/pages/admin/ManageStudentsMenu'
 import Menu from '@/pages/Menu'
 import SignIn from '@/pages/SignIn'
 import SignUp from '@/pages/SignUp'
@@ -7,12 +7,14 @@ import * as reactRouterDom from 'react-router-dom'
 import { ThemeProvider } from '@/providers/theme-provider'
 import { ModeToggle } from '@/components/mode-toggle'
 import { Toaster } from "@/components/ui/toaster";
+import Error404Page from '@/components/404'
+import Dashboard from '@/pages/student/Dashboard'
 // import './App.css'
 
 function App() {
   return (
     <reactRouterDom.BrowserRouter>
-      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <ThemeProvider defaultTheme="system" storageKey="ivy-ui-theme">
         <Router />
         <Toaster />
       </ThemeProvider>
@@ -37,8 +39,14 @@ function Router() {
               <reactRouterDom.Route path='/*' element={<ManageStudents />} />
             </reactRouterDom.Routes>
           } />
+          <reactRouterDom.Route path="/student-dashboard/*" element={
+            <reactRouterDom.Routes>
+              <reactRouterDom.Route path='/*' element={<Dashboard />} />
+            </reactRouterDom.Routes>
+          } />
           <reactRouterDom.Route path="/accounts/signin" element={<SignIn />} />
           <reactRouterDom.Route path="/accounts/signup" element={<SignUp />} />
+          <reactRouterDom.Route path="/*" element={<Error404Page />} />
         </reactRouterDom.Routes>
         <div className="absolute bottom-0 mb-4 mr-4 right-0 z-50">
           <ModeToggle />
