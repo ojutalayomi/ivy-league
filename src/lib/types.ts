@@ -6,7 +6,7 @@ export type User = {
     name: string;
     email: string;
     preferences: UserPreferences;
-    role: 'admin' | 'user';
+    role: 'admin';
     token: string;
     username: string;
     verificationStatus: UserVerificationStatus;
@@ -31,16 +31,27 @@ export type Student = {
     price: number;
     paid: number;
     gender: 'male' | 'female' | 'other';
-    preferences: UserPreferences;
-    role: 'student';
+    preferences: StudentPreferences;
+    role: 'student' | 'admin';
     type: UserType[];
     paymentDetails: UserPaymentDetails;
 }
 
-export type UserPreferences = {
+export type StudentPreferences = {
     level: 'beginner' | 'intermediate' | 'advanced';
     paymentMethod: 'creditCard' | 'paypal' | 'bankTransfer';
     currency: 'USD' | 'EUR' | 'GBP';
+    language: 'en' | 'es' | 'fr' | 'de' | 'it' | 'ja' | 'zh' | 'ko' | 'ru' | 'pt' | 'ar';
+    theme: 'light' | 'dark';
+    notifications: 'enabled' | 'disabled';
+    emailUpdates: 'enabled' | 'disabled';
+    emailFrequency: 'daily' | 'weekly' | 'monthly';
+    emailLanguage: 'en' | 'es' | 'fr' | 'de' | 'it' | 'ja' | 'zh' | 'ko' | 'ru' | 'pt' | 'ar';
+    emailTime: 'morning' | 'afternoon' | 'evening';
+}
+
+export type UserPreferences = {
+    level: 'beginner' | 'intermediate' | 'advanced';
     language: 'en' | 'es' | 'fr' | 'de' | 'it' | 'ja' | 'zh' | 'ko' | 'ru' | 'pt' | 'ar';
     theme: 'light' | 'dark';
     notifications: 'enabled' | 'disabled';
@@ -58,10 +69,9 @@ export type UserVerificationStatus = {
 }
 
 export type UserAccountDetails = {
-    accountType: 'free' | 'premium';
-    subscriptionStatus: 'active' | 'inactive';
-    subscriptionStartDate: string;
-    subscriptionEndDate: string;
+    accountType: 'admin' | 'super-admin';
+    accountStatus: 'active' | 'inactive';
+    accountCreationDate: string;
 }
 
 export type UserPaymentDetails = {

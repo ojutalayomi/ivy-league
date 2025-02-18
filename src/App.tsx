@@ -9,15 +9,19 @@ import { ModeToggle } from '@/components/mode-toggle'
 import { Toaster } from "@/components/ui/toaster";
 import Error404Page from '@/components/404'
 import Dashboard from '@/pages/student/Dashboard'
+import { Provider } from 'react-redux';
+import { store } from '@/redux/store'
 // import './App.css'
 
 function App() {
   return (
     <reactRouterDom.BrowserRouter>
-      <ThemeProvider defaultTheme="system" storageKey="ivy-ui-theme">
-        <Router />
-        <Toaster />
-      </ThemeProvider>
+      <Provider store={store}>
+        <ThemeProvider defaultTheme="system" storageKey="ivy-ui-theme">
+          <Router />
+          <Toaster />
+        </ThemeProvider>
+      </Provider>
     </reactRouterDom.BrowserRouter>
   )
 }
@@ -27,6 +31,8 @@ export default App
 function Router() {
   const location = reactRouterDom.useLocation()
   const state = location.state as { backgroundLocation?: Location }
+  const user = JSON.parse(localStorage.getItem('ivy-user') || '{}')
+  const pathSegments = (user.role === 'admin' && location.pathname.includes('dashboard')) ? location.pathname.replace("dashboard","manage-students") : location.pathname.replace("dashboard","student-dashboard")
   const backgroundLocation = state?.backgroundLocation
   return (
     <div className="w-screen h-screen bg-greybg-light bg-cover bg-center bg-fixed bg-no-repeat">
@@ -39,6 +45,7 @@ function Router() {
               <reactRouterDom.Route path='/*' element={<ManageStudents />} />
             </reactRouterDom.Routes>
           } />
+          <reactRouterDom.Route path="/dashboard/*" element={<reactRouterDom.Navigate to={pathSegments} />} />
           <reactRouterDom.Route path="/student-dashboard/*" element={
             <reactRouterDom.Routes>
               <reactRouterDom.Route path='/*' element={<Dashboard />} />

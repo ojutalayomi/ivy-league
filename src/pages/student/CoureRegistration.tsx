@@ -59,7 +59,7 @@ export default function CourseRegistration() {
     reference: (new Date()).getTime().toString(),
     email: email,
     amount: totalAmount * 100, // Convert to kobo
-    publicKey: 'pk_test_5646402cf3e889cd89d53eeb1d00400000000000',
+    publicKey: 'pk_test_ff43329c90b3e15a51dddfb44ddc03c9464740b4',
   };
 
   const initializePayment = usePaystackPayment(config);
@@ -93,7 +93,6 @@ export default function CourseRegistration() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-3xl font-bold text-center text-blue-600 dark:text-blue-400">Course Registration</h1>
       
       <div className="max-w-6xl mx-auto rounded-lg">
         {Object.entries(groupedCourses).map(([category, categoryCourses]) => (

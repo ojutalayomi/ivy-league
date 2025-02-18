@@ -1,6 +1,138 @@
 import { Student } from "./types";
+import { User } from "./types";
 
 //"Business and Technology(BT), Management Accounting(MA), Financial Accounting(FA), Corporate and Business Law(CBL), Performance Management(PM), Taxation(TAX), Financial Reporting(FR), Audit and Assurance(AA), Financial Management(FM), Strategic Business Leaders(SBL), Strategic Business Reporting(SBR), Advanced Financial Management(AFM), Advanced Performance Management(APM), Advanced Taxation(ATX), Advanced Audit and Assurance(AAA), Oxford Brookes Mentoring(OBU), Diploma in IFRS(DipIFRS)"
+
+export const courses = [
+    "Business and Technology(BT)",
+    "Management Accounting(MA)",
+    "Financial Accounting(FA)",
+    "Corporate and Business Law(CBL)",
+    "Performance Management(PM)",
+    "Taxation(TAX)",
+    "Financial Reporting(FR)",
+    "Audit and Assurance(AA)",
+    "Financial Management(FM)",
+    "Strategic Business Leaders(SBL)",
+    "Strategic Business Reporting(SBR)",
+    "Advanced Financial Management(AFM)",
+    "Advanced Performance Management(APM)",
+    "Advanced Taxation(ATX)",
+    "Advanced Audit and Assurance(AAA)",
+    "Oxford Brookes Mentoring(OBU)",
+    "Diploma in IFRS(DipIFRS)"
+];
+
+export const users: User[] = [
+    {
+        avatar: "https://example.com/avatar1.jpg",
+        id: "user001",
+        name: "Alice Johnson",
+        email: "alice.johnson@example.com",
+        preferences: {
+            level: "advanced",
+            language: "en",
+            theme: "light",
+            notifications: "enabled",
+            emailUpdates: "enabled",
+            emailFrequency: "weekly",
+            emailLanguage: "en",
+            emailTime: "morning"
+        },
+        role: "admin",
+        token: "token123",
+        username: "alicej",
+        verificationStatus: {
+            email: 'unverified',
+            phone: 'unverified',
+            address: 'verified',
+            identity: 'verified'
+        },
+        accountDetails: {
+            accountType: "admin",
+            accountStatus: "active",
+            accountCreationDate: "2022-01-01"
+        },
+        paymentDetails: {
+            paymentMethod: "creditCard",
+            paymentStatus: "active",
+            paymentStartDate: "2022-01-01",
+            paymentEndDate: "2023-01-01"
+        }
+    },
+    {
+        avatar: "https://example.com/avatar2.jpg",
+        id: "user002",
+        name: "Bob Smith",
+        email: "bob.smith@example.com",
+        preferences: {
+            level: "intermediate",
+            language: "fr",
+            theme: "dark",
+            notifications: "enabled",
+            emailUpdates: "enabled",
+            emailFrequency: "daily",
+            emailLanguage: "fr",
+            emailTime: "evening"
+        },
+        role: "admin",
+        token: "token456",
+        username: "bobsmith",
+        verificationStatus: {
+            email: 'unverified',
+            phone: 'unverified',
+            address: 'verified',
+            identity: 'verified'
+        },
+        accountDetails: {
+            accountType: "super-admin",
+            accountStatus: "active",
+            accountCreationDate: "2021-05-15"
+        },
+        paymentDetails: {
+            paymentMethod: "paypal",
+            paymentStatus: "active",
+            paymentStartDate: "2021-05-15",
+            paymentEndDate: "2022-05-15"
+        }
+    },
+    {
+        avatar: "https://example.com/avatar3.jpg",
+        id: "user003",
+        name: "Charlie Brown",
+        email: "charlie.brown@example.com",
+        preferences: {
+            level: "beginner",
+            language: "en",
+            theme: "light",
+            notifications: "disabled",
+            emailUpdates: "enabled",
+            emailFrequency: "monthly",
+            emailLanguage: "en",
+            emailTime: "afternoon"
+        },
+        role: "admin",
+        token: "token789",
+        username: "charlieb",
+        verificationStatus: {
+            email: 'unverified',
+            phone: 'unverified',
+            address: 'verified',
+            identity: 'verified'
+        },
+        accountDetails: {
+            accountType: "admin",
+            accountStatus: "inactive",
+            accountCreationDate: "2020-11-20"
+        },
+        paymentDetails: {
+            paymentMethod: "bankTransfer",
+            paymentStatus: "inactive",
+            paymentStartDate: "2020-11-20",
+            paymentEndDate: "2021-11-20"
+        }
+    }
+];
 
 export const students: Student[] = [
     {
@@ -31,7 +163,7 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: ["intensive"],
+        type: ["intensive", "standard"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",

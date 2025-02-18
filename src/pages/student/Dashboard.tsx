@@ -11,6 +11,7 @@ import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import Error404Page from '@/components/404';
 import { cn } from '@/lib/utils';
 import CourseRegistration from './CoureRegistration';
+import { Button } from '@/components/ui/button';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -71,9 +72,14 @@ export default function Dashboard() {
     const type = location.pathname.split('/').pop()
     const [isFull, setIsFull] = useState(false)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    const [student, setStudent] = useState<Student>()
     
     useEffect(() => {
         document.title = "Students - Ivy League Associates";
+    }, []);
+    
+    useEffect(() => {
+        setStudent(localStorage.getItem("ivy-user") ? JSON.parse(localStorage.getItem("ivy-user") || '{}') : {})
     }, []);
 
     const toggleSidebar = useCallback((value: boolean) => {
@@ -142,14 +148,16 @@ export default function Dashboard() {
                 }`}
             >
 
-                <div className={`flex flex-col items-center space-y-1.5 ${isFull ? 'p-4' : 'p-3'} rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow`}>
-                    {isFull ? 
-                      <div className={`font-semibold leading-none tracking-tight ${!isFull && 'overflow-hidden'}`}>
-                        Ivy League Associates
-                      </div> : 
-                      <GraduationCap className='size-6'/>
-                    }
-                </div>
+                <Link to="/">
+                  <div className={`flex flex-col items-center space-y-1.5 ${isFull ? 'p-4' : 'p-3'} rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow`}>
+                      {isFull ? 
+                        <div className={`font-semibold leading-none tracking-tight ${!isFull && 'overflow-hidden'}`}>
+                          Ivy League Associates
+                        </div> : 
+                        <GraduationCap className='size-6'/>
+                      }
+                  </div>
+                </Link>
 
                 <div className={`flex flex-col flex-1 items-center gap-2 ${isFull ? 'p-2 rounded-3xl' : 'px-1 py-2 rounded-[2rem]'} text-sm border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground relative shadow`}>
                     <div 
@@ -234,16 +242,16 @@ export default function Dashboard() {
                   <div className="block space-y-4 p-6 max-[639px]:text-center bg-cyan-500 border border-gray-200 rounded-lg shadow hover:bg-cyan-400 dark:border-gray-700">
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                       <div className="space-y-2">
-                        <h5 className="text-xl font-bold tracking-tight text-white">{students[0].name}</h5>
-                        <p className="font-normal text-white">Registration Number: <b>{students[0].registrationNumber}</b></p>
-                        <p className="font-normal text-white">Email: <b>{students[0].email}</b></p>
+                        <h5 className="text-xl font-bold tracking-tight text-white">{student?.name}</h5>
+                        <p className="font-normal text-white">Registration Number: <b>{student?.registrationNumber}</b></p>
+                        <p className="font-normal text-white">Email: <b>{student?.email}</b></p>
                       </div>
                       <div className="space-y-2 text-right">
-                        <p className="font-normal text-white">Papers Registered: <b>{students[0].papers.length}</b></p>
+                        <p className="font-normal text-white">Papers Registered: <b>{student?.papers.length}</b></p>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                      {students[0].type.map((type, index) => (
+                      {student?.type.map((type, index) => (
                         <span key={index} className="px-3 py-1 text-sm bg-white/20 rounded-full text-white">
                           {type}
                         </span>
@@ -257,6 +265,11 @@ export default function Dashboard() {
                         <Route path="home" element={
                           <TabsContent value="home">
                             <CoursesPage menuItems={HomePageItems}/>
+                          </TabsContent>
+                        } />
+                        <Route path="profile" element={
+                          <TabsContent value="profile">
+                            {student && <ProfilePage student={student} />}
                           </TabsContent>
                         } />
                         <Route path="courses/*" element={
@@ -287,21 +300,26 @@ export default function Dashboard() {
                         <Route path="*" element={
                           <Error404Page/>
                         } />
+                        <Route path="settings" element={
+                          <TabsContent value="settings">
+                            {student && <SettingsPage student={student}/>}
+                          </TabsContent>
+                        } />
                       </Routes>
                   </Tabs>
                   
-                  {/* <section>
-                    <details className="bg-white dark:bg-gray-800 border border-red-500 p-6 rounded-lg">
+                  <section>
+                    <details className="bg-white dark:bg-gray-800 border border-blue-500 p-6 rounded-lg">
                       <summary className="cursor-pointer text-lg font-medium">
                         Announcements
                       </summary>
                       <div className="mt-4 space-y-2">
-                        <p>User Retention Rate: 85%</p>
-                        <p>Churn Rate: 5%</p>
-                        <p>Average Revenue Per User: $145</p>
+                        <p className="text-gray-700 dark:text-gray-300">Welcome to the new student dashboard! We're excited to have you here.</p>
+                        <p className="text-gray-700 dark:text-gray-300">Registration for the next semester opens on January 15th, 2025.</p>
+                        <p className="text-gray-700 dark:text-gray-300">Check out our new course materials in the Resources section.</p>
                       </div>
                     </details>
-                  </section> */}
+                  </section>
                 </CardContent>
               </Card>
             </div>
@@ -371,6 +389,122 @@ const SearchPage = () => {
                     <p className="text-sm">Enter a name or registration number to search for students</p>
                 </div>
             )}
+        </div>
+    )
+}
+
+const ProfilePage = ({ student }: { student: Student }) => {
+    return (
+        <div className="space-y-8">
+            <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900">
+                <CardContent className="p-8">
+                    <div className="space-y-6">
+                        <div>
+                            <h2 className="text-2xl font-semibold">{student.name}</h2>
+                            <p className="text-muted-foreground">{student.registrationNumber}</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <h3 className="text-lg font-medium">Personal Information</h3>
+                                <div className="grid gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium min-w-24">Email:</span>
+                                        <span className="text-muted-foreground">{student.email}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium min-w-24">Date of Birth:</span>
+                                        <span className="text-muted-foreground">
+                                            {new Date(student.dateOfBirth).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium min-w-24">Gender:</span>
+                                        <span className="text-muted-foreground capitalize">
+                                            {student.gender}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h3 className="text-lg font-medium">Academic Details</h3>
+                                <div className="grid gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium min-w-24">Papers:</span>
+                                        <span className="text-muted-foreground">
+                                            {student.papers.join(', ')}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium min-w-24">Status:</span>
+                                        <span className="text-muted-foreground capitalize">
+                                            {student.newStudent ? 'New Student' : 'Returning Student'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium min-w-24">Revision:</span>
+                                        <span className="text-muted-foreground capitalize">
+                                            {student.revision ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
+const SettingsPage = ({ student }: { student: Student }) => {
+    return (
+        <div className="space-y-6">
+            
+            <Card>
+                <CardContent className="p-6">
+                    <div className="space-y-4">
+                        <div>
+                            <h2 className="text-lg font-semibold mb-2">Account Settings</h2>
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span>Email Address</span>
+                                    <span className="text-muted-foreground">{student.email}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Password</span>
+                                    <Button variant="outline" size="sm">Change Password</Button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 className="text-lg font-semibold mb-2">Preferences</h2>
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span>Theme</span>
+                                    <span className="text-muted-foreground capitalize">
+                                        {student.preferences.theme}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Language</span>
+                                    <span className="text-muted-foreground capitalize">
+                                        {student.preferences.language}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Notifications</span>
+                                    <span className="text-muted-foreground capitalize">
+                                        {student.preferences.notifications}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     )
 }

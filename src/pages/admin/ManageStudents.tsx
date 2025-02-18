@@ -1,8 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { students } from '@/lib/data';
-import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, EditIcon, Search, Settings, Users } from 'lucide-react';
+import { courses, students } from '@/lib/data';
+import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, EditIcon, GraduationCap, Search, Settings, Users, Wallet } from 'lucide-react';
 import { Link, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Student, UserType } from '@/lib/types';
@@ -12,12 +12,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
-import Logo from "@/assets/ivyLight.png";
-import LogoDark from "@/assets/ivyDark.png";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import Error404Page from '@/components/404';
 import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -74,15 +73,28 @@ export default function ManageStudents() {
     const sideItems = [
         {
             title: "All",
-            icon: <Users className={`size-4 text-muted-foreground ${isFull && 'mr-1'}`} />
+            icon: <Users className={`size-4 text-muted-foreground ${isFull && 'mr-1'}`} />,
+            description: "View all students"
         },
         {
             title: "Intensive",
-            icon: <BookOpen className={`size-4 text-muted-foreground ${isFull && 'mr-1'}`} />
+            icon: <BookOpen className={`size-4 text-muted-foreground ${isFull && 'mr-1'}`} />,
+            description: "View intensive students"
         },
         {
             title: "Standard",
-            icon: <BookOpen className={`size-4 text-muted-foreground ${isFull && 'mr-1'}`} />
+            icon: <BookOpen className={`size-4 text-muted-foreground ${isFull && 'mr-1'}`} />,
+            description: "View standard students"
+        },
+        {
+            title: "Payments",
+            icon: <Wallet className={`size-4 text-muted-foreground ${isFull && 'mr-1'}`} />,
+            description: "View payment details"
+        },
+        {
+            title: "Settings",
+            icon: <Settings className={`size-4 text-muted-foreground ${isFull && 'mr-1'}`} />,
+            description: "Go to settings"
         }
     ]
     
@@ -91,16 +103,16 @@ export default function ManageStudents() {
             {/* Sidebar */}
             <div className="flex flex-col gap-2 m-2 h-[calc(100vh-16px)] overflow-y-auto">
 
-                <div className="flex flex-col items-center space-y-1.5 p-4 rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow">
-                    <div className={`font-semibold leading-none tracking-tight ${!isFull && 'aspect-square w-7 h-7 overflow-hidden'}`}>
-                        {isFull ? 'Ivy League Associates' : (
-                            <>
-                            <img src={Logo} alt="Ivy League" className="dark:hidden mx-auto" />
-                            <img src={LogoDark} alt="Ivy League" className="hidden dark:block mx-auto" />
-                            </>
-                        )}
-                    </div>
-                </div>
+                <Link to="/">
+                  <div className={`flex flex-col items-center space-y-1.5 ${isFull ? 'p-4' : 'p-3'} rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow`}>
+                      {isFull ? 
+                        <div className={`font-semibold leading-none tracking-tight ${!isFull && 'overflow-hidden'}`}>
+                          Ivy League Associates
+                        </div> : 
+                        <GraduationCap className='size-6'/>
+                      }
+                  </div>
+                </Link>
 
                 <div className="flex flex-col flex-1 items-center space-y-1.5 p-2 rounded-3xl text-sm border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground relative shadow">
                     <div 
@@ -112,35 +124,37 @@ export default function ManageStudents() {
                         {isFull && 'Search'}
                     </div>
 
-                    <p className={`!mt-4 text-start ${!isFull && 'hidden'}`}>STUDENTS</p>
-                    {sideItems && sideItems.map(item => (
-                        <div 
-                        key={item.title} 
-                        className={`flex items-center ${type === item.title.toLowerCase() && isFull && 'bg-gray-50 dark:bg-gray-800'} ${isFull ? 'justify-start hover:bg-gray-50 dark:hover:bg-gray-800 p-2' : 'justify-center'} p-1 overflow-hidden rounded-full cursor-pointer relative w-full transition-colors`}
-                        onClick={() => navigate('/manage-students/' + item.title.toLowerCase())}
-                        >
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        {isFull ? item.icon : <Av active={type === item.title.toLowerCase()} label={item.title[0]} />}
-                                    </TooltipTrigger>
-                                    <TooltipContent side='right' sideOffset={8}>
-                                        Visit {item.title} students
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                            {isFull && <span className="ml-2">{item.title}</span>}
-                        </div>
-                    ))}
+                    {sideItems && sideItems.reduce((acc: JSX.Element[], item, index) => {
 
-                    <p className={`!mt-4 text-start ${!isFull && 'hidden'}`}>MANAGE</p>
-                    <div 
-                    className={`p-2 rounded-full cursor-pointer flex items-center ${type === 'settings' && (isFull ? 'bg-gray-50 dark:bg-gray-800' : '!border-cyan-500')} ${isFull ? 'hover:bg-gray-50 dark:hover:bg-gray-800 w-full justify-start' : 'justify-center group hover:border-cyan-500 border border-slate-200 dark:border-slate-700'} ${type === "settings" && "border-cyan-500"} space-x-3 text-gray-600`}
-                    onClick={() => navigate('/manage-students/settings')}
-                    >
-                        <Settings className={`w-5 h-5 group-hover:text-cyan-500 text-muted-foreground ${type === 'settings' && !isFull && '!text-cyan-500'} ${type === "settings" && "text-cyan-500"}`} />
-                        {isFull && <span className='dark:text-white'>Settings</span>}
-                    </div>
+                        if(index === 0){
+                            acc.push(<p className={`!mt-4 text-start ${!isFull && 'hidden'}`}>STUDENTS</p>)
+                        }
+
+                        if (item.title === 'Payments') {
+                            acc.push(<p className={`!my-2 text-start ${!isFull && 'hidden'}`}>MANAGE</p>)
+                        }
+
+                        acc.push (
+                            <div 
+                            key={item.title} 
+                            className={`flex items-center ${type === item.title.toLowerCase() && isFull && 'bg-gray-50 shadow-lg dark:border dark:border-gray-500 dark:bg-gray-800'} ${isFull ? 'justify-start hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:border dark:hover:border-gray-500 p-2' : 'justify-center'} p-1 overflow-hidden rounded-full cursor-pointer relative w-full transition-colors`}
+                            onClick={() => navigate('/manage-students/' + item.title.toLowerCase())}
+                            >
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            {isFull ? item.icon : <Av active={type === item.title.toLowerCase()} label={item.title[0]} />}
+                                        </TooltipTrigger>
+                                        <TooltipContent side='right' sideOffset={8}>
+                                            {item.description}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                {isFull && <span className="ml-2">{item.title}</span>}
+                            </div>
+                        )
+                        return acc
+                    }, [])}
 
                     <div className='absolute bottom-3 p-2 rounded-full cursor-pointer flex items-center border hover:bg-gray-50 dark:hover:bg-gray-800' onClick={() => toggleSidebar(!isFull)}>
                         {isFull && "Collapse"}
@@ -202,6 +216,11 @@ export default function ManageStudents() {
                                         <SearchStudent/>
                                     </TabsContent>
                                 } />
+                                <Route path="payments" element={
+                                    <TabsContent value="payments">
+                                        <PaymentsPage />
+                                    </TabsContent>
+                                } />
                                 <Route path="*" element={
                                     <Error404Page/>
                                 } />
@@ -211,6 +230,77 @@ export default function ManageStudents() {
                 </Card>
             </div>
         </div>
+    )
+}
+
+const PaymentsPage = () => {
+
+    const getRandomCourses = () => {
+        const shuffled = courses.slice(0,5).sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, Math.floor(Math.random() * courses.length) + 1).join(", ");
+    };
+
+    const invoices = [
+        {
+            registrationNumber: "2024001",
+            paymentId: "SNZw8VEPWdp6PZQM",
+            totalAmount: 45000.00,
+            registeredCourses: getRandomCourses(),
+        },
+        {
+            registrationNumber: "2024005",
+            paymentId: "BtNSUZeXs7Lgfxpv",
+            totalAmount: 55000.00,
+            registeredCourses: getRandomCourses(),
+        },
+        {
+            registrationNumber: "2024002",
+            paymentId: "mHCUgMuAEia4HQaN",
+            totalAmount: 65000.00,
+            registeredCourses: getRandomCourses(),
+        },
+        {
+            registrationNumber: "2024007",
+            paymentId: "MSKR7rk0pDl2Giue",
+            totalAmount: 45000.00,
+            registeredCourses: getRandomCourses(),
+        },
+        {
+            registrationNumber: "2024008",
+            paymentId: "KYAOGzlPn7ps4c7c",
+            totalAmount: 55000.00,
+            registeredCourses: getRandomCourses(),
+        }
+    ];
+
+    return (
+        <Table>
+            <TableCaption>A list of recent payments.</TableCaption>
+            <TableHeader>
+                <TableRow>
+                <TableHead className="w-[100px]">Reg.No</TableHead>
+                <TableHead>Papers/Courses</TableHead>
+                <TableHead>Payment Id</TableHead>
+                <TableHead className="text-right">Amount(NGN)</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {invoices.map((invoice) => (
+                <TableRow key={invoice.registrationNumber}>
+                    <TableCell className="font-medium">{invoice.registrationNumber}</TableCell>
+                    <TableCell>{invoice.registeredCourses}</TableCell>
+                    <TableCell>{invoice.paymentId}</TableCell>
+                    <TableCell className="text-right">{invoice.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                </TableRow>
+                ))}
+            </TableBody>
+            <TableFooter>
+                <TableRow>
+                    <TableCell colSpan={3}>Total(NGN)</TableCell>
+                    <TableCell className="text-right">{invoices.reduce((total, invoice) => total + invoice.totalAmount, 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                </TableRow>
+            </TableFooter>
+        </Table>
     )
 }
 

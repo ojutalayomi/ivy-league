@@ -19,6 +19,8 @@ import Logo from "@/assets/ivyLight.png";
 import LogoDark from "@/assets/ivyDark.png";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { students, users } from "@/lib/data";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function SignIn() {
     // const dispatch = useDispatch()
@@ -26,12 +28,11 @@ export default function SignIn() {
     const navigate = useNavigate()
     // const [searchParams] = useSearchParams()
     // const redirect = searchParams.get('redirect')
-    // const { refetchPets, refetchUser, refetchApplications } = useFetchDetails()
     const [email, setEmail] = useState<string>('')
     const [password, setPassword] = useState<string>('')
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const [loading, isLoading] = useState<boolean>(false)
-    // const [error, setError] = useState<string>('')
+    const [accountType, setAccountType] = useState<string>('')
     const [usersList, setUsersList] = useState<User[]>([])
 
     useEffect(() => {
@@ -39,7 +40,7 @@ export default function SignIn() {
     }, []);
 
     useEffect(() => {
-        const storedUsers = localStorage.getItem('users_list')
+        const storedUsers = localStorage.getItem('ivy_users_list')
         if (storedUsers) {
             setUsersList(JSON.parse(storedUsers))
         }
@@ -89,6 +90,20 @@ export default function SignIn() {
             const userData = {
                 email: email,
                 password: password
+            }
+
+            const user = (() => {
+              if(accountType === 'admin') {
+                return users.find(u => u.email === email)
+              } else {
+                return students.find(s => s.registrationNumber === email)
+              }
+            })()
+            if (user) {
+              if (password === user.name.toLowerCase().split(' ')[1]) localStorage.setItem("ivy-user", JSON.stringify(user))
+              else throw Error("Invalid password")  
+            } else {
+              throw Error("User not found!")
             }
 
             /* FETCH */
@@ -143,6 +158,7 @@ export default function SignIn() {
               title: "You have signed in succesfully.",
               description: JSON.stringify(userData)
             })
+            navigate("/dashboard/home")
 
         } catch (error: unknown) {
             console.error('error', error)
@@ -163,6 +179,8 @@ export default function SignIn() {
                 description: JSON.stringify(error)
             })
             isLoading(false)
+        } finally {
+          isLoading(false)
         }
     }
     
@@ -228,31 +246,59 @@ export default function SignIn() {
                   </div>
                 </div>
               )}
-
               <form 
               onSubmit={(e) => {
                   e.preventDefault()
                   submit()
               }} 
-              className="space-y-6">
-                <div>
-                  <label htmlFor="email" className="block text-sm/6 font-medium text-cyan-500">
-                    Email address
-                  </label>
-                  <div className="mt-2">
-                    <Input
-                      disabled={loading}
-                      id="email"
-                      name="email"
-                      type="email"
-                      defaultValue={email}
-                      onChange={e => setEmail(e.target.value)}
-                      required
-                      autoComplete="email"
-                      className="block w-full rounded-md border-0 px-2 py-1.5 dark:text-gray-100 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
-                    />
-                  </div>
-                </div>
+              className="space-y-4">
+                <Tabs defaultValue='student' onValueChange={(type) => setAccountType(type)}>
+                  {/* <TabsTrigger value="option"></TabsTrigger> */}
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="admin">Admin</TabsTrigger>
+                    <TabsTrigger value="student">Student</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="admin">
+                    <div>
+                      <label htmlFor="email" className="block text-sm/6 font-medium text-cyan-500">
+                        Email address
+                      </label>
+                      <div className="mt-2">
+                        <Input
+                          disabled={loading}
+                          id="email"
+                          name="email"
+                          type="email"
+                          defaultValue={email}
+                          onChange={e => setEmail(e.target.value)}
+                          required
+                          autoComplete="email"
+                          className="block w-full rounded-md border-0 px-2 py-1.5 dark:text-gray-100 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="student">
+                    <div>
+                      <label htmlFor="email" className="block text-sm/6 font-medium text-cyan-500">
+                        Registration Number
+                      </label>
+                      <div className="mt-2">
+                        <Input
+                          disabled={loading}
+                          id="registrationNumber"
+                          name="registrationNumber"
+                          type="text"
+                          defaultValue={email}
+                          onChange={e => setEmail(e.target.value)}
+                          required
+                          autoComplete="registrationNumber"
+                          className="block w-full rounded-md border-0 px-2 py-1.5 dark:text-gray-100 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
 
                 <div>
                   <div className="flex items-center justify-between">
@@ -271,11 +317,11 @@ export default function SignIn() {
                       id="password"
                       name="password"
                       type={showPassword ? "text" : "password"}
-                      defaultValue={password}
+                      value={password}
                       onChange={e => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="block w-full rounded-md border-0 px-2 py-1.5 dark:text-gray-100 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6"
+                      className="block w-full rounded-md border-0 px-3 py-1.5 dark:text-gray-100 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6"
                     />
                     <button
                       type="button"
