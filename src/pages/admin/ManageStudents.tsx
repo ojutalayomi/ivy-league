@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { courses, students } from '@/lib/data';
-import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, EditIcon, GraduationCap, Search, Settings, Users, Wallet } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, EditIcon, GraduationCap, Menu, Search, Settings, Users, Wallet } from 'lucide-react';
 import { Link, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Student, UserType } from '@/lib/types';
@@ -40,6 +40,7 @@ export default function ManageStudents() {
     const navigate = useNavigate()
     const type = location.pathname.split('/').pop()
     const [isFull, setIsFull] = useState(false)
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     
     useEffect(() => {
         document.title = "Manage Students - Ivy League Associates";
@@ -49,6 +50,10 @@ export default function ManageStudents() {
         localStorage.setItem('sidebar', JSON.stringify(value))
         setIsFull(value)
     }, [])
+
+    const toggleMobileSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen)
+    }
 
     useEffect(() => {
         const sidebar = localStorage.getItem('sidebar')
@@ -101,7 +106,12 @@ export default function ManageStudents() {
     return (
         <div className='flex'>
             {/* Sidebar */}
-            <div className="flex flex-col gap-2 m-2 h-[calc(100vh-16px)] overflow-y-auto">
+            <div
+                className={`flex flex-col gap-2 m-2 h-[calc(100vh-16px)] overflow-y-auto fixed sm:relative sm:flex sm:translate-x-0 transition-transform duration-200 ease-in-out z-40 ${
+                    isSidebarOpen ? 'translate-x-0' : '-translate-x-[200%]'
+                }`}
+                onClick={toggleMobileSidebar}
+            >
 
                 <Link to="/">
                   <div className={`flex flex-col items-center space-y-1.5 ${isFull ? 'p-4' : 'p-3'} rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow`}>
@@ -156,7 +166,7 @@ export default function ManageStudents() {
                         return acc
                     }, [])}
 
-                    <div className='absolute bottom-3 p-2 rounded-full cursor-pointer flex items-center border hover:bg-gray-50 dark:hover:bg-gray-800' onClick={() => toggleSidebar(!isFull)}>
+                    <div className='absolute bottom-3 p-2 rounded-full cursor-pointer flex items-center border hover:bg-gray-50 dark:hover:bg-gray-800' onClick={(e) => {e.stopPropagation();toggleSidebar(!isFull)}}>
                         {isFull && "Collapse"}
                         {isFull ? <ChevronLeft className="cursor-pointer size-4 text-muted-foreground ml-1"  /> : <ChevronRight className="cursor-pointer size-4 text-muted-foreground ml-1" />}
                     </div>
@@ -167,10 +177,27 @@ export default function ManageStudents() {
                 </div>
             </div>
 
+            {/* Overlay for Mobile */}
+            {isSidebarOpen && (
+              <div
+                className="sm:hidden fixed inset-0 bg-black/50 backdrop-blur-lg z-30"
+                onClick={toggleMobileSidebar}
+              />
+            )}
+
             {/* Main Content */}
             <div className="flex flex-1 flex-col items-start gap-2 m-2 h-[calc(100vh-16px)] overflow-y-auto">
-                <div className="flex flex-col items-center space-y-1.5 p-3 rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow">
-                    <BreadcrumbNav/>
+                <div className="flex flex-row items-center gap-2 max-w-[calc(100vw-16px)]">
+                    {/* Mobile Sidebar Toggle Button */}
+                    <div
+                    onClick={toggleMobileSidebar}
+                    className="sm:hidden p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+                    >
+                        <Menu className="size-6" />
+                    </div>
+                    <div className="flex flex-col items-center space-y-1.5 p-3 max-w-[calc(100vw-68px)] rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow">
+                        <BreadcrumbNav/>
+                    </div>
                 </div>
                 <Card className="p-2 flex-1 overflow-y-auto w-full">
                     <CardContent className='h-full px-2'>
@@ -236,39 +263,43 @@ export default function ManageStudents() {
 const PaymentsPage = () => {
 
     const getRandomCourses = () => {
-        const shuffled = courses.slice(0,5).sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, Math.floor(Math.random() * courses.length) + 1).join(", ");
+        const shuffled = courses.map(c => `${c.name}(${c.code})`).slice(0,5).sort(() => 0.8 - Math.random());
+        return shuffled.slice(0, Math.floor(Math.random() * courses.length) + 1);
     };
+
+    const calculatePrices = (cs: string[]) => {
+        return cs.map(i => courses.find(c => `${c.name}(${c.code})` === i)?.standardPrice || 0).reduce((total, invoice) => total + invoice, 0)
+    }
 
     const invoices = [
         {
             registrationNumber: "2024001",
             paymentId: "SNZw8VEPWdp6PZQM",
-            totalAmount: 45000.00,
+            totalAmount: calculatePrices(getRandomCourses()),
             registeredCourses: getRandomCourses(),
         },
         {
             registrationNumber: "2024005",
             paymentId: "BtNSUZeXs7Lgfxpv",
-            totalAmount: 55000.00,
+            totalAmount: calculatePrices(getRandomCourses()),
             registeredCourses: getRandomCourses(),
         },
         {
             registrationNumber: "2024002",
             paymentId: "mHCUgMuAEia4HQaN",
-            totalAmount: 65000.00,
+            totalAmount: calculatePrices(getRandomCourses()),
             registeredCourses: getRandomCourses(),
         },
         {
             registrationNumber: "2024007",
             paymentId: "MSKR7rk0pDl2Giue",
-            totalAmount: 45000.00,
+            totalAmount: calculatePrices(getRandomCourses()),
             registeredCourses: getRandomCourses(),
         },
         {
             registrationNumber: "2024008",
             paymentId: "KYAOGzlPn7ps4c7c",
-            totalAmount: 55000.00,
+            totalAmount: calculatePrices(getRandomCourses()),
             registeredCourses: getRandomCourses(),
         }
     ];
@@ -286,12 +317,12 @@ const PaymentsPage = () => {
             </TableHeader>
             <TableBody>
                 {invoices.map((invoice) => (
-                <TableRow key={invoice.registrationNumber}>
-                    <TableCell className="font-medium">{invoice.registrationNumber}</TableCell>
-                    <TableCell>{invoice.registeredCourses}</TableCell>
-                    <TableCell>{invoice.paymentId}</TableCell>
-                    <TableCell className="text-right">{invoice.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                </TableRow>
+                    <TableRow key={invoice.registrationNumber}>
+                        <TableCell className="font-medium">{invoice.registrationNumber}</TableCell>
+                        <TableCell>{invoice.registeredCourses.join(", ")}</TableCell>
+                        <TableCell>{invoice.paymentId}</TableCell>
+                        <TableCell className="text-right">{invoice.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    </TableRow>
                 ))}
             </TableBody>
             <TableFooter>
@@ -682,7 +713,7 @@ const EditStudent = () => {
                                         <Label htmlFor="type">Student Type</Label>
                                         <div className="grid grid-cols-2 gap-2 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                                             {student?.type.map(t => (
-                                                <div className="flex items-center space-x-2" key={t}>
+                                                <div className="flex items-center space-x-2" key={t+8}>
                                                     <Checkbox id={t} defaultChecked />
                                                     <Label htmlFor={t}>{t}</Label>
                                                 </div>

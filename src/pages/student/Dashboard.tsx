@@ -88,7 +88,7 @@ export default function Dashboard() {
     }, [])
 
     const toggleMobileSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen)
+      setIsSidebarOpen(!isSidebarOpen)
     }
 
     useEffect(() => {
@@ -144,8 +144,9 @@ export default function Dashboard() {
             {/* Sidebar */}
             <div
                 className={`flex flex-col gap-2 m-2 h-[calc(100vh-16px)] overflow-y-auto fixed sm:relative sm:flex sm:translate-x-0 transition-transform duration-200 ease-in-out z-40 ${
-                    isSidebarOpen ? 'translate-x-0' : '-translate-x-[200%]'
+                  isSidebarOpen ? 'translate-x-0' : '-translate-x-[200%]'
                 }`}
+                onClick={toggleMobileSidebar}
             >
 
                 <Link to="/">
@@ -170,23 +171,23 @@ export default function Dashboard() {
 
                     
                     {sideItems && sideItems.map(item => (
-                        <div 
-                        key={item.title} 
-                        className={`flex ${type === item.title.toLowerCase() && isFull && 'bg-gray-200 dark:bg-gray-800'} ${isFull ? 'justify-start hover:bg-gray-200 dark:hover:bg-gray-800 p-2' : 'justify-center'} p-1 overflow-hidden rounded-full cursor-pointer relative w-full transition-colors`}
-                        onClick={() => navigate('/student-dashboard/' + item.title.toLowerCase())}
-                        >
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                      {isFull ? item.icon : <Av active={type === item.title.toLowerCase()}>{item.icon}</Av>}
-                                    </TooltipTrigger>
-                                    <TooltipContent side='right' sideOffset={8}>
-                                        Visit {item.title}
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                            {isFull && <span className="ml-2">{item.title}</span>}
-                        </div>
+                      <div 
+                      key={item.title} 
+                      className={`flex ${type === item.title.toLowerCase() && isFull && 'bg-gray-200 dark:bg-gray-800'} ${isFull ? 'justify-start hover:bg-gray-200 dark:hover:bg-gray-800 p-2' : 'justify-center'} p-1 overflow-hidden rounded-full cursor-pointer relative w-full transition-colors`}
+                      onClick={() => navigate('/student-dashboard/' + item.title.toLowerCase())}
+                      >
+                        <TooltipProvider>
+                          <Tooltip>
+                              <TooltipTrigger>
+                                {isFull ? item.icon : <Av active={type === item.title.toLowerCase()}>{item.icon}</Av>}
+                              </TooltipTrigger>
+                              <TooltipContent side='right' sideOffset={8}>
+                                Visit {item.title}
+                              </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        {isFull && <span className="ml-2">{item.title}</span>}
+                      </div>
                     ))}
 
                     <div 
@@ -198,13 +199,13 @@ export default function Dashboard() {
                     }
                     onClick={() => navigate('/student-dashboard/settings')}
                     >
-                        <Settings className={`w-5 h-5 group-hover:text-cyan-500 ${type === 'settings' && !isFull && '!text-cyan-500'} ${type === "settings" && "text-cyan-500"}`} />
-                        {isFull && <span className='dark:text-white'>Settings</span>}
+                      <Settings className={`w-5 h-5 group-hover:text-cyan-500 ${type === 'settings' && !isFull && '!text-cyan-500'} ${type === "settings" && "text-cyan-500"}`} />
+                      {isFull && <span className='dark:text-white'>Settings</span>}
                     </div>
 
-                    <div className='absolute bottom-3 p-2 rounded-full cursor-pointer flex items-center border hover:bg-gray-200 dark:hover:bg-gray-800' onClick={() => toggleSidebar(!isFull)}>
-                        {isFull && "Collapse"}
-                        {isFull ? <ChevronLeft className="cursor-pointer size-4 ml-1"  /> : <ChevronRight className="cursor-pointer size-4 ml-1" />}
+                    <div className='absolute bottom-3 p-2 rounded-full cursor-pointer flex items-center border hover:bg-gray-200 dark:hover:bg-gray-800' onClick={(e) => {e.stopPropagation();toggleSidebar(!isFull)}}>
+                      {isFull && "Collapse"}
+                      {isFull ? <ChevronLeft className="cursor-pointer size-4 ml-1"  /> : <ChevronRight className="cursor-pointer size-4 ml-1" />}
                     </div>
                 </div>
                 
@@ -215,10 +216,10 @@ export default function Dashboard() {
 
             {/* Overlay for Mobile */}
             {isSidebarOpen && (
-                <div
-                    className="sm:hidden fixed inset-0 bg-black/50 backdrop-blur-lg z-30"
-                    onClick={toggleMobileSidebar}
-                />
+              <div
+                className="sm:hidden fixed inset-0 bg-black/50 backdrop-blur-lg z-30"
+                onClick={toggleMobileSidebar}
+              />
             )}
 
             {/* Main Content */}

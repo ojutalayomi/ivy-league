@@ -2,8 +2,35 @@ import { Student } from "./types";
 import { User } from "./types";
 
 //"Business and Technology(BT), Management Accounting(MA), Financial Accounting(FA), Corporate and Business Law(CBL), Performance Management(PM), Taxation(TAX), Financial Reporting(FR), Audit and Assurance(AA), Financial Management(FM), Strategic Business Leaders(SBL), Strategic Business Reporting(SBR), Advanced Financial Management(AFM), Advanced Performance Management(APM), Advanced Taxation(ATX), Advanced Audit and Assurance(AAA), Oxford Brookes Mentoring(OBU), Diploma in IFRS(DipIFRS)"
+export interface Course {
+  category: string;
+  name: string;
+  code: string;
+  standardPrice: number;
+  revisionPrice?: number;
+}
 
-export const courses = [
+export const courses: Course[] = [
+  { category: 'Knowledge Papers', name: 'Business and Technology', code: 'BT', standardPrice: 30000, revisionPrice: 10000 },
+  { category: 'Knowledge Papers', name: 'Management Accounting', code: 'MA', standardPrice: 30000, revisionPrice: 10000 },
+  { category: 'Knowledge Papers', name: 'Financial Accounting', code: 'FA', standardPrice: 30000, revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Corporate and Business Law', code: 'CBL', standardPrice: 30000, revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Performance Management', code: 'PM', standardPrice: 30000, revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Taxation', code: 'TAX', standardPrice: 30000, revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Financial Reporting', code: 'FR', standardPrice: 30000, revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Audit and Assurance', code: 'AA', standardPrice: 30000, revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Financial Management', code: 'FM', standardPrice: 30000, revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Strategic Business Leaders', code: 'SBL', standardPrice: 45000, revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Strategic Business Reporting', code: 'SBR', standardPrice: 35000, revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Advanced Financial Management', code: 'AFM', standardPrice: 35000, revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Advanced Performance Management', code: 'APM', standardPrice: 35000, revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Advanced Taxation', code: 'ATX', standardPrice: 35000, revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Advanced Audit and Assurance', code: 'AAA', standardPrice: 35000, revisionPrice: 10000 },
+  { category: 'Additional', name: 'Oxford Brookes Mentoring', code: 'OBU', standardPrice: 90000 },
+  { category: 'Additional', name: 'Diploma in IFRS', code: 'DipIFRS', standardPrice: 75000 },
+];
+
+export const courses_ = [
     "Business and Technology(BT)",
     "Management Accounting(MA)",
     "Financial Accounting(FA)",
