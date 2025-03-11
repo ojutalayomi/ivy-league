@@ -350,7 +350,7 @@ const StudentList = () => {
     return (
         <div className='space-y-2'>
             <div className="bg-white dark:bg-gray-900 text-2xl font-bold sticky top-0 z-10">
-                {type === 'intensive' ? 'Intensive' : type === "Standard" ? 'Standard' : 'All'} Students ({filteredStudents().length})
+                {type === 'intensive' ? 'Intensive' : type === "Standard" ? 'Standard' : 'All'} Students ({filteredStudents()?.length})
             </div>
             <div className="flex flex-col gap-2">
             {filteredStudents().map(student => (
