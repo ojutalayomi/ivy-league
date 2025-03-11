@@ -449,7 +449,7 @@ const StudentCard = ({theStudent}: {theStudent?: Student}) => {
                                 Registration Number: {student.registrationNumber}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                Papers: {student.papers.join(', ')}
+                                Papers: {student.papers?.join(', ')}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                 Revision: {student.revision ? 'Yes' : 'No'}
@@ -568,7 +568,7 @@ const StudentView = () => {
                             Registration Number: {student.registrationNumber}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                            Papers: {student.papers.join(', ')}
+                            Papers: {student.papers?.join(', ')}
                             </p>
                             <p className="text-sm text-muted-foreground">
                             Revision: {student.revision ? 'Yes' : 'No'}
@@ -727,7 +727,7 @@ const EditStudent = () => {
                                     <div className="col-span-2 space-y-2">
                                         <Label>Papers</Label>
                                         <div className="grid grid-cols-2 gap-2 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                                            {student?.papers.map(paper => (
+                                            {student?.papers?.map(paper => (
                                                 <div className="flex items-center space-x-2" key={paper}>
                                                     <Checkbox id={paper} defaultChecked />
                                                     <Label htmlFor={paper}>{paper}</Label>

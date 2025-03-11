@@ -248,11 +248,11 @@ export default function Dashboard() {
                         <p className="font-normal text-white">Email: <b>{student?.email}</b></p>
                       </div>
                       <div className="space-y-2 text-right">
-                        <p className="font-normal text-white">Papers Registered: <b>{student?.papers.length}</b></p>
+                        <p className="font-normal text-white">Papers Registered: <b>{student?.papers?.length}</b></p>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                      {student?.type.map((type, index) => (
+                      {student?.type?.map((type, index) => (
                         <span key={index} className="px-3 py-1 text-sm bg-white/20 rounded-full text-white">
                           {type}
                         </span>
@@ -434,7 +434,7 @@ const ProfilePage = ({ student }: { student: Student }) => {
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium min-w-24">Papers:</span>
                                         <span className="text-muted-foreground">
-                                            {student.papers.join(', ')}
+                                            {student.papers?.join(', ')}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -486,19 +486,19 @@ const SettingsPage = ({ student }: { student: Student }) => {
                                 <div className="flex items-center justify-between">
                                     <span>Theme</span>
                                     <span className="text-muted-foreground capitalize">
-                                        {student.preferences.theme}
+                                        {student.preferences?.theme}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span>Language</span>
                                     <span className="text-muted-foreground capitalize">
-                                        {student.preferences.language}
+                                        {student.preferences?.language}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span>Notifications</span>
                                     <span className="text-muted-foreground capitalize">
-                                        {student.preferences.notifications}
+                                        {student.preferences?.notifications}
                                     </span>
                                 </div>
                             </div>
