@@ -9,6 +9,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface StepProps {
   register: UseFormRegister<FormSchemaType>;
@@ -21,36 +22,55 @@ export const Step1: React.FC<StepProps> = ({ register, errors }) => {
   const [showPassword1, setShowPassword1] = useState<boolean>(false)
   return (
     <div className="space-y-4">
+      <div>
+        <Label className='text-white sm:text-cyan-500' htmlFor="title">Title</Label>
+        <Select onValueChange={(value) => register('title').onChange({ target: { value, name: 'title' } })}>
+          <SelectTrigger className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary">
+            <SelectValue placeholder="Select a title" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Mr">Mr</SelectItem>
+            <SelectItem value="Mrs">Mrs</SelectItem>
+            <SelectItem value="Miss">Miss</SelectItem>
+          </SelectContent>
+        </Select>
+        {errors.title && (
+          <p className="text-sm text-red-500 mt-1">{errors.title.message}</p>
+        )}
+      </div>
       <div className="flex gap-4">
         <div className="flex-1">
-          <Label htmlFor="firstName">First Name</Label>
+          <Label className='text-white sm:text-cyan-500' htmlFor="firstname">First Name</Label>
           <Input
-            id="firstName"
-            {...register('firstName')}
+            id="firstname"
+            {...register('firstname')}
+            className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
             placeholder="John"
           />
-          {errors.firstName && (
-            <p className="text-sm text-red-500 mt-1">{errors.firstName.message}</p>
+          {errors.firstname && (
+            <p className="text-sm text-red-500 mt-1">{errors.firstname.message}</p>
           )}
         </div>
         <div className="flex-1">
-          <Label htmlFor="lastName">Last Name</Label>
+          <Label className='text-white sm:text-cyan-500' htmlFor="lastname">Last Name</Label>
           <Input
-            id="lastName"
-            {...register('lastName')}
+            id="lastname"
+            {...register('lastname')}
+            className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
             placeholder="Doe"
           />
-          {errors.lastName && (
-            <p className="text-sm text-red-500 mt-1">{errors.lastName.message}</p>
+          {errors.lastname && (
+            <p className="text-sm text-red-500 mt-1">{errors.lastname.message}</p>
           )}
         </div>
       </div>
       <div>
-        <Label htmlFor="email">Email</Label>
+        <Label className='text-white sm:text-cyan-500' htmlFor="email">Email</Label>
         <Input
           id="email"
           type="email"
           {...register('email')}
+          className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
           placeholder="john.doe@example.com"
         />
         {errors.email && (
@@ -59,19 +79,20 @@ export const Step1: React.FC<StepProps> = ({ register, errors }) => {
       </div>
       <div className='flex gap-4'>
         <div>
-          <Label htmlFor="phoneNumber">Phone Number</Label>
+          <Label className='text-white sm:text-cyan-500' htmlFor="phone">Phone Number</Label>
           <Input
-            id="phoneNumber"
+            id="phone"
             type="tel"
-            {...register('phoneNumber')}
+            {...register('phone')}
+            className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
             placeholder="(123) 456-7890"
           />
-          {errors.phoneNumber && (
-            <p className="text-sm text-red-500 mt-1">{errors.phoneNumber.message}</p>
+          {errors.phone && (
+            <p className="text-sm text-red-500 mt-1">{errors.phone.message}</p>
           )}
         </div>
         <div>
-          <Label htmlFor="dob">Date of Birth</Label>
+          <Label className='text-white sm:text-cyan-500' htmlFor="dob">Date of Birth</Label><br/>
           <DatePicker register={register}/>
           {errors.dob && (
             <p className="text-sm text-red-500 mt-1">{errors.dob.message}</p>
@@ -79,12 +100,13 @@ export const Step1: React.FC<StepProps> = ({ register, errors }) => {
         </div>
       </div>
       <div>
-        <Label htmlFor="password">Password</Label>
+        <Label className='text-white sm:text-cyan-500' htmlFor="password">Password</Label>
         <div className='relative'>
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
             {...register('password')}
+            className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
           />
           <button
             type="button"
@@ -103,12 +125,13 @@ export const Step1: React.FC<StepProps> = ({ register, errors }) => {
         )}
       </div>
       <div>
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Label className='text-white sm:text-cyan-500' htmlFor="confirmPassword">Confirm Password</Label>
         <div className='relative'>
           <Input
           id="confirmPassword"
           type={showPassword1 ? "text" : "password"}
           {...register('confirmPassword')}
+          className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
           placeholder="Confirm Password"
           />
           <button
@@ -142,8 +165,8 @@ export function DatePicker({ register }: { register: UseFormRegister<FormSchemaT
           type="button"
           variant={"outline"}
           className={cn(
-            "justify-start text-left font-normal truncate",
-            !date && "text-muted-foreground"
+            "justify-start text-left font-normal truncate bg-cyan-500 hover:bg-cyan-400 text-white border-none sm-border",
+            !date && "bg-cyan-600"
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />

@@ -5,7 +5,7 @@ import { courses, students } from '@/lib/data';
 import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, EditIcon, GraduationCap, Menu, Search, Settings, Users, Wallet } from 'lucide-react';
 import { Link, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Student, UserType } from '@/lib/types';
+import { Student } from '@/lib/types';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -268,7 +268,7 @@ const PaymentsPage = () => {
     };
 
     const calculatePrices = (cs: string[]) => {
-        return cs.map(i => courses.find(c => `${c.name}(${c.code})` === i)?.standardPrice || 0).reduce((total, invoice) => total + invoice, 0)
+        return cs.map(i => courses.find(c => `${c.name}(${c.code})` === i)?.price || 0).reduce((total, invoice) => total + invoice, 0)
     }
 
     const invoices = [
@@ -343,8 +343,7 @@ const StudentList = () => {
     }, [type]);
 
     const filteredStudents = () => {
-        if (type !== 'all') return students.filter(student => student.type.includes(type as UserType))
-        else return students    
+        return students    
     }
 
     return (
@@ -435,7 +434,6 @@ const StudentCard = ({theStudent}: {theStudent?: Student}) => {
                                 <div className="text-sm text-muted-foreground">
                                     <div className="flex flex-col gap-1">
                                         <span>Level: {student.preferences.level.toLocaleUpperCase()}</span>
-                                        <span>Type: {student.type.join(', ').toLocaleUpperCase()}</span>
                                         <span>Gender: {student.gender.toLocaleUpperCase()}</span>
                                         <span>Date of Birth: {format(new Date(student.dateOfBirth), 'dd MMMM yyyy')}</span>
                                         <span>Email: {student.email}</span>
@@ -554,7 +552,6 @@ const StudentView = () => {
                             <div className="text-sm text-muted-foreground">
                                 <div className="flex flex-col gap-1">
                                     <span>Level: {student.preferences.level.toLocaleUpperCase()}</span>
-                                    <span>Type: {student.type.join(', ').toLocaleUpperCase()}</span>
                                     <span>Gender: {student.gender.toLocaleUpperCase()}</span>
                                     <span>Date of Birth: {format(new Date(student.dateOfBirth), 'dd MMMM yyyy')}</span>
                                     <span>Email: {student.email}</span>
@@ -708,17 +705,6 @@ const EditStudent = () => {
                                     <div className="space-y-2">
                                         <Label htmlFor="registrationNumber">Registration Number</Label>
                                         <Input id="registrationNumber" defaultValue={student?.registrationNumber} placeholder="Enter registration number" />
-                                    </div>
-                                    <div className="col-span-2 space-y-2">
-                                        <Label htmlFor="type">Student Type</Label>
-                                        <div className="grid grid-cols-2 gap-2 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                                            {student?.type.map(t => (
-                                                <div className="flex items-center space-x-2" key={t+8}>
-                                                    <Checkbox id={t} defaultChecked />
-                                                    <Label htmlFor={t}>{t}</Label>
-                                                </div>
-                                            ))}
-                                        </div>
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         <Label htmlFor="revision">Revision</Label>

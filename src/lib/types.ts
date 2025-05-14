@@ -33,7 +33,7 @@ export type Student = {
     gender: 'male' | 'female' | 'other';
     preferences: StudentPreferences;
     role: 'student' | 'admin';
-    type: UserType[];
+    // type: UserType[];
     paymentDetails: UserPaymentDetails;
 }
 
@@ -82,23 +82,26 @@ export type UserPaymentDetails = {
 }
 
 export type SignUpData = {
-    firstName: string;
-    lastName: string;
+    title: 'Mr' | 'Mrs' | 'Miss';
+    firstname: string;
+    lastname: string;
     role: 'admin' | 'student';
     email: string;
     dob: string;
-    phoneNumber: string;
+    phone: string;
     password: string;
+    gender: 'male' | 'female'
 }
-
 export const formSchema = z.object({
-    firstName: z.string().min(2, 'First name must be at least 2 characters'),
-    lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+    title: z.enum(['Mr', 'Mrs', 'Miss']),
+    firstname: z.string().min(2, 'First name must be at least 2 characters'),
+    lastname: z.string().min(2, 'Last name must be at least 2 characters'),
     email: z.string().email('Invalid email address'),
     dob: z.string({
         required_error: "A date of birth is required.",
     }),
-    phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
+    gender: z.enum(['male', 'female']).optional(),
+    phone: z.string().min(10, 'Phone number must be at least 10 digits'),
     password: z.string()
       .min(8, 'Password must be at least 8 characters')
       .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')

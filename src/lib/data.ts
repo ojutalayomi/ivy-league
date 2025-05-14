@@ -6,28 +6,29 @@ export interface Course {
   category: string;
   name: string;
   code: string;
-  standardPrice: number;
+  price: number;
   revisionPrice?: number;
+  type?: 'standard' | 'intensive'
 }
 
 export const courses: Course[] = [
-  { category: 'Knowledge Papers', name: 'Business and Technology', code: 'BT', standardPrice: 30000, revisionPrice: 10000 },
-  { category: 'Knowledge Papers', name: 'Management Accounting', code: 'MA', standardPrice: 30000, revisionPrice: 10000 },
-  { category: 'Knowledge Papers', name: 'Financial Accounting', code: 'FA', standardPrice: 30000, revisionPrice: 10000 },
-  { category: 'Skill Papers', name: 'Corporate and Business Law', code: 'CBL', standardPrice: 30000, revisionPrice: 10000 },
-  { category: 'Skill Papers', name: 'Performance Management', code: 'PM', standardPrice: 30000, revisionPrice: 10000 },
-  { category: 'Skill Papers', name: 'Taxation', code: 'TAX', standardPrice: 30000, revisionPrice: 10000 },
-  { category: 'Skill Papers', name: 'Financial Reporting', code: 'FR', standardPrice: 30000, revisionPrice: 10000 },
-  { category: 'Skill Papers', name: 'Audit and Assurance', code: 'AA', standardPrice: 30000, revisionPrice: 10000 },
-  { category: 'Skill Papers', name: 'Financial Management', code: 'FM', standardPrice: 30000, revisionPrice: 10000 },
-  { category: 'Professional Papers', name: 'Strategic Business Leaders', code: 'SBL', standardPrice: 45000, revisionPrice: 10000 },
-  { category: 'Professional Papers', name: 'Strategic Business Reporting', code: 'SBR', standardPrice: 35000, revisionPrice: 10000 },
-  { category: 'Professional Papers', name: 'Advanced Financial Management', code: 'AFM', standardPrice: 35000, revisionPrice: 10000 },
-  { category: 'Professional Papers', name: 'Advanced Performance Management', code: 'APM', standardPrice: 35000, revisionPrice: 10000 },
-  { category: 'Professional Papers', name: 'Advanced Taxation', code: 'ATX', standardPrice: 35000, revisionPrice: 10000 },
-  { category: 'Professional Papers', name: 'Advanced Audit and Assurance', code: 'AAA', standardPrice: 35000, revisionPrice: 10000 },
-  { category: 'Additional', name: 'Oxford Brookes Mentoring', code: 'OBU', standardPrice: 90000 },
-  { category: 'Additional', name: 'Diploma in IFRS', code: 'DipIFRS', standardPrice: 75000 },
+  { category: 'Knowledge Papers', name: 'Business and Technology', code: 'BT', price: 30000, revisionPrice: 10000 },
+  { category: 'Knowledge Papers', name: 'Management Accounting', code: 'MA', price: 30000, revisionPrice: 10000 },
+  { category: 'Knowledge Papers', name: 'Financial Accounting', code: 'FA', price: 30000, revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Corporate and Business Law', code: 'CBL', price: 30000, revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Performance Management', code: 'PM', price: 30000, revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Taxation', code: 'TAX', price: 30000, revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Financial Reporting', code: 'FR', price: 30000, revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Audit and Assurance', code: 'AA', price: 30000, revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Financial Management', code: 'FM', price: 30000, revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Strategic Business Leaders', code: 'SBL', price: 45000, revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Strategic Business Reporting', code: 'SBR', price: 35000, revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Advanced Financial Management', code: 'AFM', price: 35000, revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Advanced Performance Management', code: 'APM', price: 35000, revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Advanced Taxation', code: 'ATX', price: 35000, revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Advanced Audit and Assurance', code: 'AAA', price: 35000, revisionPrice: 10000 },
+  { category: 'Additional', name: 'Oxford Brookes Mentoring', code: 'OBU', price: 90000 },
+  { category: 'Additional', name: 'Diploma in IFRS', code: 'DipIFRS', price: 75000 },
 ];
 
 export const courses_ = [
@@ -190,7 +191,6 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: ["intensive", "standard"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -226,7 +226,6 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: ["standard"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",
@@ -262,7 +261,6 @@ export const students: Student[] = [
             emailTime: "afternoon"
         },
         role: "student",
-        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "bankTransfer",
             paymentStatus: "active",
@@ -298,7 +296,6 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: ["standard"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -334,7 +331,6 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",
@@ -370,7 +366,6 @@ export const students: Student[] = [
             emailTime: "afternoon"
         },
         role: "student",
-        type: ["standard"],
         paymentDetails: {
             paymentMethod: "bankTransfer",
             paymentStatus: "active",
@@ -406,7 +401,6 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -442,7 +436,6 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: ["standard"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",
@@ -478,7 +471,6 @@ export const students: Student[] = [
             emailTime: "afternoon"
         },
         role: "student",
-        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "bankTransfer",
             paymentStatus: "active",
@@ -514,7 +506,6 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: ["standard"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -550,7 +541,6 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",
@@ -586,7 +576,6 @@ export const students: Student[] = [
             emailTime: "afternoon"
         },
         role: "student",
-        type: ["standard"],
         paymentDetails: {
             paymentMethod: "bankTransfer",
             paymentStatus: "active",
@@ -622,7 +611,6 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -658,7 +646,6 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: ["standard"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",
@@ -694,7 +681,6 @@ export const students: Student[] = [
             emailTime: "afternoon"
         },
         role: "student",
-        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "bankTransfer",
             paymentStatus: "active",
@@ -730,7 +716,6 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: ["standard"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -766,7 +751,6 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",
@@ -802,7 +786,6 @@ export const students: Student[] = [
             emailTime: "afternoon"
         },
         role: "student",
-        type: ["standard"],
         paymentDetails: {
             paymentMethod: "bankTransfer",
             paymentStatus: "active",
@@ -838,7 +821,6 @@ export const students: Student[] = [
             emailTime: "morning"
         },
         role: "student",
-        type: ["intensive"],
         paymentDetails: {
             paymentMethod: "creditCard",
             paymentStatus: "active",
@@ -874,7 +856,6 @@ export const students: Student[] = [
             emailTime: "evening"
         },
         role: "student",
-        type: ["standard"],
         paymentDetails: {
             paymentMethod: "paypal",
             paymentStatus: "active",

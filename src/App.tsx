@@ -11,6 +11,7 @@ import Error404Page from '@/components/404'
 import Dashboard from '@/pages/student/Dashboard'
 import { Provider } from 'react-redux';
 import { store } from '@/redux/store'
+import AdditionalInfo from './pages/AdditionalInfo'
 // import './App.css'
 
 function App() {
@@ -53,11 +54,12 @@ function Router() {
           } />
           <reactRouterDom.Route path="/accounts/signin" element={<SignIn />} />
           <reactRouterDom.Route path="/accounts/signup" element={<SignUp />} />
+          <reactRouterDom.Route path="/accounts/additional-info" element={<AdditionalInfo />} />
           <reactRouterDom.Route path="/*" element={<Error404Page />} />
         </reactRouterDom.Routes>
-        <div className="absolute bottom-0 mb-4 mr-4 right-0 z-50">
-          <ModeToggle />
-        </div>
+      </div>
+      <div className="absolute bottom-0 mb-4 mr-4 right-0 z-[100]">
+        <ModeToggle />
       </div>
     </div>
   )

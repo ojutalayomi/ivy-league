@@ -251,13 +251,6 @@ export default function Dashboard() {
                         <p className="font-normal text-white">Papers Registered: <b>{student?.papers?.length}</b></p>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                      {student?.type?.map((type, index) => (
-                        <span key={index} className="px-3 py-1 text-sm bg-white/20 rounded-full text-white">
-                          {type}
-                        </span>
-                      ))}
-                    </div>
                   </div>
 
                   <Tabs defaultValue={'home'} value={type} onValueChange={(value) => navigate(`/student-dashboard/${value}`)}>

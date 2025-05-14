@@ -19,8 +19,9 @@ import Logo from "@/assets/ivyLight.png";
 import LogoDark from "@/assets/ivyDark.png";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { students, users } from "@/lib/data";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { api } from "@/lib/api";
+import { AxiosError } from "axios";
 
 export default function SignIn() {
     // const dispatch = useDispatch()
@@ -36,8 +37,8 @@ export default function SignIn() {
     const [usersList, setUsersList] = useState<User[]>([])
 
     useEffect(() => {
-      document.title = "Sign In - Ivy League Associates";
-    }, []);
+      document.title = "Sign In - Ivy League Associates" + accountType;
+    }, [accountType]);
 
     useEffect(() => {
         const storedUsers = localStorage.getItem('ivy_users_list')
@@ -88,72 +89,36 @@ export default function SignIn() {
         try {
             isLoading(true)
             const userData = {
-                email: email,
-                password: password
+              type: 'email',
+              email: email,
+              password: password
             }
 
-            const user = (() => {
-              if(accountType === 'admin') {
-                return users.find(u => u.email === email)
-              } else {
-                return students.find(s => s.registrationNumber === email)
-              }
-            })()
-            if (user) {
-              if (password === user.name.toLowerCase().split(' ')[1]) localStorage.setItem("ivy-user", JSON.stringify(user))
-              else throw Error("Invalid password")  
-            } else {
-              throw Error("User not found!")
-            }
-
-            /* FETCH */
-            // const response = await fetch(import.meta.env.VITE_API_URL+'/users/signin', {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json'
-            //     },
-            //     body: JSON.stringify(userData)
-            // })
-
-            // if (response.status === 200) {
-            //     const data = await response.json()
-            //     navigate(`/pet/${data.id}`)
+            // const user = (() => {
+            //   if(accountType === 'admin') {
+            //     return users.find(u => u.email === email)
+            //   } else {
+            //     return students.find(s => s.registrationNumber === email)
+            //   }
+            // })()
+            // if (user) {
+            //   if (password === user.name.toLowerCase().split(' ')[1]) localStorage.setItem("ivy-user", JSON.stringify(user))
+            //   else throw Error("Invalid password")  
+            // } else {
+            //   throw Error("User not found!")
             // }
 
             /* AXIOS */
-            // const response = await axios.post(
-            //     import.meta.env.VITE_API_URL+'/users/signin',
-            //     userData,
-            //     { headers: { 'Content-Type': 'application/json' } }
-            // )
+            const response = await api.post('/signin?api-key=AyomideEmmanuel', userData)
 
-            // if (response.status === 200) {
-            //     const cookie = setCookie({
-            //       avatar: response.data.user?.avatar,
-            //       name: response.data.user.firstName + ' ' + response.data.user.lastName,
-            //       role: response.data.user.role,
-            //       username: response.data.user.username, 
-            //       token: response.data.token
-            //     });
-            //     if (!cookie) {
-            //       dispatch(setUser(response.data.user))
-            //       toast({
-            //         title: "You have signed in succesfully.",
-            //       })
-            //       isLoading(false)
-            //       if (redirect) {
-            //         navigate(redirect)
-            //       } else {
-            //         navigate(`/`)
-            //       }
-            //     } else {
-            //       toast({
-            //         variant: 'destructive',
-            //         title: "Oops!", 
-            //         description: cookie
-            //       })
-            //     } 
-            // }
+            console.log(response)
+
+            if (response.status !== 200) {
+              console.log(response.data.error)
+              console.log(Object.entries(response.data.error))
+              throw Error(Object.entries(response.data.error)[0].join())
+            }
+
             toast({
               title: "You have signed in succesfully.",
               description: JSON.stringify(userData)
@@ -162,21 +127,21 @@ export default function SignIn() {
 
         } catch (error: unknown) {
             console.error('error', error)
-            
-            // const axiosError = error as AxiosError<{error: string}>
-            // if (!axiosError.response?.data) {
-            //     toast({
-            //         variant: 'destructive', 
-            //         title: "Oops!",
-            //         description: "An error occurred"
-            //     })
-            //     return
-            // }
+            const [title, description] = (error as string).split(',')
+            const axiosError = error as AxiosError<{error: string}>
+            if (!axiosError.response?.data) {
+                toast({
+                    variant: 'destructive', 
+                    title: "Oops!",
+                    description: "An error occurred"
+                })
+                return
+            }
 
             toast({
-                variant: 'destructive',
-                title: "Oops!", 
-                description: JSON.stringify(error)
+              variant: 'destructive',
+              title: title, 
+              description: description
             })
             isLoading(false)
         } finally {
@@ -186,24 +151,24 @@ export default function SignIn() {
     
     return (
       <div className={`flex min-h-full flex-1 flex-col items-center justify-center px-6 py-12 lg:px-8`}>
-        <Card className="min-[641px]:min-w-[640px] mx-auto">
+        <div className="max-[640px]:flex hidden items-center justify-center gap-2 sm:mx-auto sm:w-full sm:max-w-sm">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-cyan-500 text-white">
+            <UsersRound className="size-4" />
+          </div>
+          <span className="truncate text-xl font-semibold text-white">IVY LEAGUE ASSOCIATES</span>
+        </div>
+        <Card className="min-[641px]:min-w-[640px] mx-auto bg-transparent dark:bg-transparent border-none shadow-none sm:bg-white dark:sm:bg-gray-900 sm:border sm:shadow">
           <CardHeader>
             <CardTitle className="text-2xl/9 font-bold tracking-tight text-center text-cyan-500">Sign in to your account</CardTitle>
-            <CardDescription className="text-center text-muted-foreground">Enter your credentials to access your account</CardDescription>
+            <CardDescription className="text-center text-white">Enter your credentials to access your account</CardDescription>
           </CardHeader>
-          <CardContent className="flex max-[640px]:flex-wrap gap-2 items-center justify-center">
-            <div className="max-[640px]:flex hidden items-center justify-center gap-2 sm:mx-auto sm:w-full sm:max-w-sm">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <UsersRound className="size-4" />
-              </div>
-              <span className="truncate text-xl font-semibold">IVY LEAGUE ASSOCIATES</span>
-            </div>
+          <CardContent className="flex max-[640px]:flex-wrap gap-2 items-center justify-center p-0 sm:p-6 sm:pt-0">
             <div className="max-[640px]:hidden flex sm:w-full sm:h-full sm:max-w-sm">
               <img src={Logo} alt="Ivy League" className="dark:hidden w-80 h-80 mx-auto" />
               <img src={LogoDark} alt="Ivy League" className="hidden dark:block h-80 mx-auto" />
             </div>
 
-            <div className="sm:w-full sm:max-w-sm">
+            <div className="sm:w-full sm:max-w-sm flex-1 sm:flex-auto">
               {usersList.length > 0 && (
                 <div className="mb-6">
                   <h3 className="text-sm font-medium mb-2 text-cyan-500">Sign in as:</h3>
@@ -253,10 +218,9 @@ export default function SignIn() {
               }} 
               className="space-y-4">
                 <Tabs defaultValue='student' onValueChange={(type) => setAccountType(type)}>
-                  {/* <TabsTrigger value="option"></TabsTrigger> */}
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="admin">Admin</TabsTrigger>
-                    <TabsTrigger value="student">Student</TabsTrigger>
+                  <TabsList className="bg-blue-50 dark:bg-muted/20 dark:border h-auto rounded-full grid w-full grid-cols-2">
+                    <TabsTrigger value="admin" className="data-[state=active]:bg-cyan-500 data-[state=active]:hover:bg-cyan-400 data-[state=active]:text-white rounded-full">Admin</TabsTrigger>
+                    <TabsTrigger value="student" className="data-[state=active]:bg-cyan-500 data-[state=active]:hover:bg-cyan-400 data-[state=active]:text-white rounded-full">Student</TabsTrigger>
                   </TabsList>
                   <TabsContent value="admin">
                     <div>
@@ -273,7 +237,7 @@ export default function SignIn() {
                           onChange={e => setEmail(e.target.value)}
                           required
                           autoComplete="email"
-                          className="block w-full rounded-md border-0 px-2 py-1.5 dark:text-gray-100 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
+                          className="block w-full rounded-md border-0 px-2 py-1.5 text-white sm:dark:text-gray-100 sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
                         />
                       </div>
                     </div>
@@ -293,7 +257,7 @@ export default function SignIn() {
                           onChange={e => setEmail(e.target.value)}
                           required
                           autoComplete="registrationNumber"
-                          className="block w-full rounded-md border-0 px-2 py-1.5 dark:text-gray-100 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
+                          className="block w-full rounded-md border-0 px-2 py-1.5 text-white sm:dark:text-gray-100 sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
                         />
                       </div>
                     </div>
@@ -321,7 +285,7 @@ export default function SignIn() {
                       onChange={e => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="block w-full rounded-md border-0 px-3 py-1.5 dark:text-gray-100 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6"
+                      className="block w-full rounded-md border-0 px-3 py-1.5 text-white sm:dark:text-gray-100 sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6"
                     />
                     <button
                       type="button"
@@ -348,13 +312,7 @@ export default function SignIn() {
                 </div>
               </form>
 
-              {/* <p className="mt-10 text-center text-sm/6 text-gray-500">
-                Not a member?{' '}
-                <Link to="/accounts/free-trial" className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50">
-                  Start a 14 day free trial
-                </Link>
-              </p> */}
-              <p className="mt-2 text-center text-sm/6 text-gray-500">
+              <p className="mt-2 text-center text-sm/6 text-white sm:text-gray-500">
                 Don't have an account?{' '}
                 <Link to="/accounts/signup" className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50">
                   Sign up
