@@ -1,17 +1,17 @@
 import { Card, CardContent, } from '@/components/ui/card';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { students } from '@/lib/data';
-import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Search, Settings, User, Users, Menu } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Settings, User, Menu } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { Student } from '@/lib/types';
 import { forwardRef, useCallback, useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import Error404Page from '@/components/404';
 import { cn } from '@/lib/utils';
-import CourseRegistration from './CoureRegistration';
+import CourseRegistration from './PapersRegistration';
 import { Button } from '@/components/ui/button';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { Dialog, DialogTitle, DialogHeader, DialogContent, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -24,37 +24,42 @@ interface AvProps {
 const CoursePageItems = [
   {
     title: "Register",
-    description: "Register for a course",
-    path: "/student-dashboard/courses/register"
+    description: "Register for a paper",
+    path: "/student-dashboard/papers/register"
   },
   {
-    title: "View Courses", 
-    description: "View your registered courses",
-    path: "/student-dashboard/courses/view"
+    title: "View Papers", 
+    description: "View your registered papers",
+    path: "/student-dashboard/papers/view"
   },
   {
-    title: "Print Courses",
-    description: "Print course materials",
-    path: "/student-dashboard/courses/print"
+    title: "Print Papers",
+    description: "Print paper materials",
+    path: "/student-dashboard/papers/print"
   }
 ]
 
 const HomePageItems = [
   {
-    title: "Courses", 
-    description: "Visit the courses page",
-    path: "/student-dashboard/courses"
+    title: "Papers", 
+    description: "Visit the papers page",
+    path: "/student-dashboard/papers"
   },
   {
     title: "Payments",
     description: "Visit the payments page",
     path: "/student-dashboard/payments"
-  },
-  {
-    title: "Resources",
-    description: "Visit the resources page",
-    path: "/student-dashboard/resources"
-  }
+    },
+    {
+      title: "Resources",
+      description: "Visit the resources page",
+      path: "/student-dashboard/resources"
+    },
+    {
+      title: "Additional Info",
+      description: "Visit the additional info page",
+      path: "/accounts/additional-info"
+    }
 ]
 
 const Av = forwardRef<HTMLSpanElement, AvProps>(({ active, className, children }, ref) => (
@@ -72,15 +77,12 @@ export default function Dashboard() {
     const type = location.pathname.split('/').pop()
     const [isFull, setIsFull] = useState(false)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-    const [student, setStudent] = useState<Student>()
+    const user = useSelector((state: RootState) => state.user)
     
     useEffect(() => {
         document.title = "Students - Ivy League Associates";
     }, []);
     
-    useEffect(() => {
-        setStudent(localStorage.getItem("ivy-user") ? JSON.parse(localStorage.getItem("ivy-user") || '{}') : {})
-    }, []);
 
     const toggleSidebar = useCallback((value: boolean) => {
         localStorage.setItem('sidebar', JSON.stringify(value))
@@ -117,7 +119,7 @@ export default function Dashboard() {
         icon: <Home className={`size-4 ${isFull && 'mr-1'}`} />
       },
       {
-        title: "Courses", 
+        title: "Papers", 
         icon: <BookOpen className={`size-4 ${isFull && 'mr-1'}`} />
       },
       {
@@ -161,13 +163,6 @@ export default function Dashboard() {
                 </Link>
 
                 <div className={`flex flex-col flex-1 items-center gap-2 ${isFull ? 'p-2 rounded-3xl' : 'px-1 py-2 rounded-[2rem]'} text-sm border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground relative shadow`}>
-                    <div 
-                    className={`flex items-center ${type === 'search' && (isFull ? 'bg-gray-200 dark:bg-gray-800' : '!border-cyan-500')} ${isFull ? 'hover:bg-gray-200 dark:hover:bg-gray-800 justify-start w-full' : 'justify-center group hover:border-cyan-500'} p-2 rounded-full border border-slate-300 overflow-hidden cursor-pointer relative`}
-                    onClick={() => navigate('/student-dashboard/search')}
-                    >
-                        <Search className={`size-4 text-muted-foreground group-hover:text-cyan-500 ${type === 'search' && !isFull && '!text-cyan-500'} ${isFull && 'mr-1'}`} />
-                        {isFull && 'Search'}
-                    </div>
 
                     
                     {sideItems && sideItems.map(item => (
@@ -240,35 +235,32 @@ export default function Dashboard() {
               <Card className="p-2 flex-1 overflow-y-auto w-full">
                 <CardContent className='px-2 py-2 space-y-4'>
 
-                  <div className="block space-y-4 p-6 max-[639px]:text-center bg-cyan-500 border border-gray-200 rounded-lg shadow hover:bg-cyan-400 dark:border-gray-700">
+                  {!location.pathname.includes('profile') && (<div className="block space-y-4 p-6 max-[639px]:text-center hover:border-cyan-500 bg-cyan-100/30 backdrop-blur-sm hover:bg-cyan-100/30 transition-all duration-200 rounded-xl shadow-sm hover:shadow-md border">
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                       <div className="space-y-2">
-                        <h5 className="text-xl font-bold tracking-tight text-white">{student?.name}</h5>
-                        <p className="font-normal text-white">Registration Number: <b>{student?.registrationNumber}</b></p>
-                        <p className="font-normal text-white">Email: <b>{student?.email}</b></p>
-                      </div>
-                      <div className="space-y-2 text-right">
-                        <p className="font-normal text-white">Papers Registered: <b>{student?.papers?.length}</b></p>
+                        <h5 className="text-xl font-bold tracking-tight dark:text-white">{user.firstname} {user.lastname}</h5>
+                        <p className="font-normal dark:text-white">Registration Number: <b>{user.reg_no || 'N/A'}</b></p>
+                        <p className="font-normal dark:text-white">Email: <b>{user.email || 'N/A'}</b></p>
                       </div>
                     </div>
-                  </div>
+                  </div>)}
 
                   <Tabs defaultValue={'home'} value={type} onValueChange={(value) => navigate(`/student-dashboard/${value}`)}>
                       <Routes>
-                        <Route path="/" element={<Navigate to="/student-dashboard/home" />} />
+                        <Route path="/" element={<Navigate to="/student-dashboard/home" replace />} />
                         <Route path="home" element={
                           <TabsContent value="home">
-                            <CoursesPage menuItems={HomePageItems}/>
+                            <PapersPage menuItems={HomePageItems}/>
                           </TabsContent>
                         } />
                         <Route path="profile" element={
                           <TabsContent value="profile">
-                            {student && <ProfilePage student={student} />}
+                            <ProfilePage />
                           </TabsContent>
                         } />
-                        <Route path="courses/*" element={
+                        <Route path="papers/*" element={
                           <Routes>
-                            <Route path="/" element={<CoursesPage menuItems={CoursePageItems}/>} />
+                            <Route path="/" element={<PapersPage menuItems={CoursePageItems}/>} />
                             <Route path="register" element={
                               <TabsContent value="register">
                                 <CourseRegistration/>
@@ -276,27 +268,22 @@ export default function Dashboard() {
                             } />
                             <Route path="view" element={
                               <TabsContent value="view">
-                                <CoursesPage menuItems={CoursePageItems}/>
+                                <PapersPage menuItems={CoursePageItems}/>
                               </TabsContent>
                             } />
                             <Route path="print" element={
                               <TabsContent value="print">
-                                <CoursesPage menuItems={CoursePageItems}/>
+                                <PapersPage menuItems={CoursePageItems}/>
                               </TabsContent>
                             } />
                           </Routes>
-                        } />
-                        <Route path="search" element={
-                          <TabsContent value="search">
-                            <SearchPage/>
-                          </TabsContent>
                         } />
                         <Route path="*" element={
                           <Error404Page/>
                         } />
                         <Route path="settings" element={
                           <TabsContent value="settings">
-                            {student && <SettingsPage student={student}/>}
+                            {user.reg_no && <SettingsPage />}
                           </TabsContent>
                         } />
                       </Routes>
@@ -310,7 +297,7 @@ export default function Dashboard() {
                       <div className="mt-4 space-y-2">
                         <p className="text-gray-700 dark:text-gray-300">Welcome to the new student dashboard! We're excited to have you here.</p>
                         <p className="text-gray-700 dark:text-gray-300">Registration for the next semester opens on January 15th, 2025.</p>
-                        <p className="text-gray-700 dark:text-gray-300">Check out our new course materials in the Resources section.</p>
+                        <p className="text-gray-700 dark:text-gray-300">Check out our new paper materials in the Resources section.</p>
                       </div>
                     </details>
                   </section>
@@ -321,11 +308,14 @@ export default function Dashboard() {
     )
 }
 
-const CoursesPage = ({ menuItems }:{ menuItems: typeof CoursePageItems }) => {
+const PapersPage = ({ menuItems }:{ menuItems: typeof CoursePageItems }) => {
+  const user = useSelector((state: RootState) => state.user)
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <div className="w-full">
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {menuItems.map((item, index) => (
             <Link 
               key={index}
@@ -337,65 +327,37 @@ const CoursesPage = ({ menuItems }:{ menuItems: typeof CoursePageItems }) => {
             </Link>
           ))}
         </div>
+        <Dialog open={user.user_status === 'signee' && location.pathname.includes('papers')} onOpenChange={() => {}}>
+          <DialogContent className='dark:bg-gray-900 dark:border-gray-700'>
+            <DialogHeader>
+              <DialogTitle>
+                Registration Status
+              </DialogTitle>
+            </DialogHeader>
+            <DialogDescription>
+              You need to complete your registration to access this page.
+            </DialogDescription>
+            <DialogFooter className='flex flex-row sm:justify-center'>
+              <Button className='bg-cyan-500 hover:bg-cyan-400 text-white' variant="outline" onClick={() => navigate('/accounts/additional-info')}>
+                Complete Registration
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
   )
 }
 
-const SearchPage = () => {
-    const [search, setSearch] = useState('')
-    const [results, setResults] = useState<Student[]>([])
-
-    useEffect(() => {
-        document.title = "Search Students - Ivy League Associates"
-    }, [])
-
-    const handleSearch = (value: string) => {
-        setSearch(value)
-        const filtered = students.filter(student => 
-            student.name.toLowerCase().includes(value.toLowerCase()) || 
-            student.registrationNumber.toLowerCase().includes(value.toLowerCase())
-        )
-        setResults(filtered)
-    }
-
-    return (
-        <div className='space-y-4'>
-            <Input 
-                placeholder="Search by name or registration number" 
-                className="w-full"
-                value={search}
-                onChange={(e) => handleSearch(e.target.value)}
-            />
-            
-            {search && (
-                <div className="flex flex-col gap-2">
-                    <div className="text-muted-foreground text-sm">
-                        Found {results.length} student{results.length !== 1 ? 's' : ''}
-                    </div>
-                    {/* {results.map(student => (
-                        <StudentCard key={student.registrationNumber} theStudent={student} />
-                    ))} */}
-                </div>
-            )}
-            {!search && (
-                <div className="flex flex-col items-center justify-center gap-2 py-8 text-muted-foreground">
-                    <Users className="size-16 opacity-50" />
-                    <p className="text-sm">Enter a name or registration number to search for students</p>
-                </div>
-            )}
-        </div>
-    )
-}
-
-const ProfilePage = ({ student }: { student: Student }) => {
+const ProfilePage = () => {
+  const user = useSelector((state: RootState) => state.user)
     return (
         <div className="space-y-8">
-            <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900">
+            <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100/30 dark:from-gray-800 dark:to-gray-900">
                 <CardContent className="p-8">
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-2xl font-semibold">{student.name}</h2>
-                            <p className="text-muted-foreground">{student.registrationNumber}</p>
+                            <h2 className="text-2xl font-semibold">{user.firstname} {user.lastname}</h2>
+                            <p className="text-muted-foreground">{user.reg_no}</p>
                         </div>
 
                         <div className="space-y-4">
@@ -404,18 +366,18 @@ const ProfilePage = ({ student }: { student: Student }) => {
                                 <div className="grid gap-2">
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium min-w-24">Email:</span>
-                                        <span className="text-muted-foreground">{student.email}</span>
+                                        <span className="text-muted-foreground">{user.email}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium min-w-24">Date of Birth:</span>
                                         <span className="text-muted-foreground">
-                                            {new Date(student.dateOfBirth).toLocaleDateString()}
+                                            {new Date(user.dob).toLocaleDateString()}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium min-w-24">Gender:</span>
                                         <span className="text-muted-foreground capitalize">
-                                            {student.gender}
+                                            {user.gender}
                                         </span>
                                     </div>
                                 </div>
@@ -425,22 +387,10 @@ const ProfilePage = ({ student }: { student: Student }) => {
                                 <h3 className="text-lg font-medium">Academic Details</h3>
                                 <div className="grid gap-2">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-medium min-w-24">Papers:</span>
-                                        <span className="text-muted-foreground">
-                                            {student.papers?.join(', ')}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium min-w-24">Status:</span>
-                                        <span className="text-muted-foreground capitalize">
-                                            {student.newStudent ? 'New Student' : 'Returning Student'}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium min-w-24">Revision:</span>
-                                        <span className="text-muted-foreground capitalize">
-                                            {student.revision ? 'Active' : 'Inactive'}
-                                        </span>
+                                      <span className="font-medium min-w-24">User Status:</span>
+                                      <span className="text-muted-foreground capitalize">
+                                          {user.user_status}
+                                      </span>
                                     </div>
                                 </div>
                             </div>
@@ -452,7 +402,8 @@ const ProfilePage = ({ student }: { student: Student }) => {
     )
 }
 
-const SettingsPage = ({ student }: { student: Student }) => {
+const SettingsPage = () => {
+    const user = useSelector((state: RootState) => state.user)
     return (
         <div className="space-y-6">
             
@@ -464,7 +415,7 @@ const SettingsPage = ({ student }: { student: Student }) => {
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <span>Email Address</span>
-                                    <span className="text-muted-foreground">{student.email}</span>
+                                    <span className="text-muted-foreground">{user.email}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span>Password</span>
@@ -473,7 +424,7 @@ const SettingsPage = ({ student }: { student: Student }) => {
                             </div>
                         </div>
 
-                        <div>
+                        {/* <div>
                             <h2 className="text-lg font-semibold mb-2">Preferences</h2>
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
@@ -495,7 +446,7 @@ const SettingsPage = ({ student }: { student: Student }) => {
                                     </span>
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </CardContent>
             </Card>

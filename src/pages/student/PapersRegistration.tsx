@@ -2,26 +2,45 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
-import { Course, courses, students } from '@/lib/data';
+import { Paper, students } from '@/lib/data';
 import { useEffect, useState } from 'react';
 import { usePaystackPayment } from 'react-paystack';
 import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, TableCell, TableFooter } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
+import { AlertCircle, Check, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { api } from '@/lib/api';
 
-export default function CourseRegistration() {
+export default function PaperRegistration() {
   const navigate = useNavigate();
-  const [selectedCourses, setSelectedCourses] = useState<{ [key: string]: boolean }>({});
-  const [courseTypes, setCourseTypes] = useState<{ [key: string]: 'standard' | 'intensive' }>({});
+  const [selectedPapers, setSelectedPapers] = useState<{ [key: string]: boolean }>({});
+  const [paperTypes, setPaperTypes] = useState<{ [key: string]: 'standard' | 'intensive' }>({});
   const [email, setEmail] = useState('');
   const [paymentType, setPaymentType] = useState<'partial' | 'full'>('full');
   const [searchParams, setSearchParams] = useSearchParams();
+  const [papers, setPapers] = useState<Paper[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  const totalAmount = courses.reduce((total, course) => {
-    if (selectedCourses[course.code]) {
-      const price = course.price + (course.revisionPrice || 0);
+  useEffect(() => {
+    const fetchPapers = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get('/courses?api-key=AyomideEmmanuel&reg=true&acca_reg=001&user_status=signee&email=' + email);
+        setPapers(response.data.papers);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching papers:', error);
+        setError(true);
+      }
+    };
+    if (isLoading) fetchPapers();
+  }, []);
+
+  const totalAmount = papers.reduce((total, paper) => {
+    if (selectedPapers[paper.code]) {
+      const price = paper.price + (paper.revisionPrice || 0);
       return total + price;
     }
     return total;
@@ -29,7 +48,7 @@ export default function CourseRegistration() {
 
   useEffect(() => {
     setEmail(students[0].email);
-    // console.log(courses.map(course => course.name + '(' + course.code + ')').join(', '))
+    // console.log(papers.map(paper => paper.name + '(' + paper.code + ')').join(', '))
   }, []);
 
   useEffect(() => {
@@ -38,7 +57,7 @@ export default function CourseRegistration() {
       toast({
         variant: 'destructive',
         title: 'Oops!',
-        description: 'Please select at least one course'
+        description: 'Please select at least one paper'
       })
     }
   }, [searchParams, navigate, totalAmount]);
@@ -52,10 +71,10 @@ export default function CourseRegistration() {
 
   const calculatePrices = (cs: string[] | string) => {
     if (typeof cs === 'string') {
-      const price = courses.find(c => c.code === cs)?.price || 0;
-      return price + (courses.find(c => c.code === cs)?.revisionPrice || 0);
+      const price = papers.find(c => c.code === cs)?.price || 0;
+      return price + (papers.find(c => c.code === cs)?.revisionPrice || 0);
     }
-    return cs.map(i => courses.find(c => `${c.name}(${c.code})` === i)?.price || 0).reduce((total, invoice) => total + invoice, 0)
+    return cs.map(i => papers.find(c => `${c.name}(${c.code})` === i)?.price || 0).reduce((total, invoice) => total + invoice, 0)
   }
 
 
@@ -67,8 +86,8 @@ export default function CourseRegistration() {
       title: "Success!", 
       description: 'Payment successful! Thank you for your registration.'
     })
-    setSelectedCourses({});
-    setCourseTypes({});
+    setSelectedPapers({});
+    setPaperTypes({});
     setEmail('');
   };
 
@@ -80,62 +99,68 @@ export default function CourseRegistration() {
     })
   };
 
-  const groupedCourses = courses.reduce((acc, course) => {
-    if (!acc[course.category]) {
-      acc[course.category] = [];
+  const groupedPapers = papers.reduce((acc, paper) => {
+    if (!acc[paper.category]) {
+      acc[paper.category] = [];
     }
-    acc[course.category].push(course);
+    acc[paper.category].push(paper);
     return acc;
-  }, {} as { [key: string]: Course[] });
+  }, {} as { [key: string]: Paper[] });
 
   return (
     <div className="space-y-4">
+      {isLoading && <div className="flex justify-center items-center h-[50vh]">
+        <Loader2 className="w-10 h-10 animate-spin" />
+      </div>}
+      {error && <div className="flex justify-center items-center h-[50vh]">
+        <AlertCircle className="w-10 h-10 animate-spin" />
+      </div>}
       
-      <div className="max-w-6xl mx-auto rounded-lg">
-        {Object.entries(groupedCourses).map(([category, categoryCourses]) => (
+      {!isLoading && !error && (<div className="max-w-6xl mx-auto rounded-lg">
+        {Object.entries(groupedPapers).map(([category, categoryPapers]) => (
           <div key={category} className="mb-8">
             <h2 className="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200 border-b-2 border-blue-200 dark:border-blue-700 pb-2">
-              {category}
+              {category}{" "}{'(' + categoryPapers.length + ' papers)'}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 md:items-start gap-4">
-              {categoryCourses.map((course) => (
-                <div key={course.code} className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-600">
+              {categoryPapers.map((paper) => (
+                <div key={paper.code} className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-600">
                   <label className="flex items-center space-x-3">
                     <Input
                       type="checkbox"
-                      checked={!!selectedCourses[course.code]}
+                      checked={!!selectedPapers[paper.code]}
                       onChange={(e) => {
-                        setSelectedCourses({
-                          ...selectedCourses,
-                          [course.code]: e.target.checked
+                        setSelectedPapers({
+                          ...selectedPapers,
+                          [paper.code]: e.target.checked
                         })
-                        setCourseTypes({
-                          ...courseTypes,
-                          [course.code]: courseTypes[course.code] || 'standard'
+                        setPaperTypes({
+                          ...paperTypes,
+                          [paper.code]: paperTypes[paper.code] || 'standard'
                         })
                       }}
                       className="form-checkbox h-5 w-5 text-blue-600 dark:text-blue-400"
                     />
                     <span className="flex-1">
-                      <span className="block font-medium text-gray-700 dark:text-gray-200">{course.name} ({course.code})</span>
+                      <span className="block font-medium text-gray-700 dark:text-gray-200">{paper.name} ({paper.code})</span>
                       <span className="block text-sm text-gray-500 dark:text-gray-400">
-                        Standard: ₦{course.price.toLocaleString()}
-                        {course.price && ` | Intensive: ₦${course.price.toLocaleString()}`}
+                        Standard: ₦{paper.price.toLocaleString()}
+                        {paper.price && ` | Intensive: ₦${paper.price.toLocaleString()}`}
                       </span>
                     </span>
                   </label>
                   
-                  {course.price && selectedCourses[course.code] && (
+                  {paper.price && selectedPapers[paper.code] && (
                     <div className="mt-2 ml-8">
                       <div className="flex items-center space-x-4">
                         <label className="flex items-center space-x-2">
                           <input
                             type="radio"
-                            name={`course-type-${course.code}`}
-                            checked={courseTypes[course.code] === 'standard'}
-                            onChange={() => setCourseTypes({
-                              ...courseTypes,
-                              [course.code]: 'standard'
+                            name={`paper-type-${paper.code}`}
+                            checked={paperTypes[paper.code] === 'standard'}
+                            onChange={() => setPaperTypes({
+                              ...paperTypes,
+                              [paper.code]: 'standard'
                             })}
                             className="form-radio h-4 w-4 text-blue-600 dark:text-blue-400"
                           />
@@ -144,11 +169,11 @@ export default function CourseRegistration() {
                         <label className="flex items-center space-x-2">
                           <input
                             type="radio"
-                            name={`course-type-${course.code}`}
-                            checked={courseTypes[course.code] === 'intensive'}
-                            onChange={() => setCourseTypes({
-                              ...courseTypes,
-                              [course.code]: 'intensive'
+                            name={`paper-type-${paper.code}`}
+                            checked={paperTypes[paper.code] === 'intensive'}
+                            onChange={() => setPaperTypes({
+                              ...paperTypes,
+                              [paper.code]: 'intensive'
                             })}
                             className="form-radio h-4 w-4 text-blue-600 dark:text-blue-400"
                           />
@@ -189,14 +214,14 @@ export default function CourseRegistration() {
                 if (totalAmount === 0) return toast({
                   variant: 'destructive',
                   title: "Oops!",
-                  description: 'Please select at least one course'
+                  description: 'Please select at least one paper'
                 });
                 setSearchParams({paymentSummary: 'true'});
               }}
               disabled={totalAmount === 0}
               className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full max-w-md"
             >
-              {totalAmount === 0 ? 'Select a course to proceed' : 'Proceed to Payment'}
+              {totalAmount === 0 ? 'Select a paper to proceed' : 'Proceed to Payment'}
             </Button>
           </div>
         </div>
@@ -206,42 +231,42 @@ export default function CourseRegistration() {
             <DialogHeader className='space-y-4'>
               <DialogTitle className='text-2xl font-bold text-center text-gray-800 dark:text-gray-100'>Payment Summary</DialogTitle>
               <DialogDescription className='text-center text-gray-600 dark:text-gray-400'>
-                Review your selected courses and payment details before proceeding
+                Review your selected papers and payment details before proceeding
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-6 overflow-auto md:max-h-[70vh]">
               <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
                 <Table>
-                  <TableCaption className='text-gray-500 dark:text-gray-400'>Course selection details and pricing</TableCaption>
+                  <TableCaption className='text-gray-500 dark:text-gray-400'>Paper selection details and pricing</TableCaption>
                   <TableHeader>
                     <TableRow className='hover:bg-transparent'>
-                      <TableHead className='font-semibold'>Course Code</TableHead>
-                      <TableHead className='font-semibold'>Course Name</TableHead>
+                      <TableHead className='font-semibold'>Paper Code</TableHead>
+                      <TableHead className='font-semibold'>Paper Name</TableHead>
                       <TableHead className='font-semibold'>Type</TableHead>
                       <TableHead className='font-semibold text-right'>Amount (₦)</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {Object.entries(selectedCourses)
+                    {Object.entries(selectedPapers)
                       .filter(([, isSelected]) => isSelected)
-                      .map(([courseCode]) => {
-                        const course = courses.find(c => c.code === courseCode);
+                      .map(([paperCode]) => {
+                        const paper = papers.find(c => c.code === paperCode);
                         return (
-                          <TableRow key={courseCode} className='hover:bg-gray-100 dark:hover:bg-gray-800/50'>
-                            <TableCell className='font-medium'>{courseCode}</TableCell>
-                            <TableCell>{course?.name}</TableCell>
+                          <TableRow key={paperCode} className='hover:bg-gray-100 dark:hover:bg-gray-800/50'>
+                            <TableCell className='font-medium'>{paperCode}</TableCell>
+                            <TableCell>{paper?.name}</TableCell>
                             <TableCell>
                               <span className={cn(
                                 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                                courseTypes[courseCode] === 'intensive'
+                                paperTypes[paperCode] === 'intensive'
                                   ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
                                   : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                               )}>
-                                {courseTypes[courseCode] === 'intensive' ? 'Intensive' : 'Standard'}
+                                {paperTypes[paperCode] === 'intensive' ? 'Intensive' : 'Standard'}
                               </span>
                             </TableCell>
                             <TableCell className='text-right font-medium'>
-                              {calculatePrices(courseCode).toLocaleString('en-US', { 
+                              {calculatePrices(paperCode).toLocaleString('en-US', { 
                                 minimumFractionDigits: 2, 
                                 maximumFractionDigits: 2 
                               })}
@@ -270,7 +295,7 @@ export default function CourseRegistration() {
                   <ul className="space-y-2 text-blue-800 dark:text-blue-300">
                     <li className="flex items-start">
                       <span className="mr-2">•</span>
-                      <span>Revision is compulsory for each course with an additional fee of <span className="font-semibold">₦10,000</span> per course</span>
+                      <span>Revision is compulsory for each paper with an additional fee of <span className="font-semibold">₦10,000</span> per paper</span>
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2">•</span>
@@ -331,7 +356,7 @@ export default function CourseRegistration() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+      </div>)}
     </div>
   );
 }

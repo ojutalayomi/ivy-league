@@ -1,15 +1,25 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 // import { UsersRound } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import Logo from "@/assets/ivyLight.png"
 import LogoDark from "@/assets/ivyDark.png"
 import { useEffect } from "react"
+import { useSelector } from "react-redux"
+import { RootState } from "@/redux/store"
 
 export default function Menu() {
+  const user = useSelector((state: RootState) => state.user);
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = "Home - Ivy League Associates";
   }, []);
+
+  useEffect(() => {
+    if (user.signed_in) {
+      navigate("/dashboard/home", { replace: true })
+    }
+  }, [navigate, user.signed_in]);
   
   const menuItems = [
     {
@@ -22,16 +32,20 @@ export default function Menu() {
       description: "Create a new account",
       path: "/accounts/signup"
     },
-    {
-      title: "Manage Students",
-      description: "Manage students",
-      path: "/manage-students/"
-    },
-    {
-      title: "Student Dashboard",
-      description: "Go to student dashboard",
-      path: "/student-dashboard/"
-    }
+    ...((() => {
+      return process.env.NODE_ENV === 'development' ? [
+        {
+          title: "Manage Students",
+          description: "Manage students",
+          path: "/manage-students/"
+        },
+        {
+          title: "Student Dashboard",
+          description: "Go to student dashboard",
+          path: "/student-dashboard/"
+        }
+      ] : [];
+    })())
   ]
 
   return (

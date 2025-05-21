@@ -1,29 +1,44 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User } from '@/lib/types';
 
-const initialState: User = {} as User;
+type UserState = {
+    email: string;
+    firstname: string;
+    gender: string;
+    lastname: string;
+    title: string;
+    user_status: 'signee' | 'student' | '';
+    reg_no: string;
+    acca_reg: string;
+    dob: string;
+    phone_no: string;
+    address: string;
+    signed_in: boolean;
+}
+
+const initialState: UserState = {
+    email: "",
+    firstname: "",
+    gender: "",
+    lastname: "",
+    title: "",
+    user_status: "",
+    reg_no: "",
+    acca_reg: "",
+    dob: "",
+    phone_no: "",
+    address: "",
+    signed_in: false
+};
 
 const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        setUser: (_state, action: PayloadAction<User>) => {
+        setUser: (_state, action: PayloadAction<UserState>) => {
             return { ...action.payload };
         },
-        updateUserProfile: (state, action: PayloadAction<Partial<User>>) => {
+        updateUserProfile: (state, action: PayloadAction<Partial<UserState>>) => {
             return { ...state, ...action.payload };
-        },
-        updatePreferences: (state, action: PayloadAction<Partial<User['preferences']>>) => {
-            state.preferences = { ...state.preferences, ...action.payload };
-        },
-        updateVerificationStatus: (state, action: PayloadAction<Partial<User['verificationStatus']>>) => {
-            state.verificationStatus = { ...state.verificationStatus, ...action.payload };
-        },
-        updateAccountDetails: (state, action: PayloadAction<Partial<User['accountDetails']>>) => {
-            state.accountDetails = { ...state.accountDetails, ...action.payload };
-        },
-        updatePaymentDetails: (state, action: PayloadAction<Partial<User['paymentDetails']>>) => {
-            state.paymentDetails = { ...state.paymentDetails, ...action.payload };
         },
         clearUser: () => initialState,
     },
@@ -32,10 +47,6 @@ const userSlice = createSlice({
 export const {
     setUser,
     updateUserProfile,
-    updatePreferences,
-    updateVerificationStatus,
-    updateAccountDetails,
-    updatePaymentDetails,
     clearUser,
 } = userSlice.actions;
 

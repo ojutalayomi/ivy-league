@@ -23,17 +23,10 @@ export type Student = {
     dateOfBirth: string;
     newStudent: boolean;
     papers: string[];
-    totalFee: number;
-    revision: boolean;
-    discount: number;
-    outstanding: number;
-    surplus: number;
-    price: number;
-    paid: number;
     gender: 'male' | 'female' | 'other';
     preferences: StudentPreferences;
     role: 'student' | 'admin';
-    // type: UserType[];
+    user_status: "signee" | "student";
     paymentDetails: UserPaymentDetails;
 }
 

@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { courses, students } from '@/lib/data';
+import { papers, students } from '@/lib/data';
 import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, EditIcon, GraduationCap, Menu, Search, Settings, Users, Wallet } from 'lucide-react';
 import { Link, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -263,43 +263,39 @@ export default function ManageStudents() {
 const PaymentsPage = () => {
 
     const getRandomCourses = () => {
-        const shuffled = courses.map(c => `${c.name}(${c.code})`).slice(0,5).sort(() => 0.8 - Math.random());
-        return shuffled.slice(0, Math.floor(Math.random() * courses.length) + 1);
+        const shuffled = papers.map(c => `${c.name}(${c.code})`).slice(0,5).sort(() => 0.8 - Math.random());
+        return shuffled.slice(0, Math.floor(Math.random() * papers.length) + 1);
     };
-
-    const calculatePrices = (cs: string[]) => {
-        return cs.map(i => courses.find(c => `${c.name}(${c.code})` === i)?.price || 0).reduce((total, invoice) => total + invoice, 0)
-    }
 
     const invoices = [
         {
             registrationNumber: "2024001",
             paymentId: "SNZw8VEPWdp6PZQM",
-            totalAmount: calculatePrices(getRandomCourses()),
+            totalAmount: 20000,
             registeredCourses: getRandomCourses(),
         },
         {
             registrationNumber: "2024005",
             paymentId: "BtNSUZeXs7Lgfxpv",
-            totalAmount: calculatePrices(getRandomCourses()),
+            totalAmount: 20000,
             registeredCourses: getRandomCourses(),
         },
         {
             registrationNumber: "2024002",
             paymentId: "mHCUgMuAEia4HQaN",
-            totalAmount: calculatePrices(getRandomCourses()),
+            totalAmount: 20000,
             registeredCourses: getRandomCourses(),
         },
         {
             registrationNumber: "2024007",
             paymentId: "MSKR7rk0pDl2Giue",
-            totalAmount: calculatePrices(getRandomCourses()),
+            totalAmount: 20000,
             registeredCourses: getRandomCourses(),
         },
         {
             registrationNumber: "2024008",
             paymentId: "KYAOGzlPn7ps4c7c",
-            totalAmount: calculatePrices(getRandomCourses()),
+            totalAmount: 20000,
             registeredCourses: getRandomCourses(),
         }
     ];
@@ -449,37 +445,6 @@ const StudentCard = ({theStudent}: {theStudent?: Student}) => {
                                 <p className="text-sm text-muted-foreground">
                                 Papers: {student.papers?.join(', ')}
                                 </p>
-                                <p className="text-sm text-muted-foreground">
-                                Revision: {student.revision ? 'Yes' : 'No'}
-                                </p>
-                            </div>
-
-                            <div>
-                                <p className="text-sm font-medium">Payment Information</p>
-                                <p className="text-sm text-muted-foreground">
-                                Total Fee: #{student.totalFee}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                Discount: #{student.discount}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                Outstanding: #{student.outstanding}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                Surplus: #{student.surplus}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                Price: #{student.price}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                Paid: #{student.paid}
-                                </p>
-                                {/* <p className="text-sm text-muted-foreground">
-                                Payment Method: {student.paymentDetails.paymentMethod}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                Payment Status: {student.paymentDetails.paymentStatus}
-                                </p> */}
                             </div>
                         </div>
                     )}
@@ -567,37 +532,6 @@ const StudentView = () => {
                             <p className="text-sm text-muted-foreground">
                             Papers: {student.papers?.join(', ')}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                            Revision: {student.revision ? 'Yes' : 'No'}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="text-sm font-medium">Payment Information</p>
-                            <p className="text-sm text-muted-foreground">
-                            Total Fee: #{student.totalFee}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                            Discount: #{student.discount}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                            Outstanding: #{student.outstanding}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                            Surplus: #{student.surplus}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                            Price: #{student.price}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                            Paid: #{student.paid}
-                            </p>
-                            {/* <p className="text-sm text-muted-foreground">
-                            Payment Method: {student.paymentDetails.paymentMethod}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                            Payment Status: {student.paymentDetails.paymentStatus}
-                            </p> */}
                         </div>
                     </div>
                 </div>
@@ -706,10 +640,6 @@ const EditStudent = () => {
                                         <Label htmlFor="registrationNumber">Registration Number</Label>
                                         <Input id="registrationNumber" defaultValue={student?.registrationNumber} placeholder="Enter registration number" />
                                     </div>
-                                    <div className="flex items-center space-x-2">
-                                        <Label htmlFor="revision">Revision</Label>
-                                        <Checkbox id="revision" checked={student?.revision} />
-                                    </div>
                                     <div className="col-span-2 space-y-2">
                                         <Label>Papers</Label>
                                         <div className="grid grid-cols-2 gap-2 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
@@ -733,30 +663,7 @@ const EditStudent = () => {
                             </div>
                             {is3Expanded && (
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="totalFee">Total Fee</Label>
-                                        <Input id="totalFee" type="number" defaultValue={student?.totalFee} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="discount">Discount</Label>
-                                        <Input id="discount" type="number" defaultValue={student?.discount} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="outstanding">Outstanding</Label>
-                                        <Input id="outstanding" type="number" defaultValue={student?.outstanding} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="surplus">Surplus</Label>
-                                        <Input id="surplus" type="number" defaultValue={student?.surplus} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="price">Price</Label>
-                                        <Input id="price" type="number" defaultValue={student?.price} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="paid">Paid</Label>
-                                        <Input id="paid" type="number" defaultValue={student?.paid} />
-                                    </div>
+                                    
                                 </div>
                             )}
                         </div>

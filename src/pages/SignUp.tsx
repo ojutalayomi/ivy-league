@@ -6,7 +6,8 @@ import { Loader2, UsersRound } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEffect, useState } from "react";
 // import { useDispatch } from "react-redux";
-import { Link /*,useSearchParams*/ } from "react-router-dom";
+import { Link, /*,useSearchParams*/ 
+useNavigate} from "react-router-dom";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from "react-hook-form";
 import { FormSchemaType, formSchema } from "@/lib/types";
@@ -16,12 +17,14 @@ import LogoDark from "@/assets/ivyDark.png";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import { AxiosError } from "axios";
 
 export default function SignUp() {
     // const dispatch = useDispatch()
     const { toast } = useToast()
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState('');
+    const navigate = useNavigate()
     const { register, handleSubmit, formState: { errors, isValid }, watch, setValue } = useForm<FormSchemaType>({
       resolver: zodResolver(formSchema),
       mode: 'onChange'
@@ -45,29 +48,36 @@ export default function SignUp() {
 
             console.log(response)
 
-            if (response.status !== 200) {
-              throw Error(String(Object.entries(response.data.error)[0][1]))
+            if (response.status === 200) {
+              toast({
+                variant: 'success',
+                title: "Welcome to Ivy League Associates.",
+                description: "Thank you for joining Ivy League Associates! We look forward to helping you achieve your academic goals."
+              })
+              setIsLoading(false)
+              setError('')
+              navigate('/dashboard/home')
             }
     
-            toast({
-              variant: 'success',
-              title: "Welcome to Ivy League Associates.",
-              description: "Thank you for joining Ivy League Associates! We look forward to helping you achieve your academic goals."
-            })
-            setIsLoading(false)
-    
         } catch (error: unknown) {
-            console.error('error', error)
-            setError('Something went wrong. Please try again later.');
-    
-            toast({
-              variant: 'destructive',
-              title: "Oops!", 
-              description: JSON.stringify(error)
-            })
+            
+          if (error instanceof Error) {
+            const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+            console.log(message)
+            const [title, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+            setError(title + '\n ' + description)
+          } else if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response: { data: { error: string } } }
+              console.error('API Error:', axiosError.response.data.error)
+              setError(axiosError.response.data.error)
+          } else {
+              console.error('Unexpected error:', error)
+              setError('An unexpected error occurred')
+          }
             setIsLoading(false)
+        } finally {
+          setIsLoading(false)
         }
-        // console.log('Form submitted:', data);
     };
     
     return (
@@ -96,7 +106,8 @@ export default function SignUp() {
                     
                     {error && (
                         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                          <strong className="font-bold">Error:</strong> {error}
+                          {/* <strong className="font-bold">Error:</strong>  */}
+                          {error}
                         </div>
                     )}
 

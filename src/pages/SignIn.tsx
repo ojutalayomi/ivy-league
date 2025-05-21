@@ -1,11 +1,11 @@
 // import { setCookie, UserList, switchUser } from "@/lib/utils";
 // import { useFetchDetails } from "@/providers/fetch-details"
-// import { setUser } from "@/redux/userSlice";
+import { setUser } from "@/redux/userSlice";
 // import axios, { AxiosError } from "axios";
 import { ArrowRight, Check, Eye, EyeOff, LoaderCircle, UsersRound } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState, useEffect } from "react";
-// import { useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { Link, useNavigate /*,useSearchParams*/ } from "react-router-dom";
 import Cookies from "js-cookie";
 import {
@@ -24,11 +24,12 @@ import { api } from "@/lib/api";
 import { AxiosError } from "axios";
 
 export default function SignIn() {
-    // const dispatch = useDispatch()
+    const dispatch = useDispatch()
     const { toast } = useToast()
     const navigate = useNavigate()
     // const [searchParams] = useSearchParams()
     // const redirect = searchParams.get('redirect')
+    const [error, setError] = useState<string>('')
     const [email, setEmail] = useState<string>('')
     const [password, setPassword] = useState<string>('')
     const [showPassword, setShowPassword] = useState<boolean>(false)
@@ -111,38 +112,28 @@ export default function SignIn() {
             /* AXIOS */
             const response = await api.post('/signin?api-key=AyomideEmmanuel', userData)
 
-            console.log(response)
-
-            if (response.status !== 200) {
-              console.log(response.data.error)
-              console.log(Object.entries(response.data.error))
-              throw Error(Object.entries(response.data.error)[0].join())
+            if (response.status === 200) {
+              dispatch(setUser(response.data))
+              toast({
+                title: "You have signed in succesfully.",
+                description: JSON.stringify(userData)
+              })
+              navigate("/dashboard/home")
             }
-
-            toast({
-              title: "You have signed in succesfully.",
-              description: JSON.stringify(userData)
-            })
-            navigate("/dashboard/home")
 
         } catch (error: unknown) {
-            console.error('error', error)
-            const [title, description] = (error as string).split(',')
-            const axiosError = error as AxiosError<{error: string}>
-            if (!axiosError.response?.data) {
-                toast({
-                    variant: 'destructive', 
-                    title: "Oops!",
-                    description: "An error occurred"
-                })
-                return
+            if (error instanceof Error) {
+              const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+              const [title, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+              setError(title + '\n ' + description)
+            } else if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response: { data: { error: string } } }
+                console.error('API Error:', axiosError.response.data.error)
+                setError(axiosError.response.data.error)
+            } else {
+                console.error('Unexpected error:', error)
+                setError('An unexpected error occurred')
             }
-
-            toast({
-              variant: 'destructive',
-              title: title, 
-              description: description
-            })
             isLoading(false)
         } finally {
           isLoading(false)
@@ -160,7 +151,7 @@ export default function SignIn() {
         <Card className="min-[641px]:min-w-[640px] mx-auto bg-transparent dark:bg-transparent border-none shadow-none sm:bg-white dark:sm:bg-gray-900 sm:border sm:shadow">
           <CardHeader>
             <CardTitle className="text-2xl/9 font-bold tracking-tight text-center text-cyan-500">Sign in to your account</CardTitle>
-            <CardDescription className="text-center text-white">Enter your credentials to access your account</CardDescription>
+            <CardDescription className="text-center dark:text-white">Enter your credentials to access your account</CardDescription>
           </CardHeader>
           <CardContent className="flex max-[640px]:flex-wrap gap-2 items-center justify-center p-0 sm:p-6 sm:pt-0">
             <div className="max-[640px]:hidden flex sm:w-full sm:h-full sm:max-w-sm">
@@ -310,6 +301,13 @@ export default function SignIn() {
                     {loading ? <LoaderCircle className="animate-spin text-white" /> : 'Sign in'}
                   </button>
                 </div>
+
+                {error && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    {/* <strong className="font-bold">Error:</strong>  */}
+                    {error}
+                  </div>
+                )}
               </form>
 
               <p className="mt-2 text-center text-sm/6 text-white sm:text-gray-500">
