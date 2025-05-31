@@ -5,9 +5,8 @@
 import { Loader2, UsersRound } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEffect, useState } from "react";
-// import { useDispatch } from "react-redux";
-import { Link, /*,useSearchParams*/ 
-useNavigate} from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from "react-hook-form";
 import { FormSchemaType, formSchema } from "@/lib/types";
@@ -18,14 +17,15 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
+import { setUser } from "@/redux/userSlice";
 
 export default function SignUp() {
-    // const dispatch = useDispatch()
+    const dispatch = useDispatch()
     const { toast } = useToast()
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState('');
     const navigate = useNavigate()
-    const { register, handleSubmit, formState: { errors, isValid }, watch, setValue } = useForm<FormSchemaType>({
+    const { register, handleSubmit, formState: { errors }, watch, getValues, trigger, setValue } = useForm<FormSchemaType>({
       resolver: zodResolver(formSchema),
       mode: 'onChange'
     });
@@ -37,47 +37,70 @@ export default function SignUp() {
     const stepProps = { register, errors, watch, setValue };
     
     const submit: SubmitHandler<FormSchemaType> = async (data) => {
-        // e.preventDefault();
-        // Handle form submission here
-        try {
-            delete (data as Partial<FormSchemaType>).confirmPassword
-            data.gender = data.title === 'Mr' ? 'male' : 'female';
-            setIsLoading(true)
-            // await new Promise(resolve => setTimeout(resolve, 3000));
-            const response = await api.post("/signup?api-key=AyomideEmmanuel", data)
-
-            console.log(response)
-
-            if (response.status === 200) {
-              toast({
-                variant: 'success',
-                title: "Welcome to Ivy League Associates.",
-                description: "Thank you for joining Ivy League Associates! We look forward to helping you achieve your academic goals."
-              })
-              setIsLoading(false)
-              setError('')
-              navigate('/dashboard/home')
-            }
-    
-        } catch (error: unknown) {
-            
-          if (error instanceof Error) {
-            const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
-            console.log(message)
-            const [title, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
-            setError(title + '\n ' + description)
-          } else if (error && typeof error === 'object' && 'response' in error) {
-              const axiosError = error as { response: { data: { error: string } } }
-              console.error('API Error:', axiosError.response.data.error)
-              setError(axiosError.response.data.error)
-          } else {
-              console.error('Unexpected error:', error)
-              setError('An unexpected error occurred')
-          }
-            setIsLoading(false)
-        } finally {
-          setIsLoading(false)
+      try {
+        const isValid = await trigger();
+        
+        if (!isValid) {
+          return;
         }
+          delete (data as Partial<FormSchemaType>).confirmPassword
+          data.gender = data.title === 'Mr' ? 'male' : 'female';
+          setIsLoading(true)
+          // await new Promise(resolve => setTimeout(resolve, 3000));
+          const response = await api.post("/signup?api-key=AyomideEmmanuel", data)
+
+          // console.log(response)
+
+          if (response.status >= 200 && response.status < 300) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { password, confirmPassword, ...userData} = getValues();
+            dispatch(setUser({
+              ...userData,
+              signed_in: true,
+              user_status: 'signee',
+              gender: userData.title === 'Mr' ? 'male' : 'female',
+              reg_no: "",
+              acca_reg: "",
+              phone_no: "",
+              address: "",
+              fee: [],
+              scholarship: [],
+              email_verified: false
+            }))
+            toast({
+              variant: 'success',
+              title: "Welcome to Ivy League Associates. Please check your email for a verification link.",
+              description: "Thank you for joining Ivy League Associates! We look forward to helping you achieve your academic goals.",
+              duration: 15000
+            })
+            setIsLoading(false)
+            setError('')
+            navigate('/dashboard/home')
+          }
+  
+      } catch (error: unknown) {
+          
+        if (error instanceof Error) {
+          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+          if (message && typeof message !== 'object') {
+            setError(message)
+            return;
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+          setError(description)
+        } else if (error && typeof error === 'object' && 'response' in error) {
+            const axiosError = error as { response: { data: { error: string } } }
+            // console.error('API Error:', axiosError.response.data.error)
+            setError(axiosError.response.data.error)
+        } else {
+            // console.error('Unexpected error:', error)
+            setError('An unexpected error occurred')
+        }
+          setIsLoading(false)
+      } finally {
+        setIsLoading(false)
+      }
     };
     
     return (
@@ -88,15 +111,20 @@ export default function SignUp() {
           </div>
           <span className="truncate text-xl font-semibold text-white">IVY LEAGUE ASSOCIATES</span>
         </div>
-        <Card className="min-[641px]:min-w-[640px] mx-auto bg-transparent dark:bg-transparent border-none shadow-none sm:bg-white dark:sm:bg-gray-900 sm:border sm:shadow">
+        <Card className="sm:min-w-[660px] mx-auto bg-transparent dark:bg-transparent border-none shadow-none sm:bg-white dark:sm:bg-gray-900 sm:border sm:shadow">
           <CardHeader className="py-3">
             <CardTitle className="text-2xl/9 font-bold tracking-tight text-center text-cyan-500">Create your account</CardTitle>
             <CardDescription className="text-center text-white sm:text-primary">Enter your details to create your account</CardDescription>
           </CardHeader>
           <CardContent className="flex max-[640px]:flex-wrap gap-2 items-center justify-center p-0 sm:pb-3 sm:px-6">
-            <div className="max-[640px]:hidden flex sm:w-full sm:h-full sm:max-w-sm">
+            <div className="max-[640px]:hidden flex flex-col sm:w-full sm:h-full sm:max-w-sm">
               <img src={Logo} alt="Ivy League" className="dark:hidden w-80 h-80 mx-auto" />
               <img src={LogoDark} alt="Ivy League" className="hidden dark:block h-80 mx-auto" />
+              {error && (
+                <div className="max-[640px]:hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                  {error}
+                </div>
+              )}
             </div>
 
             <div className="sm:w-full sm:max-w-sm">
@@ -105,17 +133,17 @@ export default function SignUp() {
                     <Step1 {...stepProps} />
                     
                     {error && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                          {/* <strong className="font-bold">Error:</strong>  */}
-                          {error}
-                        </div>
+                      <div className="hidden max-[640px]:block bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                        {error}
+                      </div>
                     )}
 
                     <div className="flex justify-between mt-3">
                       <Button 
                       type="submit" 
                       className="w-full bg-cyan-500 text-white"
-                      disabled={isLoading || !isValid}
+                      disabled={isLoading}
+                      onClick={() => submit(getValues())}
                       >
                       {isLoading ? (
                           <>

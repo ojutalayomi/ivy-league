@@ -8,13 +8,13 @@ export default {
   ],
   theme: {
   	extend: {
-		backgroundImage: {
-		  'greybg-light': "url('/src/assets/pencils-1280558_1920.jpg')",
+  		backgroundImage: {
+  			'greybg-light': "url('/src/assets/pencils-1280558_1920.jpg')",
 		  'greybg-light-gradient': "linear-gradient(rgb(6 182 212 / 0.1), rgba(255, 255, 255, 0.95)), url('/src/assets/pencils-1280558_1920.jpg')",
 		  'greybg-dark': "url('/src/assets/greybg-dark.png')",
 		  'greybg-dark-gradient': "linear-gradient(rgb(6 182 212 / 0.2), rgba(10, 23, 61, 0.95)), url('/src/assets/greybg-dark.png')",
 		  'logo': "url('/src/assets/logo.png')",
-		},
+  		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
@@ -71,6 +71,28 @@ export default {
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
   			}
+  		},
+  		keyframes: {
+  			'accordion-down': {
+  				from: {
+  					height: '0'
+  				},
+  				to: {
+  					height: 'var(--radix-accordion-content-height)'
+  				}
+  			},
+  			'accordion-up': {
+  				from: {
+  					height: 'var(--radix-accordion-content-height)'
+  				},
+  				to: {
+  					height: '0'
+  				}
+  			}
+  		},
+  		animation: {
+  			'accordion-down': 'accordion-down 0.2s ease-out',
+  			'accordion-up': 'accordion-up 0.2s ease-out'
   		}
   	}
   },

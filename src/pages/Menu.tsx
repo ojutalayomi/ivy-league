@@ -6,6 +6,8 @@ import LogoDark from "@/assets/ivyDark.png"
 import { useEffect } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/redux/store"
+import { toast } from "@/hooks/use-toast"
+import { Button } from "@/components/ui/button"
 
 export default function Menu() {
   const user = useSelector((state: RootState) => state.user);
@@ -17,7 +19,13 @@ export default function Menu() {
 
   useEffect(() => {
     if (user.signed_in) {
-      navigate("/dashboard/home", { replace: true })
+      // navigate("/dashboard/home", { replace: true })
+      toast({
+        title: "You are signed in",
+        description: "You are signed in to your account",
+        variant: "default",
+        action: <Button onClick={() => navigate("/dashboard/home")}>Go to Dashboard</Button>
+      })
     }
   }, [navigate, user.signed_in]);
   
@@ -33,7 +41,7 @@ export default function Menu() {
       path: "/accounts/signup"
     },
     ...((() => {
-      return process.env.NODE_ENV === 'development' ? [
+      return import.meta.env.VITE_NODE_ENV === 'development' ? [
         {
           title: "Manage Students",
           description: "Manage students",

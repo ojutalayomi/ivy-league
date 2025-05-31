@@ -13,6 +13,12 @@ type UserState = {
     phone_no: string;
     address: string;
     signed_in: boolean;
+    email_verified: boolean;
+    fee: {
+        amount: number;
+        reason: string;
+    }[];
+    scholarship: [][]
 }
 
 const initialState: UserState = {
@@ -21,13 +27,16 @@ const initialState: UserState = {
     gender: "",
     lastname: "",
     title: "",
-    user_status: "",
+    user_status: "signee",
     reg_no: "",
     acca_reg: "",
     dob: "",
     phone_no: "",
     address: "",
-    signed_in: false
+    signed_in: false,
+    email_verified: false,
+    fee: [],
+    scholarship: []
 };
 
 const userSlice = createSlice({

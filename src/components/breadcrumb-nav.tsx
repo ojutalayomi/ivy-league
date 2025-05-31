@@ -39,7 +39,7 @@ import {
               <BreadcrumbItem className={`cursor-pointer ${index !== breadcrumbItems.length - 1 && 'truncate'}`}>
                 {item.path ? (
                   <BreadcrumbLink asChild>
-                    <Link to={item.path} className="truncate">{item.label}</Link>
+                    <Link to={item.path} className="truncate" replace>{item.label}</Link>
                   </BreadcrumbLink>
                 ) : (
                   <BreadcrumbPage>{item.label}</BreadcrumbPage>

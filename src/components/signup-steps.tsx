@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UseFormWatch, UseFormRegister, FieldErrors } from 'react-hook-form';
+import { UseFormWatch, UseFormRegister, FieldErrors, UseFormSetValue } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FormSchemaType } from '@/lib/types';
@@ -15,9 +15,10 @@ interface StepProps {
   register: UseFormRegister<FormSchemaType>;
   errors: FieldErrors<FormSchemaType>;
   watch: UseFormWatch<FormSchemaType>;
+  setValue: UseFormSetValue<FormSchemaType>;
 }
 
-export const Step1: React.FC<StepProps> = ({ register, errors }) => {
+export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }) => {
   const [showPassword, setShowPassword] = useState<boolean>(false)
   const [showPassword1, setShowPassword1] = useState<boolean>(false)
   return (
@@ -83,9 +84,10 @@ export const Step1: React.FC<StepProps> = ({ register, errors }) => {
           <Input
             id="phone"
             type="tel"
-            {...register('phone')}
+            onChange={(e) => setValue('phone', e.target.value)}
+            value={watch('phone')}
             className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
-            placeholder="(123) 456-7890"
+            placeholder="0801 234 5678"
           />
           {errors.phone && (
             <p className="text-sm text-red-500 mt-1">{errors.phone.message}</p>

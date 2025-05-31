@@ -12,7 +12,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 
-export default function PaperRegistration() {
+export default function PapersRegistration() {
   const navigate = useNavigate();
   const [selectedPapers, setSelectedPapers] = useState<{ [key: string]: boolean }>({});
   const [paperTypes, setPaperTypes] = useState<{ [key: string]: 'standard' | 'intensive' }>({});

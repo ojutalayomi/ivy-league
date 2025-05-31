@@ -1,17 +1,19 @@
 import { Card, CardContent, } from '@/components/ui/card';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Settings, User, Menu } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Settings, User, Menu, Loader2, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { forwardRef, useCallback, useEffect, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import Error404Page from '@/components/404';
 import { cn } from '@/lib/utils';
-import CourseRegistration from './PapersRegistration';
+import PapersRegistration from './PapersRegistration';
 import { Button } from '@/components/ui/button';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { Dialog, DialogTitle, DialogHeader, DialogContent, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Paper } from '@/lib/data';
+import { api } from '@/lib/api';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -31,6 +33,11 @@ const CoursePageItems = [
     title: "View Papers", 
     description: "View your registered papers",
     path: "/student-dashboard/papers/view"
+  },
+  {
+    title: "View",
+    description: "View available papers",
+    path: "/student-dashboard/papers/available"
   },
   {
     title: "Print Papers",
@@ -240,53 +247,99 @@ export default function Dashboard() {
                       <div className="space-y-2">
                         <h5 className="text-xl font-bold tracking-tight dark:text-white">{user.firstname} {user.lastname}</h5>
                         <p className="font-normal dark:text-white">Registration Number: <b>{user.reg_no || 'N/A'}</b></p>
-                        <p className="font-normal dark:text-white">Email: <b>{user.email || 'N/A'}</b></p>
+                        <p className="font-normal dark:text-white flex items-center gap-2">
+                          Email: <b>{user.email || 'N/A'}</b> 
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                {user.email_verified ? <CheckCircle className="size-4 text-green-500" /> : <XCircle className="size-4 text-red-500" />}
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {user.email_verified ? 'Email verified' : 'Email not verified'}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </p>
+                        {!user.email_verified && (
+                          <div className="flex items-center gap-2 p-2 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                            <AlertCircle className="size-4" />
+                            <p className="text-sm">Your email is not verified. Please verify your email to continue.</p>
+                            <Button variant="outline" size="sm" onClick={() => navigate('/accounts/confirm-email')}>Verify Email</Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>)}
 
                   <Tabs defaultValue={'home'} value={type} onValueChange={(value) => navigate(`/student-dashboard/${value}`)}>
-                      <Routes>
-                        <Route path="/" element={<Navigate to="/student-dashboard/home" replace />} />
-                        <Route path="home" element={
-                          <TabsContent value="home">
-                            <PapersPage menuItems={HomePageItems}/>
-                          </TabsContent>
-                        } />
-                        <Route path="profile" element={
-                          <TabsContent value="profile">
-                            <ProfilePage />
-                          </TabsContent>
-                        } />
-                        <Route path="papers/*" element={
-                          <Routes>
-                            <Route path="/" element={<PapersPage menuItems={CoursePageItems}/>} />
-                            <Route path="register" element={
-                              <TabsContent value="register">
-                                <CourseRegistration/>
-                              </TabsContent>
-                            } />
-                            <Route path="view" element={
-                              <TabsContent value="view">
-                                <PapersPage menuItems={CoursePageItems}/>
-                              </TabsContent>
-                            } />
-                            <Route path="print" element={
-                              <TabsContent value="print">
-                                <PapersPage menuItems={CoursePageItems}/>
-                              </TabsContent>
-                            } />
-                          </Routes>
-                        } />
-                        <Route path="*" element={
-                          <Error404Page/>
-                        } />
-                        <Route path="settings" element={
-                          <TabsContent value="settings">
-                            {user.reg_no && <SettingsPage />}
-                          </TabsContent>
-                        } />
-                      </Routes>
+                    <Routes>
+                      <Route path="/" element={<Navigate to="/student-dashboard/home" replace />} />
+                      <Route path="home" element={
+                        <TabsContent value="home">
+                          <PapersPage menuItems={HomePageItems}/>
+                        </TabsContent>
+                      } />
+                      <Route path="profile" element={
+                        <TabsContent value="profile">
+                          <ProfilePage />
+                        </TabsContent>
+                      } />
+                      <Route path="papers/*" element={
+                        <Routes>
+                          <Route path="/" element={<PapersPage menuItems={CoursePageItems}/>} />
+                          <Route path="register" element={
+                            <TabsContent value="register">
+                            {user.user_status === 'signee' && location.pathname.includes('papers') ?
+                            (
+                              <Dialog open={user.user_status === 'signee' && location.pathname.includes('papers')} onOpenChange={() => {}}>
+                                <DialogContent className='dark:bg-gray-900 dark:border-gray-700 rounded-lg'>
+                                  <DialogHeader>
+                                    <DialogTitle>
+                                      Registration Status
+                                    </DialogTitle>
+                                  </DialogHeader>
+                                  <DialogDescription>
+                                    You need to complete your registration to access this page.
+                                  </DialogDescription>
+                                  <DialogFooter className='flex flex-col sm:justify-center'>
+                                    <Button className='bg-cyan-500 hover:bg-cyan-400 text-white' variant="outline" onClick={() => navigate('/accounts/additional-info')}>
+                                      Complete Registration
+                                    </Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
+                            ) :
+                            (
+                              <PapersRegistration/>
+                            )}
+                            </TabsContent>
+                          } />
+                          <Route path="view" element={
+                            <TabsContent value="view">
+                              <PapersPage menuItems={CoursePageItems}/>
+                            </TabsContent>
+                          } />
+                          <Route path="available" element={
+                            <TabsContent value="available">
+                              <AvailablePapers/>
+                            </TabsContent>
+                          } />
+                          <Route path="print" element={
+                            <TabsContent value="print">
+                              <PapersPage menuItems={CoursePageItems}/>
+                            </TabsContent>
+                          } />
+                        </Routes>
+                      } />
+                      <Route path="*" element={
+                        <Error404Page/>
+                      } />
+                      <Route path="settings" element={
+                        <TabsContent value="settings">
+                          {user.reg_no && <SettingsPage />}
+                        </TabsContent>
+                      } />
+                    </Routes>
                   </Tabs>
                   
                   <section>
@@ -308,10 +361,60 @@ export default function Dashboard() {
     )
 }
 
+const AvailablePapers = () => {
+  // const user = useSelector((state: RootState) => state.user)
+  const [papers, setPapers] = useState<Paper[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    const fetchPapers = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get('/courses?api-key=AyomideEmmanuel&reg=true&acca_reg=001&user_status=signee&email=');
+        setPapers(response.data.papers);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching papers:', error);
+        setError(true);
+      }
+    };
+    if (isLoading) fetchPapers();
+  }, []);
+
+    return (
+        <div className="space-y-8">
+            <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100/30 dark:from-gray-800 dark:to-gray-900">
+                <CardContent className="p-8">
+                    <div className="space-y-6">
+                        <div>
+                          <h2 className="text-2xl font-semibold">Available Papers</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {isLoading && <div className="flex justify-center items-center h-[50vh]">
+                            <Loader2 className="w-10 h-10 animate-spin" />
+                          </div>}
+                          {error && <div className="flex justify-center items-center h-[50vh]">
+                            <AlertCircle className="w-10 h-10 animate-spin" />
+                          </div>}
+                          {papers.map((paper) => (
+                            <div key={paper.code} className="p-4 border rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
+                              <h3 className="text-lg font-medium">{paper.name}</h3>
+                              <p className="text-muted-foreground">{paper.category} - {paper.code}</p>
+                              <p className="text-sm text-muted-foreground mt-2">Price: ₦{paper.price.toLocaleString()}</p>
+                            </div>
+                          ))}
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
 const PapersPage = ({ menuItems }:{ menuItems: typeof CoursePageItems }) => {
   const user = useSelector((state: RootState) => state.user)
-  const navigate = useNavigate();
-  const location = useLocation();
 
   return (
     <div className="w-full">
@@ -319,7 +422,7 @@ const PapersPage = ({ menuItems }:{ menuItems: typeof CoursePageItems }) => {
           {menuItems.map((item, index) => (
             <Link 
               key={index}
-              to={item.path}
+              to={item.path === '/student-dashboard/papers/register' && !user.email_verified ? '/accounts/confirm-email' : item.path}
               className="block p-6 max-[639px]:text-center bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
             >
               <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">{item.title}</h5>
@@ -327,23 +430,6 @@ const PapersPage = ({ menuItems }:{ menuItems: typeof CoursePageItems }) => {
             </Link>
           ))}
         </div>
-        <Dialog open={user.user_status === 'signee' && location.pathname.includes('papers')} onOpenChange={() => {}}>
-          <DialogContent className='dark:bg-gray-900 dark:border-gray-700'>
-            <DialogHeader>
-              <DialogTitle>
-                Registration Status
-              </DialogTitle>
-            </DialogHeader>
-            <DialogDescription>
-              You need to complete your registration to access this page.
-            </DialogDescription>
-            <DialogFooter className='flex flex-row sm:justify-center'>
-              <Button className='bg-cyan-500 hover:bg-cyan-400 text-white' variant="outline" onClick={() => navigate('/accounts/additional-info')}>
-                Complete Registration
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
   )
 }

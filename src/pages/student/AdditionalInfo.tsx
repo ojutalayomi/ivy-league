@@ -17,12 +17,14 @@ import { cn } from "@/lib/utils";
 import { Check, ChevronLeft, Loader2, XCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 interface Question {
     key: string;
     subject: string;
     more_info: string;
-    type: 'short answer' | 'long answer' | 'checkboxes' | 'multiple choice' | 'terms';
+    type: 'short answer' | 'long answer' | 'checkboxes' | 'multiple choice' | 'terms' | 'boolean';
     options: string[];
 }
 
@@ -53,7 +55,7 @@ const STORAGE_KEY = 'additional_info_draft';
 
 export default function AdditionalInfo() {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -97,14 +99,15 @@ export default function AdditionalInfo() {
         setIsLoading(true);
         const response = await api.get('/required-info?api-key=AyomideEmmanuel&title=reg_form_info');
         setQuestions(response.data);
-        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching questions:', error);
         setError(true);
+      } finally {
+        setIsLoading(false);
       }
     };
-    if (questions.length === 0 && isLoading) fetchQuestions();
-  }, []);
+    if (questions.length === 0 && !isLoading) fetchQuestions();
+  }, [isLoading, questions.length]);
 
   useEffect(() => {
     document.title = "Additional Info - Ivy League Associates";
@@ -134,6 +137,28 @@ export default function AdditionalInfo() {
     const fieldName = question.key;
 
     switch (question.type) {
+      case 'boolean':
+        return (
+          <div key={index} className="grid gap-2">
+            <Label className="font-semibold">{question.subject}</Label>
+            <RadioGroup
+              value={form.watch(fieldName) === true ? "Agreed" : form.watch(fieldName) === false ? "Disagreed" : ""}
+              onValueChange={(value) => form.setValue(fieldName, value === "Agreed")}
+              className="grid gap-3 bg-blue-50 dark:bg-muted/20 rounded-lg p-4"
+            >
+              {question.options.map((option) => (
+                <div key={option} className="flex items-center space-x-3">
+                  <RadioGroupItem value={option} id={`${fieldName}-${option}`} />
+                  <Label htmlFor={`${fieldName}-${option}`} className="text-sm">{option}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+            {form.formState.errors[fieldName] && (
+              <p className="text-sm text-red-500">{form.formState.errors[fieldName]?.message as string}</p>
+            )}
+          </div>
+        );
+
       case 'short answer':
         return (
           <div key={index} className="grid gap-2">
@@ -358,11 +383,31 @@ export default function AdditionalInfo() {
 }
 
 const SponsorCard = ({ form }: { form: UseFormReturn<FormData> }) => {
+    const user = useSelector((state: RootState) => state.user)
     const navigate = useNavigate();
     const [isSponsor, setIsSponsor] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [isError, setIsError] = useState('');
+    const [scholarship, setScholarship] = useState<string[]>([]);
+    const [fee, setFee] = useState<string[]>([]);
     const { toast } = useToast();
+
+    useEffect(() => {
+      const fetchDetails = async () => {
+        try {
+          setIsLoading(true);
+          const response = await api.get('/courses?api-key=AyomideEmmanuel&reg=true&acca_reg=001&user_status=signee&email=');
+          setScholarship(response.data.scholarship);
+          setFee(response.data.fee);
+          setIsLoading(false);
+        } catch (error) {
+          console.error('Error fetching papers:', error);
+          // setError(true);
+        }
+      };
+      if (isLoading) fetchDetails();
+    }, [isLoading]);
 
     const sponsorForm = useForm<SponsorData>({
         resolver: zodResolver(sponsorSchema),
@@ -387,9 +432,9 @@ const SponsorCard = ({ form }: { form: UseFormReturn<FormData> }) => {
             const isValid = await sponsorForm.trigger();
             if (!isValid) {
                 toast({
-                    variant: "destructive",
-                    title: "Validation Error",
-                    description: "Please fill in all required sponsor fields correctly"
+                  variant: "destructive",
+                  title: "Validation Error",
+                  description: "Please fill in all required sponsor fields correctly"
                 });
                 return;
             }
@@ -399,47 +444,55 @@ const SponsorCard = ({ form }: { form: UseFormReturn<FormData> }) => {
             
             // TODO: Submit sponsor information
             console.log('Sponsor data:', data);
-            const response = await api.post('/required-info?api-key=AyomideEmmanuel', data)
+            const additionalInfo = localStorage.getItem(STORAGE_KEY);
+            const response = await api.post('/register?api-key=AyomideEmmanuel', {
+              firstname: user.firstname,
+              lastname: user.lastname,
+              email: user.email,
+              reg_no: user.reg_no,
+              user_status: 'signee',
+              sponsored: isSponsor,
+              token: data.sponsorCode, 
+              diet: 0,
+              info: {
+                discount: [],
+                discount_papers: [], 
+                ...JSON.parse(additionalInfo || '{}'),
+                scholarship_used: scholarship,
+              },
+              fee: fee
+            })
 
-            if (response.status === 200) {
+            if (response.status >= 200 && response.status < 300) {
               toast({
-                title: "You have signed in succesfully.",
-                description: JSON.stringify(data)
+                title: "Your registration is complete.",
+                description: JSON.stringify(response.data)
               })
             
               setSuccess(true);
               
               setTimeout(() => {
-                  setIsLoading(false);
-                  setSuccess(false);
-                  navigate("/student-dashboard/papers/register")
+                setIsLoading(false);
+                setSuccess(false);
+                navigate("/student-dashboard/papers/register")
               }, 3000);
             }
         } catch (error) {
+          setIsLoading(false);
+          setSuccess(false);
             if (error instanceof Error) {
                 const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
                 console.log(message)
-                const [title, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
-                toast({
-                    variant: 'destructive',
-                    title: title || 'Error',
-                    description: description || 'An unexpected error occurred'
-                })
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+                setIsError(description);
             } else if (error && typeof error === 'object' && 'response' in error) {
                 const axiosError = error as { response: { data: { error: string } } }
                 console.error('API Error:', axiosError.response.data.error)
-                toast({
-                    variant: 'destructive',
-                    title: 'API Error',
-                    description: axiosError.response.data.error
-                })
+                setIsError(axiosError.response.data.error);
             } else {
                 console.error('Unexpected error:', error)
-                toast({
-                    variant: 'destructive',
-                    title: 'Error',
-                    description: 'An unexpected error occurred'
-                })
+                setIsError('An unexpected error occurred');
             }
         }
     };
@@ -447,22 +500,22 @@ const SponsorCard = ({ form }: { form: UseFormReturn<FormData> }) => {
     return (
         <Card className="min-[641px]:min-w-[640px] mx-auto">
           <CardHeader>
-                <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleBack}
-                        className="h-8 w-8 rounded-full"
-                    >
-                        <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <div>
-                        <CardTitle>Sponsor Information</CardTitle>
-                        <CardDescription>
-                            Please provide your sponsor details if applicable
-                        </CardDescription>
-                    </div>
+            <div className="flex items-center gap-4">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleBack}
+                    className="h-8 w-8 rounded-full"
+                >
+                    <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <div>
+                    <CardTitle>Sponsor Information</CardTitle>
+                    <CardDescription>
+                        Please provide your sponsor details if applicable
+                    </CardDescription>
                 </div>
+            </div>
           </CardHeader>
             <CardContent className="flex flex-col gap-6">
                 <div className="space-y-4">
@@ -545,11 +598,17 @@ const SponsorCard = ({ form }: { form: UseFormReturn<FormData> }) => {
                     </div>
                 </div>
 
+                {isError && (
+                  <div className="flex flex-col items-center justify-center bg-red-500 text-white p-4 rounded-lg">
+                    <p className="text-white">{isError}</p>
+                  </div>
+                )}
+
                 <Button 
-                    type="submit" 
-                    disabled={!form.watch('termsAgreed')} 
-                    className="bg-cyan-500 hover:bg-cyan-400 max-w-lg mx-auto flex-1 font-semibold" 
-                    onClick={() => isSponsor ? handleSubmit() : navigate('/student-dashboard/papers/register')}
+                  type="submit" 
+                  disabled={form.watch('sponsorCode')} 
+                  className="bg-cyan-500 hover:bg-cyan-400 max-w-lg mx-auto flex-1 font-semibold" 
+                  onClick={() => isSponsor ? handleSubmit() : navigate('/student-dashboard/papers/register')}
                 >
                     {isSponsor ? (
                         <>

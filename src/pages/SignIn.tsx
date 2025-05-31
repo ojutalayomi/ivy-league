@@ -112,11 +112,11 @@ export default function SignIn() {
             /* AXIOS */
             const response = await api.post('/signin?api-key=AyomideEmmanuel', userData)
 
-            if (response.status === 200) {
-              dispatch(setUser(response.data))
+            if (response.status >= 200 && response.status < 300) {
+              dispatch(setUser({...response.data, signed_in: true}))
               toast({
                 title: "You have signed in succesfully.",
-                description: JSON.stringify(userData)
+                // description: JSON.stringify(userData)
               })
               navigate("/dashboard/home")
             }
@@ -124,8 +124,13 @@ export default function SignIn() {
         } catch (error: unknown) {
             if (error instanceof Error) {
               const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
-              const [title, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
-              setError(title + '\n ' + description)
+              if (message && typeof message !== 'object') {
+                setError(message)
+                return;
+              }
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+              setError(description)
             } else if (error && typeof error === 'object' && 'response' in error) {
                 const axiosError = error as { response: { data: { error: string } } }
                 console.error('API Error:', axiosError.response.data.error)
@@ -261,7 +266,7 @@ export default function SignIn() {
                       Password
                     </label>
                     <div className="text-sm">
-                      <Link to="/accounts/forgot-password" className="font-semibold text-sidebar-primary hover:text-sidebar-primary/50">
+                      <Link to="/accounts/reset-password" className="font-semibold text-gray-500 hover:text-gray-600 dark:text-gray-200 dark:hover:text-gray-300">
                         Forgot password?
                       </Link>
                     </div>
@@ -312,7 +317,7 @@ export default function SignIn() {
 
               <p className="mt-2 text-center text-sm/6 text-white sm:text-gray-500">
                 Don't have an account?{' '}
-                <Link to="/accounts/signup" className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50">
+                <Link to="/accounts/signup" className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50  dark:text-gray-200 dark:hover:text-gray-300">
                   Sign up
                 </Link>
               </p>

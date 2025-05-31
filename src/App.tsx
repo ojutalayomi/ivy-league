@@ -16,6 +16,9 @@ import LogoDark from "@/assets/ivyDark.png";
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
+import VerifyEmail from './pages/VerifyEmail'
+import ResetPassword from './pages/ResetPassword'
+import HelpCenter from './pages/HelpCenter'
 // import './App.css'
 
 function App() {
@@ -54,6 +57,7 @@ function Router() {
         {!isLoading && (
           <reactRouterDom.Routes location={backgroundLocation || location}>
             <reactRouterDom.Route path="/" element={<Menu />} />
+            <reactRouterDom.Route path="/help-center" element={<HelpCenter />} />
             <reactRouterDom.Route path="/manage-students/*" element={
               <reactRouterDom.Routes>
                 <reactRouterDom.Route path='/' element={<ManageStudentsMenu />} />
@@ -82,6 +86,8 @@ function Router() {
             <reactRouterDom.Route path="/accounts/signin" element={<SignIn />} />
             <reactRouterDom.Route path="/accounts/signup" element={<SignUp />} />
             <reactRouterDom.Route path="/accounts/additional-info" element={<AdditionalInfo />} />
+            <reactRouterDom.Route path="/accounts/reset-password" element={<ResetPassword />} />
+            <reactRouterDom.Route path="/accounts/confirm-email" element={<VerifyEmail />} />
             <reactRouterDom.Route path="/*" element={<Error404Page />} />
           </reactRouterDom.Routes>
         )}
