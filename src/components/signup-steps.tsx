@@ -3,13 +3,11 @@ import { UseFormWatch, UseFormRegister, FieldErrors, UseFormSetValue } from 'rea
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FormSchemaType } from '@/lib/types';
-import { EyeOff, Eye, CalendarIcon } from 'lucide-react';
-import { Button } from './ui/button';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
+import { EyeOff, Eye } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { DatePicker as AntdDatePicker } from "antd";
+import "antd/dist/reset.css";
+import dayjs from 'dayjs';
 
 interface StepProps {
   register: UseFormRegister<FormSchemaType>;
@@ -95,7 +93,19 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
         </div>
         <div>
           <Label className='text-white sm:text-cyan-500' htmlFor="dob">Date of Birth</Label><br/>
-          <DatePicker register={register}/>
+          <AntdDatePicker
+            value={watch('dob') ? dayjs(watch('dob')) : null}
+            onChange={(date) => setValue('dob', date?.format('YYYY-MM-DD'))}
+            picker="date"
+            placeholder="Select your date of birth"
+            format="YYYY-MM-DD"
+            allowClear
+            style={{ width: "100%" }}
+            disabledDate={current =>
+              current && (dayjs(current).isAfter(dayjs()) || dayjs(current).isBefore(dayjs('1900-01-01')))
+            }
+            inputReadOnly
+          />
           {errors.dob && (
             <p className="text-sm text-red-500 mt-1">{errors.dob.message}</p>
           )}
@@ -155,44 +165,3 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
     </div>
   )
 };
-  
-
-export function DatePicker({ register }: { register: UseFormRegister<FormSchemaType> }) {
-  const [date, setDate] = React.useState<Date>()
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant={"outline"}
-          className={cn(
-            "justify-start text-left font-normal truncate bg-cyan-500 hover:bg-cyan-400 text-white border-none sm-border",
-            !date && "bg-cyan-600"
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, 'MM/dd/yyyy') : <span>Pick a date</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
-        <Calendar
-          mode="single" 
-          selected={date}
-          onSelect={(newDate) => {
-            setDate(newDate);
-            if (newDate) {
-              register('dob').onChange({
-                target: { value: newDate.toISOString(), name: 'dob' }
-              });
-            }
-          }}
-          disabled={(date) =>
-            date > new Date() || date < new Date("1900-01-01")
-          }
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
-  )
-}

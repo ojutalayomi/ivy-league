@@ -1,12 +1,9 @@
-// import { setCookie, UserList, switchUser } from "@/lib/utils";
-// import { useFetchDetails } from "@/providers/fetch-details"
 import { setUser } from "@/redux/userSlice";
-// import axios, { AxiosError } from "axios";
 import { ArrowRight, Check, Eye, EyeOff, LoaderCircle, UsersRound } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate /*,useSearchParams*/ } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Cookies from "js-cookie";
 import {
   Tooltip,
@@ -19,7 +16,7 @@ import Logo from "@/assets/ivyLight.png";
 import LogoDark from "@/assets/ivyDark.png";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
 
@@ -27,8 +24,8 @@ export default function SignIn() {
     const dispatch = useDispatch()
     const { toast } = useToast()
     const navigate = useNavigate()
-    // const [searchParams] = useSearchParams()
-    // const redirect = searchParams.get('redirect')
+    const [searchParams] = useSearchParams()
+    const redirect = searchParams.get('redirect')
     const [error, setError] = useState<string>('')
     const [email, setEmail] = useState<string>('')
     const [password, setPassword] = useState<string>('')
@@ -44,7 +41,7 @@ export default function SignIn() {
     useEffect(() => {
         const storedUsers = localStorage.getItem('ivy_users_list')
         if (storedUsers) {
-            setUsersList(JSON.parse(storedUsers))
+          setUsersList(JSON.parse(storedUsers))
         }
     }, [])
 
@@ -88,58 +85,58 @@ export default function SignIn() {
 
     const submit = async () => {
         try {
-            isLoading(true)
-            const userData = {
-              type: 'email',
-              email: email,
-              password: password
-            }
+          isLoading(true)
+          const userData = {
+            type: 'email',
+            email: email,
+            password: password
+          }
 
-            // const user = (() => {
-            //   if(accountType === 'admin') {
-            //     return users.find(u => u.email === email)
-            //   } else {
-            //     return students.find(s => s.registrationNumber === email)
-            //   }
-            // })()
-            // if (user) {
-            //   if (password === user.name.toLowerCase().split(' ')[1]) localStorage.setItem("ivy-user", JSON.stringify(user))
-            //   else throw Error("Invalid password")  
-            // } else {
-            //   throw Error("User not found!")
-            // }
+          // const user = (() => {
+          //   if(accountType === 'admin') {
+          //     return users.find(u => u.email === email)
+          //   } else {
+          //     return students.find(s => s.registrationNumber === email)
+          //   }
+          // })()
+          // if (user) {
+          //   if (password === user.name.toLowerCase().split(' ')[1]) localStorage.setItem("ivy-user", JSON.stringify(user))
+          //   else throw Error("Invalid password")  
+          // } else {
+          //   throw Error("User not found!")
+          // }
 
-            /* AXIOS */
-            const response = await api.post('/signin?api-key=AyomideEmmanuel', userData)
+          /* AXIOS */
+          const response = await api.post('/signin?api-key=AyomideEmmanuel', userData)
 
-            if (response.status >= 200 && response.status < 300) {
-              dispatch(setUser({...response.data, signed_in: true}))
-              toast({
-                title: "You have signed in succesfully.",
-                // description: JSON.stringify(userData)
-              })
-              navigate("/dashboard/home")
-            }
+          if (response.status >= 200 && response.status < 300) {
+            localStorage.setItem('ivy_user', JSON.stringify({...response.data, signed_in: true, timestamp: Date.now()}))
+            dispatch(setUser({...response.data, signed_in: true}))
+            toast({
+              title: "You have signed in succesfully.",
+              // description: JSON.stringify(userData)
+            })
+            navigate(redirect || "/dashboard/home")
+          }
 
         } catch (error: unknown) {
-            if (error instanceof Error) {
-              const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
-              if (message && typeof message !== 'object') {
-                setError(message)
-                return;
-              }
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
-              setError(description)
-            } else if (error && typeof error === 'object' && 'response' in error) {
-                const axiosError = error as { response: { data: { error: string } } }
-                console.error('API Error:', axiosError.response.data.error)
-                setError(axiosError.response.data.error)
-            } else {
-                console.error('Unexpected error:', error)
-                setError('An unexpected error occurred')
+          if (error instanceof Error) {
+            const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+            if (message && typeof message !== 'object') {
+              setError(message)
+              return;
             }
-            isLoading(false)
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+            setError(description)
+          } else if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response: { data: { error: string } } }
+              console.error('API Error:', axiosError.response.data.error)
+              setError(axiosError.response.data.error)
+          } else {
+              console.error('Unexpected error:', error)
+              setError('An unexpected error occurred')
+          }
         } finally {
           isLoading(false)
         }
@@ -214,10 +211,10 @@ export default function SignIn() {
               }} 
               className="space-y-4">
                 <Tabs defaultValue='student' onValueChange={(type) => setAccountType(type)}>
-                  <TabsList className="bg-blue-50 dark:bg-muted/20 dark:border h-auto rounded-full grid w-full grid-cols-2">
+                  {/* <TabsList className="bg-blue-50 dark:bg-muted/20 dark:border h-auto rounded-full grid w-full grid-cols-2">
                     <TabsTrigger value="admin" className="data-[state=active]:bg-cyan-500 data-[state=active]:hover:bg-cyan-400 data-[state=active]:text-white rounded-full">Admin</TabsTrigger>
                     <TabsTrigger value="student" className="data-[state=active]:bg-cyan-500 data-[state=active]:hover:bg-cyan-400 data-[state=active]:text-white rounded-full">Student</TabsTrigger>
-                  </TabsList>
+                  </TabsList> */}
                   <TabsContent value="admin">
                     <div>
                       <label htmlFor="email" className="block text-sm/6 font-medium text-cyan-500">
@@ -241,7 +238,7 @@ export default function SignIn() {
                   <TabsContent value="student">
                     <div>
                       <label htmlFor="email" className="block text-sm/6 font-medium text-cyan-500">
-                        Registration Number
+                        Registration Number or Email
                       </label>
                       <div className="mt-2">
                         <Input

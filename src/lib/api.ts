@@ -19,6 +19,8 @@ api.interceptors.request.use(async (config) => {
         if (token) {
             config.headers['X-Secondary-Authorization'] = `Bearer ${token}`;
         }
+        // Always send ngrok-skip-browser-warning header
+        config.headers['ngrok-skip-browser-warning'] = 'true';
         return config;
     } catch (error) {
         console.error('Network check failed:', error);

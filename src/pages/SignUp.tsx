@@ -65,7 +65,8 @@ export default function SignUp() {
               address: "",
               fee: [],
               scholarship: [],
-              email_verified: false
+              email_verified: false,
+              papers: []
             }))
             toast({
               variant: 'success',

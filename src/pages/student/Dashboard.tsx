@@ -1,7 +1,7 @@
 import { Card, CardContent, } from '@/components/ui/card';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Settings, User, Menu, Loader2, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
-import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { forwardRef, useCallback, useEffect, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
@@ -9,65 +9,28 @@ import Error404Page from '@/components/404';
 import { cn } from '@/lib/utils';
 import PapersRegistration from './PapersRegistration';
 import { Button } from '@/components/ui/button';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { Dialog, DialogTitle, DialogHeader, DialogContent, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Paper } from '@/lib/data';
 import { api } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
+import { AxiosError } from 'axios';
+import { setUser } from '@/redux/userSlice';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
 interface AvProps {
-    active?: boolean;
-    className?: string;
-    children?: React.ReactNode;
+  active?: boolean;
+  className?: string;
+  children?: React.ReactNode;
 }
 
-const CoursePageItems = [
-  {
-    title: "Register",
-    description: "Register for a paper",
-    path: "/student-dashboard/papers/register"
-  },
-  {
-    title: "View Papers", 
-    description: "View your registered papers",
-    path: "/student-dashboard/papers/view"
-  },
-  {
-    title: "View",
-    description: "View available papers",
-    path: "/student-dashboard/papers/available"
-  },
-  {
-    title: "Print Papers",
-    description: "Print paper materials",
-    path: "/student-dashboard/papers/print"
-  }
-]
-
-const HomePageItems = [
-  {
-    title: "Papers", 
-    description: "Visit the papers page",
-    path: "/student-dashboard/papers"
-  },
-  {
-    title: "Payments",
-    description: "Visit the payments page",
-    path: "/student-dashboard/payments"
-    },
-    {
-      title: "Resources",
-      description: "Visit the resources page",
-      path: "/student-dashboard/resources"
-    },
-    {
-      title: "Additional Info",
-      description: "Visit the additional info page",
-      path: "/accounts/additional-info"
-    }
-]
+type CoursePageItems = {
+  title: string;
+  description: string;
+  path: string;
+}[]
 
 const Av = forwardRef<HTMLSpanElement, AvProps>(({ active, className, children }, ref) => (
     <span 
@@ -85,15 +48,62 @@ export default function Dashboard() {
     const [isFull, setIsFull] = useState(false)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const user = useSelector((state: RootState) => state.user)
+    const allowPaperRegistration = useSelector((state: RootState) => state.utils.allowPaperRegistration)
+
+    const HomePageItems = [
+    {
+      title: "Papers", 
+      description: "Visit the papers page",
+      path: "/student-dashboard/papers"
+    },
+    {
+      title: "Payments",
+      description: "Visit the payments page",
+      path: "/student-dashboard/payments"
+    },
+    // {
+    //   title: "Resources",
+    //   description: "Visit the resources page",
+    //   path: "/student-dashboard/resources"
+    // },
+    // {
+    //   title: "Additional Info",
+    //   description: "Visit the additional info page",
+    //   path: "/accounts/additional-info"
+    // }
+    ]
+
+    const CoursePageItems = [
+      {
+        title: "Register",
+        description: "Register for a paper",
+        path: "/student-dashboard/papers/register"
+      },
+      {
+        title: "View Papers", 
+        description: "View your registered papers",
+        path: "/student-dashboard/papers/view"
+      },
+      {
+        title: "View",
+        description: "View available papers",
+        path: "/student-dashboard/papers/available"
+      },
+      {
+        title: "Print Papers",
+        description: "Print paper materials",
+        path: "/student-dashboard/papers/print"
+      }
+    ]
     
     useEffect(() => {
-        document.title = "Students - Ivy League Associates";
+      document.title = "Students - Ivy League Associates";
     }, []);
     
 
     const toggleSidebar = useCallback((value: boolean) => {
-        localStorage.setItem('sidebar', JSON.stringify(value))
-        setIsFull(value)
+      localStorage.setItem('sidebar', JSON.stringify(value))
+      setIsFull(value)
     }, [])
 
     const toggleMobileSidebar = () => {
@@ -101,8 +111,8 @@ export default function Dashboard() {
     }
 
     useEffect(() => {
-        const sidebar = localStorage.getItem('sidebar')
-        if (sidebar) toggleSidebar(JSON.parse(sidebar))
+      const sidebar = localStorage.getItem('sidebar')
+      if (sidebar) toggleSidebar(JSON.parse(sidebar))
     })
 
     useEffect(() => {
@@ -175,8 +185,19 @@ export default function Dashboard() {
                     {sideItems && sideItems.map(item => (
                       <div 
                       key={item.title} 
-                      className={`flex ${type === item.title.toLowerCase() && isFull && 'bg-gray-200 dark:bg-gray-800'} ${isFull ? 'justify-start hover:bg-gray-200 dark:hover:bg-gray-800 p-2' : 'justify-center'} p-1 overflow-hidden rounded-full cursor-pointer relative w-full transition-colors`}
-                      onClick={() => navigate('/student-dashboard/' + item.title.toLowerCase())}
+                      className={`flex ${type === item.title.toLowerCase() && isFull && 'bg-gray-200 dark:bg-gray-800'} ${isFull ? 'justify-start hover:bg-gray-200 dark:hover:bg-gray-800 p-2' : 'justify-center'} p-1 overflow-hidden rounded-full cursor-pointer relative w-full transition-colors ${(item.title === 'Papers' && !user.email_verified) || (item.title === 'Payments' && user.user_status === 'signee') ? 'opacity-50 pointer-events-none' : ''}`}
+                      onClick={() => {
+                        if (item.title === 'Papers') {
+                          if (!user.email_verified) {
+                            return;
+                          }
+                          if (user.user_status === 'signee') {
+                            navigate('/accounts/additional-info');
+                            return;
+                          }
+                        }
+                        navigate('/student-dashboard/' + item.title.toLowerCase());
+                      }}
                       >
                         <TooltipProvider>
                           <Tooltip>
@@ -289,7 +310,7 @@ export default function Dashboard() {
                           <Route path="/" element={<PapersPage menuItems={CoursePageItems}/>} />
                           <Route path="register" element={
                             <TabsContent value="register">
-                            {user.user_status === 'signee' && location.pathname.includes('papers') ?
+                            {user.user_status === 'signee' && location.pathname.includes('papers') && !allowPaperRegistration ?
                             (
                               <Dialog open={user.user_status === 'signee' && location.pathname.includes('papers')} onOpenChange={() => {}}>
                                 <DialogContent className='dark:bg-gray-900 dark:border-gray-700 rounded-lg'>
@@ -316,7 +337,7 @@ export default function Dashboard() {
                           } />
                           <Route path="view" element={
                             <TabsContent value="view">
-                              <PapersPage menuItems={CoursePageItems}/>
+                              <PapersList/>
                             </TabsContent>
                           } />
                           <Route path="available" element={
@@ -342,7 +363,7 @@ export default function Dashboard() {
                     </Routes>
                   </Tabs>
                   
-                  <section>
+                  {/* <section>
                     <details className="bg-white dark:bg-gray-800 border border-blue-500 p-6 rounded-lg">
                       <summary className="cursor-pointer text-lg font-medium">
                         Announcements
@@ -353,7 +374,7 @@ export default function Dashboard() {
                         <p className="text-gray-700 dark:text-gray-300">Check out our new paper materials in the Resources section.</p>
                       </div>
                     </details>
-                  </section>
+                  </section> */}
                 </CardContent>
               </Card>
             </div>
@@ -373,14 +394,15 @@ const AvailablePapers = () => {
         setIsLoading(true);
         const response = await api.get('/courses?api-key=AyomideEmmanuel&reg=true&acca_reg=001&user_status=signee&email=');
         setPapers(response.data.papers);
-        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching papers:', error);
         setError(true);
+      } finally {
+        setIsLoading(false);
       }
     };
     if (isLoading) fetchPapers();
-  }, []);
+  }, [isLoading]);
 
     return (
         <div className="space-y-8">
@@ -396,10 +418,10 @@ const AvailablePapers = () => {
                             <Loader2 className="w-10 h-10 animate-spin" />
                           </div>}
                           {error && <div className="flex justify-center items-center h-[50vh]">
-                            <AlertCircle className="w-10 h-10 animate-spin" />
+                            <AlertCircle className="w-10 h-10" />
                           </div>}
-                          {papers.map((paper) => (
-                            <div key={paper.code} className="p-4 border rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
+                          {papers?.map((paper) => (
+                            <div key={paper.code[0]} className="p-4 border rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
                               <h3 className="text-lg font-medium">{paper.name}</h3>
                               <p className="text-muted-foreground">{paper.category} - {paper.code}</p>
                               <p className="text-sm text-muted-foreground mt-2">Price: ₦{paper.price.toLocaleString()}</p>
@@ -413,7 +435,123 @@ const AvailablePapers = () => {
     )
 }
 
-const PapersPage = ({ menuItems }:{ menuItems: typeof CoursePageItems }) => {
+const PapersList = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const savedReference = localStorage.getItem('reference');
+  const reference = searchParams.get('reference') || searchParams.get('trxref') || savedReference;
+  const user = useSelector((state: RootState) => state.user)
+
+  useEffect(() => {
+    // 200 - Payment has been made; 202 - Payment pending; 410 - payment failed; 404 - payment not found
+    const verifyPayment = async () => {
+      if (!reference) {
+        navigate("/student-dashboard/papers/")
+        return
+      }
+
+      try {
+        const response = await api.get(`/verify/${reference}?api-key=AyomideEmmanuel`);
+
+        switch (response.status) {
+          case 200:
+            { toast({
+              title: response.data.status || "Payment Successful!",
+              description: response.data.message || "Your payment has been successfully processed.",
+              variant: "success"
+            })
+            dispatch(setUser({...user, acca_reg: response.data.data.acca_reg, reg_no: response.data.data.reg_no, papers: response.data.data.papers}))
+            localStorage.removeItem('reference');
+            const additional_info = JSON.parse(localStorage.getItem('additional_info_draft') || '{}')
+            localStorage.setItem('additional_info_draft', JSON.stringify({...additional_info, acca_reg_no: response.data.data.acca_reg_no}))
+            break; }
+          case 202:
+            toast({
+              title: response.data.status || "Payment Pending",
+              description: response.data.message || "Your payment is pending. Please wait while we verify your payment.",
+            })
+            break;
+          case 410:
+            toast({
+              title: "Payment Failed",
+              description: "Your payment has failed. Please try again.",
+              variant: "destructive"
+            })
+            break;
+          case 404:
+            toast({
+              title: "Payment Not Found",
+              description: "Your payment was not found. Please try again.",
+              variant: "destructive"
+            })
+            break;
+          default:
+            toast({
+              title: response.data.status || "Payment Verification Failed",
+              description: response.data.message || "There was an error verifying your payment.",
+              variant: "destructive"
+            })
+            break;
+        }
+      } catch (error) {
+        console.error('Error fetching papers:', error);
+        if (error instanceof Error) {
+          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+          toast({
+            title: "Error",
+            description: description,
+            variant: "destructive"
+          })
+        } else if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response: { data: { error: string } } }
+          console.error('API Error:', axiosError.response.data.error)
+          toast({
+            title: "Error",
+            description: axiosError.response.data.error,
+            variant: "destructive"
+          })
+        } else {
+          console.error('Unexpected error:', error)
+          toast({
+            title: "Error",
+            description: "An unexpected error occurred",
+            variant: "destructive"
+          })
+        }
+      } finally {
+        // setIsVerifying(false)
+      }
+    }
+    verifyPayment()
+  }, [reference, navigate])
+
+  return (
+    <div className="space-y-8">
+      <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100/30 dark:from-gray-800 dark:to-gray-900">
+        <CardContent className="p-8">
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold">Papers List</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {user.papers?.map((paper) => (
+                <div key={Object.keys(paper)[0]} className="p-4 border rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <h3 className="text-lg font-medium">{Object.keys(paper)[0]}</h3>
+                  <p className="text-muted-foreground">{Object.values(paper)[0]}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+}
+
+const PapersPage = ({ menuItems }:{ menuItems: CoursePageItems }) => {
   const user = useSelector((state: RootState) => state.user)
 
   return (
@@ -423,10 +561,10 @@ const PapersPage = ({ menuItems }:{ menuItems: typeof CoursePageItems }) => {
             <Link 
               key={index}
               to={item.path === '/student-dashboard/papers/register' && !user.email_verified ? '/accounts/confirm-email' : item.path}
-              className="block p-6 max-[639px]:text-center bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+              className={`block p-6 max-[639px]:text-center bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 ${(item.title === 'Papers' && !user.email_verified) || (item.title === 'Payments' && user.user_status === 'signee') ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">{item.title}</h5>
-              <p className="font-normal ">{item.description}</p>
+              <p className="font-normal ">{item.title === 'Papers' && !user.email_verified ? 'Please verify your email to register for papers' : item.description}</p>
             </Link>
           ))}
         </div>
@@ -440,48 +578,89 @@ const ProfilePage = () => {
         <div className="space-y-8">
             <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100/30 dark:from-gray-800 dark:to-gray-900">
                 <CardContent className="p-8">
-                    <div className="space-y-6">
-                        <div>
-                            <h2 className="text-2xl font-semibold">{user.firstname} {user.lastname}</h2>
-                            <p className="text-muted-foreground">{user.reg_no}</p>
-                        </div>
+                  <div className="space-y-6">
+                      <div>
+                          <h2 className="text-2xl font-semibold">{user.firstname} {user.lastname}</h2>
+                          <p className="text-muted-foreground">{user.reg_no}</p>
+                      </div>
 
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <h3 className="text-lg font-medium">Personal Information</h3>
-                                <div className="grid gap-2">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium min-w-24">Email:</span>
-                                        <span className="text-muted-foreground">{user.email}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium min-w-24">Date of Birth:</span>
-                                        <span className="text-muted-foreground">
-                                            {new Date(user.dob).toLocaleDateString()}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium min-w-24">Gender:</span>
-                                        <span className="text-muted-foreground capitalize">
-                                            {user.gender}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+                      <div className="space-y-4">
+                          <div className="space-y-2">
+                              <h3 className="text-lg font-medium">Personal Information</h3>
+                              <div className="grid gap-2">
+                                  <div className="flex items-center gap-2">
+                                      <span className="font-medium min-w-24">Email:</span>
+                                      <span className="text-muted-foreground">{user.email}</span>
+                                      {user.email_verified ? (
+                                          <CheckCircle className="w-4 h-4 text-green-500" />
+                                      ) : (
+                                          <XCircle className="w-4 h-4 text-red-500" />
+                                      )}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                      <span className="font-medium min-w-24">Date of Birth:</span>
+                                      <span className="text-muted-foreground">
+                                          {new Date(user.dob).toLocaleDateString()}
+                                      </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                      <span className="font-medium min-w-24">Gender:</span>
+                                      <span className="text-muted-foreground capitalize">
+                                          {user.gender}
+                                      </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                      <span className="font-medium min-w-24">Phone:</span>
+                                      <span className="text-muted-foreground">
+                                          {user.phone_no}
+                                      </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                      <span className="font-medium min-w-24">Address:</span>
+                                      <span className="text-muted-foreground">
+                                          {user.address}
+                                      </span>
+                                  </div>
+                              </div>
+                          </div>
 
-                            <div className="space-y-2">
-                                <h3 className="text-lg font-medium">Academic Details</h3>
-                                <div className="grid gap-2">
-                                    <div className="flex items-center gap-2">
+                          <div className="space-y-2">
+                              <h3 className="text-lg font-medium">Academic Details</h3>
+                              <div className="grid gap-2">
+                                  <div className="flex items-center gap-2">
                                       <span className="font-medium min-w-24">User Status:</span>
                                       <span className="text-muted-foreground capitalize">
                                           {user.user_status}
                                       </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                  </div>
+                                  {user.acca_reg && (
+                                      <div className="flex items-center gap-2">
+                                          <span className="font-medium min-w-24">ACCA Reg:</span>
+                                          <span className="text-muted-foreground">
+                                              {user.acca_reg}
+                                          </span>
+                                      </div>
+                                  )}
+                                  {user.scholarship?.length > 0 && (
+                                      <div className="flex items-center gap-2">
+                                          <span className="font-medium min-w-24">Scholarship:</span>
+                                          <span className="text-muted-foreground">
+                                              {user.scholarship.join(', ')}
+                                          </span>
+                                      </div>
+                                  )}
+                                  {user.fee?.length > 0 && (
+                                      <div className="flex items-center gap-2">
+                                          <span className="font-medium min-w-24">Fees:</span>
+                                          <span className="text-muted-foreground">
+                                              {user.fee.map(f => `₦${f.amount.toLocaleString()} (${f.reason})`).join(', ')}
+                                          </span>
+                                      </div>
+                                  )}
+                              </div>
+                          </div>
+                      </div>
+                  </div>
                 </CardContent>
             </Card>
         </div>

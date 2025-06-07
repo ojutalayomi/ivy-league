@@ -18,7 +18,10 @@ type UserState = {
         amount: number;
         reason: string;
     }[];
-    scholarship: [][]
+    scholarship: [][],
+    papers: {
+        [name: string]: string;
+    }[]
 }
 
 const initialState: UserState = {
@@ -36,7 +39,8 @@ const initialState: UserState = {
     signed_in: false,
     email_verified: false,
     fee: [],
-    scholarship: []
+    scholarship: [],
+    papers: []
 };
 
 const userSlice = createSlice({

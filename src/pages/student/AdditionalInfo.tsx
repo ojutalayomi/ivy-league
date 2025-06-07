@@ -17,8 +17,10 @@ import { cn } from "@/lib/utils";
 import { Check, ChevronLeft, Loader2, XCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { updateUserProfile } from "@/redux/userSlice";
+import { setAllowPaperRegistration } from "@/redux/utilsSlice";
 
 interface Question {
     key: string;
@@ -44,9 +46,9 @@ interface Question {
 type FormData = z.infer<z.ZodObject<z.ZodRawShape>>;
 
 const sponsorSchema = z.object({
-    sponsorCode: z.string().min(1, "Sponsor code is required"),
-    sponsorName: z.string().min(1, "Organization name is required"),
-    sponsorEmail: z.string().email("Please enter a valid email address")
+  sponsorCode: z.string().min(1, "Sponsor code is required"),
+  sponsorName: z.string().min(1, "Organization name is required"),
+  sponsorEmail: z.string().email("Please enter a valid email address")
 });
 
 type SponsorData = z.infer<typeof sponsorSchema>;
@@ -73,9 +75,17 @@ export default function AdditionalInfo() {
         if (question.subject.includes("Referred by a friend")) {
             schemaFields[fieldName] = z.string().optional();
         } else if (question.type === 'terms') {
-          schemaFields[fieldName] = z.boolean().refine((val) => val === true, {
-            message: "You must agree to the terms and conditions"
-          });
+          if (question.key === 'accuracy') {
+            schemaFields[fieldName] = z.boolean().refine((val) => val === true, {
+              message: "You must select the checkbox"
+            });
+          } else {
+            schemaFields[fieldName] = z.boolean().refine((val) => val === true, {
+              message: "You must agree to the terms and conditions"
+            });
+          }
+        } else if (question.type === 'boolean') {
+          schemaFields[fieldName] = z.boolean();
         } else {
           schemaFields[fieldName] = z.string().min(1, `${question.subject} is required`);
         }
@@ -266,8 +276,8 @@ export default function AdditionalInfo() {
 
       setIsLoading(true);
       toast({
-        title: "Success",
-        description: "Additional information submitted successfully"
+        title: "Form Saved",
+        description: "Additional information saved successfully"
       });
       
       setIsLoading(false);
@@ -383,6 +393,7 @@ export default function AdditionalInfo() {
 }
 
 const SponsorCard = ({ form }: { form: UseFormReturn<FormData> }) => {
+    const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user)
     const navigate = useNavigate();
     const [isSponsor, setIsSponsor] = useState(true);
@@ -397,7 +408,7 @@ const SponsorCard = ({ form }: { form: UseFormReturn<FormData> }) => {
       const fetchDetails = async () => {
         try {
           setIsLoading(true);
-          const response = await api.get('/courses?api-key=AyomideEmmanuel&reg=true&acca_reg=001&user_status=signee&email=');
+          const response = await api.get('/courses?api-key=AyomideEmmanuel&reg=true&acca_reg=001&user_status='+user.user_status+'&email='+user.email);
           setScholarship(response.data.scholarship);
           setFee(response.data.fee);
           setIsLoading(false);
@@ -407,94 +418,108 @@ const SponsorCard = ({ form }: { form: UseFormReturn<FormData> }) => {
         }
       };
       if (isLoading) fetchDetails();
-    }, [isLoading]);
+    }, [isLoading, user.email, user.user_status]);
 
     const sponsorForm = useForm<SponsorData>({
-        resolver: zodResolver(sponsorSchema),
-        defaultValues: {
-            sponsorCode: '',
-            sponsorName: '',
-            sponsorEmail: ''
-        }
+      resolver: zodResolver(sponsorSchema),
+      defaultValues: {
+        sponsorCode: '',
+        sponsorName: '',
+        sponsorEmail: ''
+      }
     });
 
     const handleBack = () => {
-        navigate(-1);
+      navigate(-1);
     };
 
     const handleSubmit = async () => {
-        if (!isSponsor) {
-            navigate('/student-dashboard/papers/register');
-            return;
+      console.log(isSponsor);
+      try {
+        const isValid = await sponsorForm.trigger();
+        if (!isValid && isSponsor) {
+          toast({
+            variant: "destructive",
+            title: "Validation Error",
+            description: "Please fill in all required sponsor fields correctly"
+          });
+          return;
         }
+        setIsError('');
+        setIsLoading(true);
+        const data = sponsorForm.getValues();
+        
+        // TODO: Submit sponsor information
+        // console.log('Sponsor data:', data);
+        const additionalInfo = localStorage.getItem(STORAGE_KEY);
+        const response = await api.post('/register?api-key=AyomideEmmanuel', {
+          firstname: user.firstname,
+          lastname: user.lastname,
+          email: user.email,
+          reg_no: user.reg_no,
+          user_status: 'signee',
+          sponsored: isSponsor,
+          token: data.sponsorCode, 
+          diet: 0,
+          user_data: {
+            discount: [],
+            discount_papers: [], 
+            ...JSON.parse(additionalInfo || '{}'),
+            scholarship_used: scholarship,
+          },
+          fee: fee
+        })
 
-        try {
-            const isValid = await sponsorForm.trigger();
-            if (!isValid) {
-                toast({
-                  variant: "destructive",
-                  title: "Validation Error",
-                  description: "Please fill in all required sponsor fields correctly"
-                });
-                return;
-            }
+        if (response.status >= 200 && response.status < 300) {
+          toast({
+            title: "Your registration is complete.",
+            description: JSON.stringify(response.data)
+          })
 
-            setIsLoading(true);
-            const data = sponsorForm.getValues();
-            
-            // TODO: Submit sponsor information
-            console.log('Sponsor data:', data);
-            const additionalInfo = localStorage.getItem(STORAGE_KEY);
-            const response = await api.post('/register?api-key=AyomideEmmanuel', {
-              firstname: user.firstname,
-              lastname: user.lastname,
-              email: user.email,
-              reg_no: user.reg_no,
-              user_status: 'signee',
-              sponsored: isSponsor,
-              token: data.sponsorCode, 
-              diet: 0,
-              info: {
-                discount: [],
-                discount_papers: [], 
-                ...JSON.parse(additionalInfo || '{}'),
-                scholarship_used: scholarship,
-              },
-              fee: fee
-            })
-
-            if (response.status >= 200 && response.status < 300) {
-              toast({
-                title: "Your registration is complete.",
-                description: JSON.stringify(response.data)
-              })
-            
-              setSuccess(true);
-              
-              setTimeout(() => {
-                setIsLoading(false);
-                setSuccess(false);
-                navigate("/student-dashboard/papers/register")
-              }, 3000);
-            }
-        } catch (error) {
-          setIsLoading(false);
-          setSuccess(false);
-            if (error instanceof Error) {
-                const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
-                console.log(message)
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
-                setIsError(description);
-            } else if (error && typeof error === 'object' && 'response' in error) {
-                const axiosError = error as { response: { data: { error: string } } }
-                console.error('API Error:', axiosError.response.data.error)
-                setIsError(axiosError.response.data.error);
+          dispatch(updateUserProfile({
+            user_status: 'student',
+            reg_no: response.data.reg_no || '',
+            acca_reg: response.data.acca_reg || '001',
+            fee: response.data.fee || [],
+            scholarship: response.data.scholarship || []
+          }));
+        
+          setSuccess(true);
+          
+          setTimeout(() => {
+            setIsLoading(false);
+            setSuccess(false);
+            if (!isSponsor) {
+              navigate("/student-dashboard/papers/register");
             } else {
-                console.error('Unexpected error:', error)
-                setIsError('An unexpected error occurred');
+              navigate("/student-dashboard/papers/available");
             }
+          }, 3000);
         }
+      } catch (error) {
+        setSuccess(false);
+        if (error instanceof Error) {
+          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+          console.log(message)
+           
+          const [title, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+          setIsError(title.includes('Initialization Error') ? 'An unexpected error occurred' : description);
+        } else if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response: { data: { error: string } } }
+          console.error('API Error:', axiosError.response.data.error)
+          setIsError(axiosError.response.data.error);
+        } else {
+          console.error('Unexpected error:', error)
+          setIsError('An unexpected error occurred');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const handleSkip = async () => {
+      dispatch(setAllowPaperRegistration(true));
+      navigate('/student-dashboard/papers/register');
     };
     
     return (
@@ -518,125 +543,125 @@ const SponsorCard = ({ form }: { form: UseFormReturn<FormData> }) => {
             </div>
           </CardHeader>
             <CardContent className="flex flex-col gap-6">
-                <div className="space-y-4">
-                    <div className="flex flex-col items-center space-y-2">
-                        <Label className="font-semibold">Are you sponsored by an organization?</Label>
-                        <div className="flex justify-between items-center gap-2 bg-blue-50 dark:bg-muted/20 dark:border p-1 rounded-full max-w-md">
-                            <Button 
-                                data-state={isSponsor ? 'checked' : 'unchecked'}
-                                onClick={() => setIsSponsor(true)}
-                                className={cn(
-                                    "flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200",
-                                    isSponsor 
-                                        ? "bg-cyan-500 text-white hover:bg-cyan-400 shadow-sm font-medium" 
-                                        : "bg-transparent shadow-none text-muted-foreground hover:bg-cyan-400/10"
-                                )}
-                            >
-                                Yes
-                                {isSponsor && <Check className='w-4 h-4' />}
-                            </Button>
-                            <Button
-                                data-state={!isSponsor ? 'checked' : 'unchecked'}
-                                onClick={() => setIsSponsor(false)}
-                                className={cn(
-                                    "flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200",
-                                    !isSponsor 
-                                        ? "bg-cyan-500 text-white hover:bg-cyan-400 shadow-sm font-medium" 
-                                        : "bg-transparent shadow-none text-muted-foreground hover:bg-cyan-400/10"
-                                )}
-                            >
-                                No
-                                {!isSponsor && <Check className='w-4 h-4' />}
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4 bg-blue-50 max-w-lg mx-auto dark:bg-muted/20 dark:border rounded-lg transition-all p-4">
-                    {isSponsor ? (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="sponsorCode" className="font-semibold">Sponsor Code</Label>
-                                <Input
-                                    id="sponsorCode"
-                                    placeholder="Enter your sponsor code"
-                                    className="w-full"
-                                    {...sponsorForm.register('sponsorCode')}
-                                />
-                                {sponsorForm.formState.errors.sponsorCode && (
-                                    <p className="text-sm text-red-500">{sponsorForm.formState.errors.sponsorCode.message}</p>
-                                )}
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="sponsorName" className="font-semibold">Sponsor Organization</Label>
-                                <Input
-                                    id="sponsorName"
-                                    placeholder="Enter sponsor organization name"
-                                    className="w-full"
-                                    {...sponsorForm.register('sponsorName')}
-                                />
-                                {sponsorForm.formState.errors.sponsorName && (
-                                    <p className="text-sm text-red-500">{sponsorForm.formState.errors.sponsorName.message}</p>
-                                )}
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="sponsorEmail" className="font-semibold">Sponsor Email</Label>
-                                <Input
-                                    id="sponsorEmail"
-                                    type="email"
-                                    placeholder="Enter sponsor contact email"
-                                    className="w-full"
-                                    {...sponsorForm.register('sponsorEmail')}
-                                />
-                                {sponsorForm.formState.errors.sponsorEmail && (
-                                    <p className="text-sm text-red-500">{sponsorForm.formState.errors.sponsorEmail.message}</p>
-                                )}
-                            </div>
-                        </>
-                    ) : (
-                        <span>You have chosen to skip the sponsor information. You will be redirected to the course registration page in <CountdownTimer />.</span>
-                    )}
-                    </div>
-                </div>
-
-                {isError && (
-                  <div className="flex flex-col items-center justify-center bg-red-500 text-white p-4 rounded-lg">
-                    <p className="text-white">{isError}</p>
+              <div className="space-y-4">
+                  <div className="flex flex-col items-center space-y-2">
+                      <Label className="font-semibold">Are you sponsored by an organization?</Label>
+                      <div className="flex justify-between items-center gap-2 bg-blue-50 dark:bg-muted/20 dark:border p-1 rounded-full max-w-md">
+                          <Button 
+                              data-state={isSponsor ? 'checked' : 'unchecked'}
+                              onClick={() => setIsSponsor(true)}
+                              className={cn(
+                                  "flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200",
+                                  isSponsor 
+                                      ? "bg-cyan-500 text-white hover:bg-cyan-400 shadow-sm font-medium" 
+                                      : "bg-transparent shadow-none text-muted-foreground hover:bg-cyan-400/10"
+                              )}
+                          >
+                              Yes
+                              {isSponsor && <Check className='w-4 h-4' />}
+                          </Button>
+                          <Button
+                              data-state={!isSponsor ? 'checked' : 'unchecked'}
+                              onClick={() => setIsSponsor(false)}
+                              className={cn(
+                                  "flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200",
+                                  !isSponsor 
+                                      ? "bg-cyan-500 text-white hover:bg-cyan-400 shadow-sm font-medium" 
+                                      : "bg-transparent shadow-none text-muted-foreground hover:bg-cyan-400/10"
+                              )}
+                          >
+                              No
+                              {!isSponsor && <Check className='w-4 h-4' />}
+                          </Button>
+                      </div>
                   </div>
-                )}
 
-                <Button 
-                  type="submit" 
-                  disabled={form.watch('sponsorCode')} 
-                  className="bg-cyan-500 hover:bg-cyan-400 max-w-lg mx-auto flex-1 font-semibold" 
-                  onClick={() => isSponsor ? handleSubmit() : navigate('/student-dashboard/papers/register')}
-                >
-                    {isSponsor ? (
-                        <>
-                            <span className="font-semibold">
-                                {isLoading ? "Submitting..." : "Submit Information"}
-                            </span>
-                            {isLoading && (success ? <Check className='w-4 h-4' /> : <Loader2 className='w-4 h-4 animate-spin' />)}
-                        </>
-                    ) : (
-                        <>
-                            <span className="flex-1 font-semibold">
-                                Skip
-                            </span>
-                        </>
-                    )}
-                </Button>
+                  <div className="space-y-4 bg-blue-50 max-w-lg mx-auto dark:bg-muted/20 dark:border rounded-lg transition-all p-4">
+                  {isSponsor ? (
+                      <>
+                          <div className="grid gap-2">
+                              <Label htmlFor="sponsorCode" className="font-semibold">Sponsor Code</Label>
+                              <Input
+                                  id="sponsorCode"
+                                  placeholder="Enter your sponsor code"
+                                  className="w-full"
+                                  {...sponsorForm.register('sponsorCode')}
+                              />
+                              {sponsorForm.formState.errors.sponsorCode && (
+                                  <p className="text-sm text-red-500">{sponsorForm.formState.errors.sponsorCode.message}</p>
+                              )}
+                          </div>
+                          <div className="grid gap-2">
+                              <Label htmlFor="sponsorName" className="font-semibold">Sponsor Organization</Label>
+                              <Input
+                                  id="sponsorName"
+                                  placeholder="Enter sponsor organization name"
+                                  className="w-full"
+                                  {...sponsorForm.register('sponsorName')}
+                              />
+                              {sponsorForm.formState.errors.sponsorName && (
+                                  <p className="text-sm text-red-500">{sponsorForm.formState.errors.sponsorName.message}</p>
+                              )}
+                          </div>
+                          <div className="grid gap-2">
+                              <Label htmlFor="sponsorEmail" className="font-semibold">Sponsor Email</Label>
+                              <Input
+                                  id="sponsorEmail"
+                                  type="email"
+                                  placeholder="Enter sponsor contact email"
+                                  className="w-full"
+                                  {...sponsorForm.register('sponsorEmail')}
+                              />
+                              {sponsorForm.formState.errors.sponsorEmail && (
+                                  <p className="text-sm text-red-500">{sponsorForm.formState.errors.sponsorEmail.message}</p>
+                              )}
+                          </div>
+                      </>
+                  ) : (
+                      <span>You have chosen to skip the sponsor information. You will be redirected to the course registration page in <CountdownTimer callback={handleSkip} />.</span>
+                  )}
+                  </div>
+              </div>
+
+              {isError && (
+                <div className="flex flex-col items-center justify-center bg-red-500 text-white p-4 rounded-lg">
+                  <p className="text-white">{isError}</p>
+                </div>
+              )}
+
+              <Button 
+                type="submit" 
+                disabled={form.watch('sponsorCode')} 
+                className="bg-cyan-500 hover:bg-cyan-400 max-w-lg mx-auto flex-1 font-semibold" 
+                onClick={async () => isSponsor ? handleSubmit() : await handleSkip()}
+              >
+                {isSponsor ? (
+                  <>
+                    <span className="font-semibold">
+                      {isLoading ? "Submitting..." : isSponsor ? "Submit Information" : "Submit and Skip"}
+                    </span>
+                    {isLoading && (success ? <Check className='w-4 h-4' /> : <Loader2 className='w-4 h-4 animate-spin' />)}
+                  </>
+                ) : (
+                  <>
+                    <span className="flex-1 font-semibold">
+                      Submit and Skip
+                    </span>
+                  </>
+                )}
+              </Button>
             </CardContent>
         </Card>
     );
 };
 
-const CountdownTimer = () => {
-    const navigate = useNavigate();
+const CountdownTimer = ( { callback }: { callback?: () => void }) => {
+    // const navigate = useNavigate();
     const [countdown, setCountdown] = useState(10);
     
     useEffect(() => {
         const timer = setInterval(() => {
-            setCountdown(prev => prev > 0 ? prev - 1 : 0);
+          setCountdown(prev => prev > 0 ? prev - 1 : 0);
         }, 1000);
         
         return () => clearInterval(timer);
@@ -644,10 +669,9 @@ const CountdownTimer = () => {
 
     useEffect(() => {
         if (countdown === 0) {
-            navigate('/student-dashboard/papers/register');
+          callback?.();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [countdown]);
-    
     return countdown > 0 ? countdown + (countdown > 1 ? " seconds" : " second") : "0 seconds";
 }

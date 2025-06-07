@@ -5,30 +5,30 @@ import { User } from "./types";
 export interface Paper {
   category: string;
   name: string;
-  code: string;
-  price: number;
+  code: string[];
+  price: number[];
   revisionPrice?: number;
-  type?: 'standard' | 'intensive'
+  type?: ('Standard' | 'Intensive' | '')[]
 }
 
 export const papers: Paper[] = [
-  { category: 'Knowledge Papers', name: 'Business and Technology', code: 'BT', price: 30000, revisionPrice: 10000 },
-  { category: 'Knowledge Papers', name: 'Management Accounting', code: 'MA', price: 30000, revisionPrice: 10000 },
-  { category: 'Knowledge Papers', name: 'Financial Accounting', code: 'FA', price: 30000, revisionPrice: 10000 },
-  { category: 'Skill Papers', name: 'Corporate and Business Law', code: 'CBL', price: 30000, revisionPrice: 10000 },
-  { category: 'Skill Papers', name: 'Performance Management', code: 'PM', price: 30000, revisionPrice: 10000 },
-  { category: 'Skill Papers', name: 'Taxation', code: 'TAX', price: 30000, revisionPrice: 10000 },
-  { category: 'Skill Papers', name: 'Financial Reporting', code: 'FR', price: 30000, revisionPrice: 10000 },
-  { category: 'Skill Papers', name: 'Audit and Assurance', code: 'AA', price: 30000, revisionPrice: 10000 },
-  { category: 'Skill Papers', name: 'Financial Management', code: 'FM', price: 30000, revisionPrice: 10000 },
-  { category: 'Professional Papers', name: 'Strategic Business Leaders', code: 'SBL', price: 45000, revisionPrice: 10000 },
-  { category: 'Professional Papers', name: 'Strategic Business Reporting', code: 'SBR', price: 35000, revisionPrice: 10000 },
-  { category: 'Professional Papers', name: 'Advanced Financial Management', code: 'AFM', price: 35000, revisionPrice: 10000 },
-  { category: 'Professional Papers', name: 'Advanced Performance Management', code: 'APM', price: 35000, revisionPrice: 10000 },
-  { category: 'Professional Papers', name: 'Advanced Taxation', code: 'ATX', price: 35000, revisionPrice: 10000 },
-  { category: 'Professional Papers', name: 'Advanced Audit and Assurance', code: 'AAA', price: 35000, revisionPrice: 10000 },
-  { category: 'Additional', name: 'Oxford Brookes Mentoring', code: 'OBU', price: 90000 },
-  { category: 'Additional', name: 'Diploma in IFRS', code: 'DipIFRS', price: 75000 },
+  { category: 'Knowledge Papers', name: 'Business and Technology', code: ['BT'], price: [30000], revisionPrice: 10000 },
+  { category: 'Knowledge Papers', name: 'Management Accounting', code: ['MA'], price: [30000], revisionPrice: 10000 },
+  { category: 'Knowledge Papers', name: 'Financial Accounting', code: ['FA'], price: [30000], revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Corporate and Business Law', code: ['CBL'], price: [30000], revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Performance Management', code: ['PM'], price: [30000], revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Taxation', code: ['TAX'], price: [30000], revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Financial Reporting', code: ['FR'], price: [30000], revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Audit and Assurance', code: ['AA'], price: [30000], revisionPrice: 10000 },
+  { category: 'Skill Papers', name: 'Financial Management', code: ['FM'], price: [30000], revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Strategic Business Leaders', code: ['SBL'], price: [45000], revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Strategic Business Reporting', code: ['SBR'], price: [35000], revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Advanced Financial Management', code: ['AFM'], price: [35000], revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Advanced Performance Management', code: ['APM'], price: [35000], revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Advanced Taxation', code: ['ATX'], price: [35000], revisionPrice: 10000 },
+  { category: 'Professional Papers', name: 'Advanced Audit and Assurance', code: ['AAA'], price: [35000], revisionPrice: 10000 },
+  { category: 'Additional', name: 'Oxford Brookes Mentoring', code: ['OBU'], price: [90000] },
+  { category: 'Additional', name: 'Diploma in IFRS', code: ['DipIFRS'], price: [75000] },
 ];
 
 export const papers_ = [

@@ -61,7 +61,7 @@ export default function VerifyEmail() {
                 if(getCode) {
                     return;
                 } else {
-                    navigate("/dashboard/home")
+                    navigate("/student-dashboard/home")
                 }
                 dispatch(updateUserProfile({email_verified: true}))
               }, 3000)

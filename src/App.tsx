@@ -9,7 +9,7 @@ import { ModeToggle } from '@/components/mode-toggle'
 import { Toaster } from "@/components/ui/toaster";
 import Error404Page from '@/components/404'
 import Dashboard from '@/pages/student/Dashboard'
-import { Provider } from 'react-redux';
+import { Provider, useDispatch } from 'react-redux';
 import { store } from '@/redux/store'
 import AdditionalInfo from './pages/student/AdditionalInfo'
 import LogoDark from "@/assets/ivyDark.png";
@@ -19,6 +19,7 @@ import { RootState } from '@/redux/store';
 import VerifyEmail from './pages/VerifyEmail'
 import ResetPassword from './pages/ResetPassword'
 import HelpCenter from './pages/HelpCenter'
+import { clearUser, setUser } from './redux/userSlice'
 // import './App.css'
 
 function App() {
@@ -38,11 +39,44 @@ export default App
 
 function Router() {
   const [isLoading, setIsLoading] = useState(true);
+  const [searchParams] = reactRouterDom.useSearchParams()
+  const redirect = searchParams.get('redirect')
+  const navigate = reactRouterDom.useNavigate();
   const location = reactRouterDom.useLocation()
   const state = location.state as { backgroundLocation?: Location }
+  const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
   const pathSegments = (user.user_status === '' && location.pathname.startsWith('/dashboard')) ? location.pathname.replace("dashboard","manage-students") : location.pathname.replace("dashboard","student-dashboard")
   const backgroundLocation = state?.backgroundLocation;
+
+  useEffect(() => {
+    // Hydrate on mount
+    const hydrateUser = () => {
+      const { timestamp, ...userdata } = JSON.parse(localStorage.getItem('ivy_user') || '{}');
+      const isExpired = !userdata?.signed_in || !timestamp || Date.now() - timestamp > 3600000;
+      const whiteList = ['/accounts/signin', '/accounts/signup', '/accounts/reset-password', '/accounts/confirm-email', '/accounts/additional-info'];
+      if (isExpired && !whiteList.includes(location.pathname)) {
+        // localStorage.removeItem('ivy_user');
+        dispatch(clearUser()); // clear user in Redux
+        const path = location.pathname + location.search;
+        navigate('/accounts/signin' + (path ? '?redirect=' + (redirect || path) : ''));
+      } else if (userdata?.signed_in) {
+        dispatch(setUser(userdata));
+      }
+    };
+
+    hydrateUser();
+
+    // Listen for changes in localStorage (cross-tab sync)
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'ivy_user') {
+        hydrateUser();
+      }
+    };
+    window.addEventListener('storage', onStorage);
+
+    return () => window.removeEventListener('storage', onStorage);
+  }, [dispatch, location.pathname, location.search, navigate, redirect]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -52,7 +86,7 @@ function Router() {
 
   return (
     <>
-    <div className="w-screen h-screen bg-greybg-light bg-cover bg-center bg-fixed bg-no-repeat">
+    <div className="w-screen h-screen bg-background">
       <div className="relative backdrop-blur-sm z-10 w-full h-full overflow-y-auto">
         {!isLoading && (
           <reactRouterDom.Routes location={backgroundLocation || location}>
@@ -66,7 +100,7 @@ function Router() {
             } />
             <reactRouterDom.Route path="/dashboard/*" element={<reactRouterDom.Navigate to={pathSegments} replace />} />
             <reactRouterDom.Route path="/student-dashboard/*" element={
-              (user.signed_in && user.user_status !== '' ? (
+              (user.user_status !== '' ? (
                 <reactRouterDom.Routes>
                   <reactRouterDom.Route path='/*' element={<Dashboard />} />
                 </reactRouterDom.Routes>
@@ -92,7 +126,7 @@ function Router() {
           </reactRouterDom.Routes>
         )}
       </div>
-      <div className="absolute bottom-0 mb-4 mr-4 right-0 z-[100]">
+      <div className="absolute top-0 mt-4 mr-4 right-0 z-[100]">
         <ModeToggle />
       </div>
     </div>

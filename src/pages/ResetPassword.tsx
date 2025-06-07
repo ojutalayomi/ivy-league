@@ -223,10 +223,10 @@ export default function ResetPassword() {
                 </form>
 
                 <p className="mt-2 text-center text-sm/6 text-white sm:text-gray-500">
-                    Don't have an account?{' '}
-                    <Link to="/accounts/signup" className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50 dark:text-gray-200 dark:hover:text-gray-300">
-                    Sign up
-                    </Link>
+                  Don't have an account?{' '}
+                  <Link to="/accounts/signup" className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50 dark:text-gray-200 dark:hover:text-gray-300">
+                  Sign up
+                  </Link>
                 </p>
                 </>
               )}
