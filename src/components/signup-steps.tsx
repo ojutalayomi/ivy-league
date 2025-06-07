@@ -77,7 +77,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
         )}
       </div>
       <div className='flex gap-4'>
-        <div>
+        <div className='flex-1'>
           <Label className='sm:text-cyan-500' htmlFor="phone">Phone Number</Label>
           <Input
             id="phone"
