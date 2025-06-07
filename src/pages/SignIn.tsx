@@ -148,9 +148,9 @@ export default function SignIn() {
           <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-cyan-500 text-white">
             <UsersRound className="size-4" />
           </div>
-          <span className="truncate text-xl font-semibold text-white">IVY LEAGUE ASSOCIATES</span>
+          <span className="truncate text-xl font-semibold">IVY LEAGUE ASSOCIATES</span>
         </div>
-        <Card className="min-[641px]:min-w-[640px] mx-auto bg-transparent dark:bg-transparent border-none shadow-none sm:bg-white dark:sm:bg-gray-900 sm:border sm:shadow">
+        <Card className="min-[641px]:min-w-[640px] mx-auto bg-transparent dark:bg-transparent border-none shadow-none sm:bg-white dark:sm:bg-gray-900 sm:border-1 sm:border-solid sm:shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl/9 font-bold tracking-tight text-center text-cyan-500">Sign in to your account</CardTitle>
             <CardDescription className="text-center dark:text-white">Enter your credentials to access your account</CardDescription>
@@ -312,7 +312,7 @@ export default function SignIn() {
                 )}
               </form>
 
-              <p className="mt-2 text-center text-sm/6 text-white sm:text-gray-500">
+              <p className="mt-2 text-center text-sm/6 sm:text-gray-500">
                 Don't have an account?{' '}
                 <Link to="/accounts/signup" className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50  dark:text-gray-200 dark:hover:text-gray-300">
                   Sign up

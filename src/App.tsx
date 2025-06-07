@@ -13,6 +13,7 @@ import { Provider, useDispatch } from 'react-redux';
 import { store } from '@/redux/store'
 import AdditionalInfo from './pages/student/AdditionalInfo'
 import LogoDark from "@/assets/ivyDark.png";
+import LogoLight from "@/assets/ivyLight.png";
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
@@ -26,7 +27,7 @@ function App() {
   return (
     <reactRouterDom.BrowserRouter>
       <Provider store={store}>
-        <ThemeProvider defaultTheme="system" storageKey="ivy-ui-theme">
+        <ThemeProvider storageKey="ivy-ui-theme">
           <Router />
           <Toaster />
         </ThemeProvider>
@@ -86,7 +87,7 @@ function Router() {
 
   return (
     <>
-    <div className="w-screen h-screen bg-background">
+    <div className="w-screen h-screen bg-white dark:bg-black">
       <div className="relative backdrop-blur-sm z-10 w-full h-full overflow-y-auto">
         {!isLoading && (
           <reactRouterDom.Routes location={backgroundLocation || location}>
@@ -134,7 +135,8 @@ function Router() {
       <div className="absolute bottom-0 mb-4 mr-4 right-0 z-[100] animate-in animate-out fade-out-0 fade-in-0">
         <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-xl">
           <div className="flex flex-col items-center gap-4">
-            <img src={LogoDark} alt="Ivy League Associates Logo" className="h-52" />
+            <img src={LogoDark} alt="Ivy League Associates Logo" className="h-52 hidden dark:block" />
+            <img src={LogoLight} alt="Ivy League Associates Logo" className="h-52 dark:hidden" />
             {/* <h1 className="text-2xl font-bold">Ivy League Associates</h1> */}
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>

@@ -105,12 +105,12 @@ export default function ResetPassword() {
           <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-cyan-500 text-white">
             <UsersRound className="size-4" />
           </div>
-          <span className="truncate text-xl font-semibold text-white">IVY LEAGUE ASSOCIATES</span>
+          <span className="truncate text-xl font-semibold">IVY LEAGUE ASSOCIATES</span>
         </div>
-        <Card className="min-[641px]:min-w-[640px] mx-auto bg-transparent dark:bg-transparent border-none shadow-none sm:bg-white dark:sm:bg-gray-900 sm:border sm:shadow">
+        <Card className="min-[641px]:min-w-[640px] mx-auto bg-transparent dark:bg-transparent border-none shadow-none sm:bg-white dark:sm:bg-gray-900 sm:border-1 sm:border-solid sm:shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl/9 font-bold tracking-tight text-center text-cyan-500">Reset Password</CardTitle>
-            <CardDescription className="text-center dark:text-white">{token ? "Enter your new password" : "Enter your email to reset your password"}</CardDescription>
+            <CardDescription className="text-center">{token ? "Enter your new password" : "Enter your email to reset your password"}</CardDescription>
           </CardHeader>
           <CardContent className="flex max-[640px]:flex-wrap gap-2 items-center justify-center p-0 sm:p-6 sm:pt-0">
             <div className="max-[640px]:hidden flex sm:w-full sm:h-full sm:max-w-sm">
@@ -222,7 +222,7 @@ export default function ResetPassword() {
                     )}
                 </form>
 
-                <p className="mt-2 text-center text-sm/6 text-white sm:text-gray-500">
+                <p className="mt-2 text-center text-sm/6 sm:text-gray-500">
                   Don't have an account?{' '}
                   <Link to="/accounts/signup" className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50 dark:text-gray-200 dark:hover:text-gray-300">
                   Sign up

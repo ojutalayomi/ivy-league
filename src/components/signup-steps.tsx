@@ -22,9 +22,9 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
   return (
     <div className="space-y-4">
       <div>
-        <Label className='text-white sm:text-cyan-500' htmlFor="title">Title</Label>
+        <Label className='sm:text-cyan-500' htmlFor="title">Title</Label>
         <Select onValueChange={(value) => register('title').onChange({ target: { value, name: 'title' } })}>
-          <SelectTrigger className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary">
+          <SelectTrigger className="sm:text-primary sm:placeholder:text-primary">
             <SelectValue placeholder="Select a title" />
           </SelectTrigger>
           <SelectContent>
@@ -39,11 +39,11 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
       </div>
       <div className="flex gap-4">
         <div className="flex-1">
-          <Label className='text-white sm:text-cyan-500' htmlFor="firstname">First Name</Label>
+          <Label className='sm:text-cyan-500' htmlFor="firstname">First Name</Label>
           <Input
             id="firstname"
             {...register('firstname')}
-            className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
+            className="sm:text-primary sm:placeholder:text-primary"
             placeholder="John"
           />
           {errors.firstname && (
@@ -51,11 +51,11 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           )}
         </div>
         <div className="flex-1">
-          <Label className='text-white sm:text-cyan-500' htmlFor="lastname">Last Name</Label>
+          <Label className='sm:text-cyan-500' htmlFor="lastname">Last Name</Label>
           <Input
             id="lastname"
             {...register('lastname')}
-            className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
+            className="sm:text-primary sm:placeholder:text-primary"
             placeholder="Doe"
           />
           {errors.lastname && (
@@ -64,12 +64,12 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
         </div>
       </div>
       <div>
-        <Label className='text-white sm:text-cyan-500' htmlFor="email">Email</Label>
+        <Label className='sm:text-cyan-500' htmlFor="email">Email</Label>
         <Input
           id="email"
           type="email"
           {...register('email')}
-          className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
+          className="sm:text-primary sm:placeholder:text-primary"
           placeholder="john.doe@example.com"
         />
         {errors.email && (
@@ -78,22 +78,23 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
       </div>
       <div className='flex gap-4'>
         <div>
-          <Label className='text-white sm:text-cyan-500' htmlFor="phone">Phone Number</Label>
+          <Label className='sm:text-cyan-500' htmlFor="phone">Phone Number</Label>
           <Input
             id="phone"
             type="tel"
             onChange={(e) => setValue('phone', e.target.value)}
             value={watch('phone')}
-            className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
+            className="sm:text-primary sm:placeholder:text-primary"
             placeholder="0801 234 5678"
           />
           {errors.phone && (
             <p className="text-sm text-red-500 mt-1">{errors.phone.message}</p>
           )}
         </div>
-        <div>
-          <Label className='text-white sm:text-cyan-500' htmlFor="dob">Date of Birth</Label><br/>
+        <div className='flex-1'>
+          <Label className='sm:text-cyan-500' htmlFor="dob">Date of Birth</Label><br/>
           <AntdDatePicker
+            id="dob"
             value={watch('dob') ? dayjs(watch('dob')) : null}
             onChange={(date) => setValue('dob', date?.format('YYYY-MM-DD'))}
             picker="date"
@@ -101,8 +102,10 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
             format="YYYY-MM-DD"
             allowClear
             style={{ width: "100%" }}
+            minDate={dayjs('1980-01-01')}
+            maxDate={dayjs('2010-12-31')}
             disabledDate={current =>
-              current && (dayjs(current).isAfter(dayjs()) || dayjs(current).isBefore(dayjs('1900-01-01')))
+              current && (dayjs(current).isAfter(dayjs('2010-12-31')) || dayjs(current).isBefore(dayjs('1980-01-01')))
             }
             inputReadOnly
           />
@@ -112,13 +115,13 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
         </div>
       </div>
       <div>
-        <Label className='text-white sm:text-cyan-500' htmlFor="password">Password</Label>
+        <Label className='sm:text-cyan-500' htmlFor="password">Password</Label>
         <div className='relative'>
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
             {...register('password')}
-            className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
+            className="sm:text-primary sm:placeholder:text-primary"
           />
           <button
             type="button"
@@ -137,13 +140,13 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
         )}
       </div>
       <div>
-        <Label className='text-white sm:text-cyan-500' htmlFor="confirmPassword">Confirm Password</Label>
+        <Label className='sm:text-cyan-500' htmlFor="confirmPassword">Confirm Password</Label>
         <div className='relative'>
           <Input
           id="confirmPassword"
           type={showPassword1 ? "text" : "password"}
           {...register('confirmPassword')}
-          className="text-white placeholder:text-white sm:text-primary sm:placeholder:text-primary"
+          className="sm:text-primary sm:placeholder:text-primary"
           placeholder="Confirm Password"
           />
           <button

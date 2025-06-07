@@ -110,12 +110,12 @@ export default function SignUp() {
           <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-cyan-500 text-white">
             <UsersRound className="size-4" />
           </div>
-          <span className="truncate text-xl font-semibold text-white">IVY LEAGUE ASSOCIATES</span>
+          <span className="truncate text-xl font-semibold tracking-tight text-cyan-500">IVY LEAGUE ASSOCIATES</span>
         </div>
-        <Card className="sm:min-w-[660px] mx-auto bg-transparent dark:bg-transparent border-none shadow-none sm:bg-white dark:sm:bg-gray-900 sm:border sm:shadow">
+        <Card className="sm:min-w-[660px] mx-auto bg-transparent dark:bg-transparent border-none shadow-none sm:bg-white dark:sm:bg-gray-900 sm:border-1 sm:border-solid sm:shadow-lg">
           <CardHeader className="py-3">
             <CardTitle className="text-2xl/9 font-bold tracking-tight text-center text-cyan-500">Create your account</CardTitle>
-            <CardDescription className="text-center text-white sm:text-primary">Enter your details to create your account</CardDescription>
+            <CardDescription className="text-center sm:text-primary">Enter your details to create your account</CardDescription>
           </CardHeader>
           <CardContent className="flex max-[640px]:flex-wrap gap-2 items-center justify-center p-0 sm:pb-3 sm:px-6">
             <div className="max-[640px]:hidden flex flex-col sm:w-full sm:h-full sm:max-w-sm">
@@ -130,37 +130,37 @@ export default function SignUp() {
 
             <div className="sm:w-full sm:max-w-sm">
 
-                <form onSubmit={handleSubmit(submit)} className="space-y-6 p-4 sm:dark:border sm:dark:border-gray-700 rounded-lg">
-                    <Step1 {...stepProps} />
-                    
-                    {error && (
-                      <div className="hidden max-[640px]:block bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                        {error}
-                      </div>
-                    )}
+              <form onSubmit={handleSubmit(submit)} className="space-y-6 p-4 sm:dark:border sm:dark:border-gray-700 rounded-lg">
+                <Step1 {...stepProps} />
+                
+                {error && (
+                  <div className="hidden max-[640px]:block bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    {error}
+                  </div>
+                )}
 
-                    <div className="flex justify-between mt-3">
-                      <Button 
-                      type="submit" 
-                      className="w-full bg-cyan-500 text-white"
-                      disabled={isLoading}
-                      onClick={() => submit(getValues())}
-                      >
-                      {isLoading ? (
-                          <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating Account...
-                          </>
-                      ) : (
-                          'Create Account'
-                      )}
-                      </Button>
-                    </div>
-                </form>
+                <div className="flex justify-between mt-3">
+                  <Button 
+                  type="submit" 
+                  className="w-full bg-cyan-500 text-white"
+                  disabled={isLoading}
+                  onClick={() => submit(getValues())}
+                  >
+                  {isLoading ? (
+                      <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Account...
+                      </>
+                  ) : (
+                      'Create Account'
+                  )}
+                  </Button>
+                </div>
+              </form>
             </div>
           </CardContent>
           <CardFooter className="flex justify-center py-1.5">
-            <p className="text-center text-sm/6 text-white sm:text-gray-500">
+            <p className="text-center text-sm/6 sm:text-gray-500">
                 Already have an account?{' '}
                 <Link to="/accounts/signin" className="font-semibold text-cyan-500 hover:text-cyan-400 hover:underline">
                   Sign in
