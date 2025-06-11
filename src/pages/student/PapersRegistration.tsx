@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Paper } from '@/lib/data';
@@ -10,13 +10,16 @@ import { AlertCircle, Check, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { AxiosError } from 'axios';
+import SponsorCard from './Sponsored';
+import { setAllowPaperRegistration } from '@/redux/utilsSlice';
 
 export default function PapersRegistration() {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user);
+  const allowPaperRegistration = useSelector((state: RootState) => state.utils.allowPaperRegistration);
   const [selectedPapers, setSelectedPapers] = useState<{ [name: string]: { selected: boolean, type: { index: number, name: string } } }>({});
   const [email, setEmail] = useState(user.email);
   const [paymentType, setPaymentType] = useState<'partial' | 'full'>('full');
@@ -33,17 +36,19 @@ export default function PapersRegistration() {
   const [partialPayment, setPartialPayment] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isSponsor, setIsSponsor] = useState(true);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (isLoading) {
       (async () => {
         try {
           setIsLoading(true);
-            const response = await api.get(`/courses?api-key=AyomideEmmanuel&reg=true&acca_reg=${user.acca_reg || '001'}&user_status=${user.user_status}&email=${email}`);
+            const response = await api.get(`/courses?reg=true&${user.user_status === 'student' ? '' : "acca_reg=" + (user.acca_reg || '001')}&user_status=${user.user_status}&email=${email}`);
             setCurrentPapers(response.data.current_papers);
             setCoursesLimit(response.data.course_limit);
             setScholarships(response.data.scholarships);
-            setPartialPayment(response.data.partial_payment)
+            setPartialPayment(response.data.partial_payment);
             const currentFees = response.data.fee;
             const filteredPapers = response.data.papers.filter((paper: Paper) => 
               user.user_status === 'student' ? !paper.code.some(code => response.data.current_papers.includes(code)) : true
@@ -70,7 +75,17 @@ export default function PapersRegistration() {
         }
       })();
     };
-  }, [user]);
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // useEffect(() => {
+  //   console.log('Mounted');
+  //   return () => {
+  //     console.log('Unmounted');
+  //     dispatch(setAllowPaperRegistration(false));
+  //   };
+  // }, [dispatch]);
 
   const totalAmount = useCallback((returnFull: boolean = false, deductCurrentFees: boolean = true) => {
     return Object.entries(selectedPapers).reduce((sum, [name, { selected, type }]) => {
@@ -133,12 +148,12 @@ export default function PapersRegistration() {
         user_data: {
           discount: getDiscountPercentage(),
           discount_papers: getDiscountPapers(),
-          papers: Object.entries(selectedPapers).map(([name]) => papers.find(p => p.name === name)?.code[0] || '').filter(Boolean),
+          papers: Object.entries(selectedPapers).map(([name, {type}]) => papers.find(p => p.name === name)?.code[type.index] || '').filter(Boolean),
           ...(user.user_status === 'signee' ? JSON.parse(additionalInfo || '{}') : {}),
           retaking: false,
         },
       }
-      const response = await api.post(`/register?api-key=AyomideEmmanuel`, data);
+      const response = await api.post(`/register`, data);
       if (response.status === 200) {
         console.log(response.data);
         localStorage.setItem('reference', response.data.data.reference);
@@ -147,7 +162,9 @@ export default function PapersRegistration() {
           title: 'Payment Initiated!',
           description: 'Please wait while we redirect you to the payment page.'
         })
-        window.open(response.data.data.authorization_url, '_blank', 'noopener,noreferrer');
+        window.open(response.data.data.authorization_url, '_blank');
+        dispatch(setAllowPaperRegistration(false));
+        navigate('/student-dashboard/papers/payment-status');
       }
     } catch (error) {
       console.error('Error initializing payment:', error);
@@ -177,23 +194,30 @@ export default function PapersRegistration() {
     return acc;
   }, {} as { [key: string]: Paper[] });
 
-  return (
-    <div className="space-y-4">
-      {isLoading ? (
-        <div className="flex justify-center items-center h-[50vh]">
+  let content = null;
+
+  if (isLoading)  {
+    content = (
+      <div className="flex justify-center items-center h-[50vh]">
         <Loader2 className="w-10 h-10 animate-spin" />
+      </div>
+    )
+  } else if (error) {
+    content = (
+      <div className="flex flex-col justify-center items-center gap-2 h-[50vh]">
+        <div className='flex flex-col items-center gap-2'>
+          <AlertCircle className="w-10 h-10 text-red-500" />
+          <p className="text-red-500">{error}</p>
         </div>
-      ) : error ? (
-        <div className="flex flex-col justify-center items-center gap-2 h-[50vh]">
-          <div className='flex flex-col items-center gap-2'>
-            <AlertCircle className="w-10 h-10 text-red-500" />
-            <p className="text-red-500">{error}</p>
-          </div>
-          <Button onClick={() => navigate(-1)} className='bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full max-w-md'>Go Back</Button>
-        </div>
-      ) :  (
-        <div className="max-w-6xl mx-auto rounded-lg">
-          {Object.entries(groupedPapers ?? {}).map(([category, categoryPapers]) => (
+        <Button onClick={() => navigate(-1)} className='bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full max-w-md'>Go Back</Button>
+      </div>
+    )
+  } else if (user.user_status === 'student' && (!allowPaperRegistration || isSponsor)) {
+    content = <SponsorCard hideBackButton={true} />
+  } else {
+    content = (
+      <div className="max-w-6xl mx-auto rounded-lg">
+        {Object.entries(groupedPapers ?? {}).map(([category, categoryPapers]) => (
           <div key={category} className="mb-8">
             <h2 className="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200 border-b-2 border-blue-200 dark:border-blue-700 pb-2">
               {category}{" "}{'(' + categoryPapers.length + ' papers)'}
@@ -207,11 +231,17 @@ export default function PapersRegistration() {
                 })();
                 return (
                 <div key={paper.name} className={`p-4 relative border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-600 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                  {scholarships.length && scholarships.find(s => s.paper === paper.code[0]) && (
-                    <div className='absolute top-0 right-0 bg-blue-500 text-white px-2 py-1 rounded-full'>
-                      <p className='text-sm'>-{scholarships.find(s => s.paper === paper.code[0])?.percentage}%</p>
+                  {scholarships.length && scholarships.find(s => paper.code.some(code => code === s.paper)) ? (
+                    <div className='absolute top-0 right-0 flex item-center gap-1 bg-blue-500 text-white px-2 py-1 rounded-full'>
+                      {paper.code.map((code) => {
+                        const scholarship = scholarships.find(s => s.paper === code);
+                        if (!scholarship) return null;
+                        return (
+                          <p key={code} className='text-sm'>-{scholarship.percentage}%</p>
+                        )
+                      })}
                     </div>
-                  )}
+                  ) : null}
                   <label className="flex items-center space-x-3">
                     <Input
                       type="checkbox"
@@ -236,26 +266,26 @@ export default function PapersRegistration() {
                       className={`h-5 w-5 text-blue-600 dark:text-blue-400 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                     />
                     <span className="flex-1">
-                        <span className="block font-medium text-gray-700 dark:text-gray-200">{paper.name}</span>
-                        {Array.isArray(paper.type) && paper.type.length > 0 && Array.isArray(paper.price) && (
-                      <span className="block text-sm text-gray-500 dark:text-gray-400">
-                            {paper.type?.map((t: string, idx: number) => (
-                              <span key={t + idx}>
-                                {t}: ₦{paper.price?.[idx]?.toLocaleString()}
-                                {idx < (paper.type?.length ?? 0) - 1 ? ' | ' : ''}
-                              </span>
-                            ))}
-                      </span>
-                        )}
+                      <span className="block font-medium text-gray-700 dark:text-gray-200">{paper.name}</span>
+                      {Array.isArray(paper.type) && paper.type.length > 0 && Array.isArray(paper.price) && (
+                        <span className="block text-sm text-gray-500 dark:text-gray-400">
+                          {paper.type?.map((t: string, idx: number) => (
+                            <span key={t + idx}>
+                              {t}: ₦{paper.price?.[idx]?.toLocaleString()}
+                              {idx < (paper.type?.length ?? 0) - 1 ? ' | ' : ''}
+                            </span>
+                          ))}
+                        </span>
+                      )}
                     </span>
                   </label>
                   {selectedPapers[paper.name]?.selected && Array.isArray(paper.type) && paper.type.length > 1 && Array.isArray(paper.price) && (
-                  <div className="mt-2 ml-8">
+                    <div className="mt-2 ml-8">
                       <div className="flex flex-wrap items-center space-x-4">
                         {paper.type.map((t: string, idx: number) => (
                           <label key={t + idx} className="flex items-center gap-2">
-                        <input
-                          type="radio"
+                            <input
+                              type="radio"
                               name={`paper-type-${paper.name}`}
                               checked={selectedPapers[paper.name]?.type?.name === t}
                               onChange={() => setSelectedPapers({
@@ -264,11 +294,11 @@ export default function PapersRegistration() {
                                   ...selectedPapers[paper.name],
                                   type: { index: idx, name: t }
                                 }
-                          })}
-                          className="form-radio h-4 w-4 text-blue-600 dark:text-blue-400"
-                        />
+                              })}
+                              className="form-radio h-4 w-4 text-blue-600 dark:text-blue-400"
+                            />
                             <span className="text-sm text-gray-600 dark:text-gray-400">{t}</span>
-                      </label>
+                          </label>
                         ))}
                       </div>
                     </div>
@@ -291,7 +321,7 @@ export default function PapersRegistration() {
           </div>
         ))}
 
-          {papers?.length > 0 && (<div className="m-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        {papers?.length > 0 && (<div className="m-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <div className="flex flex-col items-center space-y-4">
             <div className="text-xl font-semibold text-gray-700 dark:text-gray-200">
               Total Amount: ₦{totalAmount(false, false)?.toLocaleString('en-US', {
@@ -330,7 +360,8 @@ export default function PapersRegistration() {
               {totalAmount() === 0 ? 'Select a paper to proceed' : 'Proceed to Payment'}
             </Button>
           </div>
-          </div>)}
+          </div>
+        )}
 
         <Dialog open={searchParams.get('paymentSummary') === 'true' && totalAmount() !== 0} onOpenChange={() => navigate(-1)}>
           <DialogContent className='dark:bg-gray-900 h-screen w-screen md:max-w-[calc(100vw-68px)] md:h-auto'>
@@ -505,8 +536,68 @@ export default function PapersRegistration() {
             </div>
           </DialogContent>
         </Dialog>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {user.user_status === 'student' && (
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-xl font-semibold text-gray-700 dark:text-gray-200">
+            Do you have a sponsor code?
+          </h1>
+          <div className="flex justify-between items-center gap-2 bg-gray-100 dark:bg-zinc-900 dark:text-gray-200 p-1 rounded-full">
+            <Button 
+              data-state={isSponsor ? 'checked' : 'unchecked'}
+              onClick={() => setIsSponsor(true)}
+              className={cn(
+                `flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200`,
+                isSponsor 
+                  ? "bg-white dark:bg-zinc-600 text-gray-800 dark:text-gray-200 hover:bg-inherit shadow-bar dark:shadow-bar-dark font-medium" 
+                  : "bg-transparent shadow-none text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800"
+              )}
+            >
+              Yes
+              {isSponsor && <Check className='w-4 h-4' />}
+            </Button>
+            <Button
+              data-state={!isSponsor ? 'checked' : 'unchecked'}
+              onClick={() => {
+                setIsSponsor(false)
+                dispatch(setAllowPaperRegistration(true));
+              }}
+              className={cn(
+                "flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200",
+                !isSponsor 
+                  ? "bg-white dark:bg-zinc-600 text-gray-800 dark:text-gray-200 hover:bg-inherit shadow-bar dark:shadow-bar-dark font-medium" 
+                  : "bg-transparent shadow-none text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800"
+              )}
+            >
+              No
+              {!isSponsor && <Check className='w-4 h-4' />}
+            </Button>
+          </div>
         </div>
       )}
+      {content}
+      <Dialog open={user.user_status === 'signee' && !allowPaperRegistration} onOpenChange={() => {}}>
+        <DialogContent className='dark:bg-gray-900 dark:border-gray-700 rounded-lg'>
+          <DialogHeader>
+            <DialogTitle>
+              Registration Status
+            </DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            You need to complete your registration to access this page.
+          </DialogDescription>
+          <DialogFooter className='flex flex-col sm:justify-center'>
+            <Button className='bg-cyan-500 hover:bg-cyan-400 text-white' variant="outline" onClick={() => navigate('/accounts/additional-info')}>
+              Complete Registration
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

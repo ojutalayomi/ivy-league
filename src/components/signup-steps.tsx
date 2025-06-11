@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UseFormWatch, UseFormRegister, FieldErrors, UseFormSetValue } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,7 +6,6 @@ import { FormSchemaType } from '@/lib/types';
 import { EyeOff, Eye } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { DatePicker as AntdDatePicker } from "antd";
-import "antd/dist/reset.css";
 import dayjs from 'dayjs';
 
 interface StepProps {
@@ -19,9 +18,23 @@ interface StepProps {
 export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }) => {
   const [showPassword, setShowPassword] = useState<boolean>(false)
   const [showPassword1, setShowPassword1] = useState<boolean>(false)
+
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .ant-picker-input input {
+        color: #000;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    }
+  }, []);
+
   return (
-    <div className="space-y-4">
-      <div>
+    <div className="space-y-2.5">
+      <div className='space-y-1'>
         <Label className='sm:text-cyan-500' htmlFor="title">Title</Label>
         <Select onValueChange={(value) => register('title').onChange({ target: { value, name: 'title' } })}>
           <SelectTrigger className="sm:text-primary sm:placeholder:text-primary">
@@ -38,7 +51,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
         )}
       </div>
       <div className="flex gap-4">
-        <div className="flex-1">
+        <div className="flex-1 space-y-1">
           <Label className='sm:text-cyan-500' htmlFor="firstname">First Name</Label>
           <Input
             id="firstname"
@@ -50,7 +63,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
             <p className="text-sm text-red-500 mt-1">{errors.firstname.message}</p>
           )}
         </div>
-        <div className="flex-1">
+        <div className="flex-1 space-y-1">
           <Label className='sm:text-cyan-500' htmlFor="lastname">Last Name</Label>
           <Input
             id="lastname"
@@ -63,7 +76,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           )}
         </div>
       </div>
-      <div>
+      <div className='space-y-1'>
         <Label className='sm:text-cyan-500' htmlFor="email">Email</Label>
         <Input
           id="email"
@@ -77,7 +90,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
         )}
       </div>
       <div className='flex gap-4'>
-        <div className='flex-1'>
+        <div className='flex-1 space-y-1'>
           <Label className='sm:text-cyan-500' htmlFor="phone">Phone Number</Label>
           <Input
             id="phone"
@@ -91,9 +104,10 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
             <p className="text-sm text-red-500 mt-1">{errors.phone.message}</p>
           )}
         </div>
-        <div className='flex-1'>
+        <div className='flex-1 space-y-1'>
           <Label className='sm:text-cyan-500' htmlFor="dob">Date of Birth</Label><br/>
           <AntdDatePicker
+            className='h-9'
             id="dob"
             value={watch('dob') ? dayjs(watch('dob')) : null}
             onChange={(date) => setValue('dob', date?.format('YYYY-MM-DD'))}
@@ -114,7 +128,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           )}
         </div>
       </div>
-      <div>
+      <div className='space-y-1'>
         <Label className='sm:text-cyan-500' htmlFor="password">Password</Label>
         <div className='relative'>
           <Input
@@ -139,7 +153,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
         )}
       </div>
-      <div>
+      <div className='space-y-1'>
         <Label className='sm:text-cyan-500' htmlFor="confirmPassword">Confirm Password</Label>
         <div className='relative'>
           <Input

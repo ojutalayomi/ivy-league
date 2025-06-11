@@ -6,7 +6,7 @@ import { Loader2, UsersRound } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from "react-hook-form";
 import { FormSchemaType, formSchema } from "@/lib/types";
@@ -21,6 +21,8 @@ import { setUser } from "@/redux/userSlice";
 
 export default function SignUp() {
     const dispatch = useDispatch()
+    const [searchParams] = useSearchParams();
+    const redirect = searchParams.get('redirect');
     const { toast } = useToast()
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState('');
@@ -47,7 +49,7 @@ export default function SignUp() {
           data.gender = data.title === 'Mr' ? 'male' : 'female';
           setIsLoading(true)
           // await new Promise(resolve => setTimeout(resolve, 3000));
-          const response = await api.post("/signup?api-key=AyomideEmmanuel", data)
+          const response = await api.post("/signup", data)
 
           // console.log(response)
 
@@ -68,6 +70,7 @@ export default function SignUp() {
               email_verified: false,
               papers: []
             }))
+            localStorage.setItem('ivy_user_token', JSON.stringify({token: response.data.email, timestamp: Date.now()}))
             toast({
               variant: 'success',
               title: "Welcome to Ivy League Associates. Please check your email for a verification link.",
@@ -76,7 +79,7 @@ export default function SignUp() {
             })
             setIsLoading(false)
             setError('')
-            navigate('/dashboard/home')
+            navigate(redirect ? redirect : '/dashboard/home')
           }
   
       } catch (error: unknown) {
@@ -162,7 +165,7 @@ export default function SignUp() {
           <CardFooter className="flex justify-center py-1.5">
             <p className="text-center text-sm/6 sm:text-gray-500">
                 Already have an account?{' '}
-                <Link to="/accounts/signin" className="font-semibold text-cyan-500 hover:text-cyan-400 hover:underline">
+                <Link to={`/accounts/signin${redirect ? `?redirect=${redirect}` : ''}`} className="font-semibold text-cyan-500 hover:text-cyan-400 hover:underline">
                   Sign in
                 </Link>
             </p>

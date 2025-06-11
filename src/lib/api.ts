@@ -15,9 +15,9 @@ api.interceptors.request.use(async (config) => {
         if (!networkStatus?.online) {
             throw new Error('No internet connection');
         }
-        const token = "";
+        const token = import.meta.env.VITE_BEARER_TOKEN;
         if (token) {
-            config.headers['X-Secondary-Authorization'] = `Bearer ${token}`;
+            config.headers['Authorization'] = `Bearer ${token}`;
         }
         // Always send ngrok-skip-browser-warning header
         config.headers['ngrok-skip-browser-warning'] = 'true';

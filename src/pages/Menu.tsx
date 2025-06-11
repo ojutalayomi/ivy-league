@@ -18,16 +18,20 @@ export default function Menu() {
   }, []);
 
   useEffect(() => {
-    if (user.signed_in) {
+    const timestamp = JSON.parse(localStorage.getItem('ivy_user_token') || '{}').timestamp;
+    const isExpired = !timestamp || Date.now() - timestamp > 3600000;
+    if (user.signed_in && !isExpired) {
       // navigate("/dashboard/home", { replace: true })
       toast({
         title: "You are signed in",
         description: "You are signed in to your account",
         variant: "default",
-        action: <Button onClick={() => navigate("/dashboard/home")}>Go to Dashboard</Button>
+        action: <Button onClick={() => navigate("/dashboard/home")}>Go to Dashboard</Button>,
+        duration: 10000
       })
     }
-  }, [navigate, user.signed_in]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   const menuItems = [
     {
@@ -58,14 +62,14 @@ export default function Menu() {
 
   return (
     <div className={`flex min-h-full flex-1 flex-col items-center justify-center px-6`}>
-      <Card className="min-[641px]:min-w-[640px] mx-auto">
+      <Card className="min-[641px]:min-w-[640px] mx-auto bg-transparent dark:bg-transparent border-none shadow-none sm:bg-white dark:sm:bg-gray-900 sm:border-1 sm:border-solid sm:shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl/9 font-bold tracking-tight text-center text-cyan-500">
-            Welcome to <br /> Ivy League Associates
+            Welcome to <br /> Ivy League Associates <br /> Student Portal
           </CardTitle>
           <CardDescription className="text-center text-muted-foreground">Please select an option to continue</CardDescription>
         </CardHeader>
-        <CardContent className="flex max-[640px]:flex-wrap gap-2 items-center justify-center">
+        <CardContent className="flex max-[640px]:flex-wrap gap-2 items-center justify-center p-0 sm:p-6 sm:pt-0">
             {/* <div className="max-[640px]:flex hidden items-center justify-center gap-2 sm:mx-auto sm:w-full sm:max-w-sm">
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <UsersRound className="size-4" />

@@ -15,6 +15,7 @@ export default function ResetPassword() {
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const token = searchParams.get('token')
+    const redirect = searchParams.get('redirect')
     const [error, setError] = useState<string>('')
     const [email, setEmail] = useState<string>('')
     const [password, setPassword] = useState<string>('')
@@ -52,7 +53,7 @@ export default function ResetPassword() {
             }
 
             /* AXIOS */
-            const response = token ? await api.post('/reset-password?api-key=AyomideEmmanuel&token='+token, userData) : await api.post('/reset-password?api-key=AyomideEmmanuel', userData)
+            const response = token ? await api.post('/reset-password?token='+token, userData) : await api.post('/reset-password', userData)
 
             if (response.status >= 200 && response.status < 300) {
               setSuccess(true)
@@ -61,7 +62,7 @@ export default function ResetPassword() {
                 if(!token) {
                     return;
                 } else {
-                    navigate("/accounts/signin")
+                    navigate(redirect ? redirect : "/accounts/signin")
                 }
                 dispatch(updateUserProfile({email_verified: true}))
               }, 3000)
@@ -224,7 +225,7 @@ export default function ResetPassword() {
 
                 <p className="mt-2 text-center text-sm/6 sm:text-gray-500">
                   Don't have an account?{' '}
-                  <Link to="/accounts/signup" className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50 dark:text-gray-200 dark:hover:text-gray-300">
+                  <Link to={`/accounts/signup${redirect ? `?redirect=${redirect}` : ''}`} className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50 dark:text-gray-200 dark:hover:text-gray-300">
                   Sign up
                   </Link>
                 </p>

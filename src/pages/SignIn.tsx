@@ -81,65 +81,65 @@ export default function SignIn() {
               description: "An error occurred while switching user"
           })
       }
-  }
+    }
 
     const submit = async () => {
-        try {
-          isLoading(true)
-          const userData = {
-            type: 'email',
-            email: email,
-            password: password
-          }
-
-          // const user = (() => {
-          //   if(accountType === 'admin') {
-          //     return users.find(u => u.email === email)
-          //   } else {
-          //     return students.find(s => s.registrationNumber === email)
-          //   }
-          // })()
-          // if (user) {
-          //   if (password === user.name.toLowerCase().split(' ')[1]) localStorage.setItem("ivy-user", JSON.stringify(user))
-          //   else throw Error("Invalid password")  
-          // } else {
-          //   throw Error("User not found!")
-          // }
-
-          /* AXIOS */
-          const response = await api.post('/signin?api-key=AyomideEmmanuel', userData)
-
-          if (response.status >= 200 && response.status < 300) {
-            localStorage.setItem('ivy_user', JSON.stringify({...response.data, signed_in: true, timestamp: Date.now()}))
-            dispatch(setUser({...response.data, signed_in: true}))
-            toast({
-              title: "You have signed in succesfully.",
-              // description: JSON.stringify(userData)
-            })
-            navigate(redirect || "/dashboard/home")
-          }
-
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
-            if (message && typeof message !== 'object') {
-              setError(message)
-              return;
-            }
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
-            setError(description)
-          } else if (error && typeof error === 'object' && 'response' in error) {
-              const axiosError = error as { response: { data: { error: string } } }
-              console.error('API Error:', axiosError.response.data.error)
-              setError(axiosError.response.data.error)
-          } else {
-              console.error('Unexpected error:', error)
-              setError('An unexpected error occurred')
-          }
-        } finally {
-          isLoading(false)
+      try {
+        isLoading(true)
+        const userData = {
+          type: 'email',
+          email: email,
+          password: password
         }
+
+        // const user = (() => {
+        //   if(accountType === 'admin') {
+        //     return users.find(u => u.email === email)
+        //   } else {
+        //     return students.find(s => s.registrationNumber === email)
+        //   }
+        // })()
+        // if (user) {
+        //   if (password === user.name.toLowerCase().split(' ')[1]) localStorage.setItem("ivy-user", JSON.stringify(user))
+        //   else throw Error("Invalid password")  
+        // } else {
+        //   throw Error("User not found!")
+        // }
+
+        /* AXIOS */
+        const response = await api.post('/signin', userData)
+
+        if (response.status >= 200 && response.status < 300) {
+          localStorage.setItem('ivy_user_token', JSON.stringify({token: response.data.email, timestamp: Date.now()}))
+          dispatch(setUser({...response.data, signed_in: true}))
+          toast({
+            title: "You have signed in succesfully.",
+            // description: JSON.stringify(userData)
+          })
+          navigate(redirect || "/dashboard/home")
+        }
+
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+          if (message && typeof message !== 'object') {
+            setError(message)
+            return;
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+          setError(description)
+        } else if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response: { data: { error: string } } }
+          console.error('API Error:', axiosError.response.data.error)
+          setError(axiosError.response.data.error)
+        } else {
+          console.error('Unexpected error:', error)
+          setError('An unexpected error occurred')
+        }
+      } finally {
+        isLoading(false)
+      }
     }
     
     return (
@@ -314,7 +314,7 @@ export default function SignIn() {
 
               <p className="mt-2 text-center text-sm/6 sm:text-gray-500">
                 Don't have an account?{' '}
-                <Link to="/accounts/signup" className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50  dark:text-gray-200 dark:hover:text-gray-300">
+                <Link to={`/accounts/signup${redirect ? `?redirect=${redirect}` : ''}`} className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50  dark:text-gray-200 dark:hover:text-gray-300">
                   Sign up
                 </Link>
               </p>

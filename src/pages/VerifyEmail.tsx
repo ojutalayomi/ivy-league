@@ -21,14 +21,6 @@ export default function VerifyEmail() {
     const [loading2, setLoading2] = useState<boolean>(false)
     const [success, setSuccess] = useState<boolean>(false)
     const [successMessage, setSuccessMessage] = useState<string>('')
-    
-
-    // useEffect(() => {
-    //     setSuccess(true)
-    //     setTimeout(() => {
-    //         setSuccess(false)
-    //     }, 5000)
-    //   }, [])
 
     useEffect(() => {
       if (token) {
@@ -40,65 +32,65 @@ export default function VerifyEmail() {
     }, [token])
 
     const submit = async (getCode = true) => {
-        try {
-            setError('')
-            if (token) {
-                setLoading2(true)
-            } else {
-                setLoading(true)
-            }
-            const userData = {
-              email: email,
-            }
-
-            /* AXIOS */
-            const response = token && !getCode ? await api.post('/confirm-email?api-key=AyomideEmmanuel&token='+token) : await api.post('/confirm-email?api-key=AyomideEmmanuel', userData)
-
-            if (response.status >= 200 && response.status < 300) {
-              setSuccess(true)
-              setSuccessMessage(getCode ? 'Email verification link sent to your email' : 'Email verified successfully')
-              setTimeout(() => {
-                if(getCode) {
-                    return;
-                } else {
-                    navigate("/student-dashboard/home")
-                }
-                dispatch(updateUserProfile({email_verified: true}))
-              }, 3000)
-            }
-
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-              const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
-              if (message && typeof message !== 'object') {
-                setError(message)
-                return;
-              }
-              const [title, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
-              setError(title + '\n ' + description)
-            } else if (error && typeof error === 'object' && 'response' in error) {
-                const axiosError = error as { response: { data: { error: string } } }
-                // console.error('API Error:', axiosError.response.data.error)
-                setError(axiosError.response.data.error)
-            } else {
-                // console.error('Unexpected error:', error)
-                setError('An unexpected error occurred')
-            }
-            if (token) {
-                setLoading2(false)
-            } else {
-                setLoading(false)
-            }
-        } finally {
+      try {
+          setError('')
           if (token) {
-            setLoading2(false)
-            setTimeout(() => {
-                setSuccess(false)
-            }, 3000)
+              setLoading2(true)
           } else {
-            setLoading(false)
+              setLoading(true)
           }
+          const userData = {
+            email: email,
+          }
+
+          /* AXIOS */
+          const response = token && !getCode ? await api.post('/confirm-email?token='+token) : await api.post('/confirm-email', userData)
+
+          if (response.status >= 200 && response.status < 300) {
+            setSuccess(true)
+            setSuccessMessage(getCode ? 'Email verification link sent to your email' : 'Email verified successfully')
+            setTimeout(() => {
+              if(getCode) {
+                  return;
+              } else {
+                  navigate("/student-dashboard/home")
+              }
+              dispatch(updateUserProfile({email_verified: true}))
+            }, 3000)
+          }
+
+      } catch (error: unknown) {
+          if (error instanceof Error) {
+            const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+            if (message && typeof message !== 'object') {
+              setError(message)
+              return;
+            }
+            const [title, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+            setError(title + '\n ' + description)
+          } else if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response: { data: { error: string } } }
+              // console.error('API Error:', axiosError.response.data.error)
+              setError(axiosError.response.data.error)
+          } else {
+              // console.error('Unexpected error:', error)
+              setError('An unexpected error occurred')
+          }
+          if (token) {
+              setLoading2(false)
+          } else {
+              setLoading(false)
+          }
+      } finally {
+        if (token) {
+          setLoading2(false)
+          setTimeout(() => {
+              setSuccess(false)
+          }, 3000)
+        } else {
+          setLoading(false)
         }
+      }
     }
     
     return (

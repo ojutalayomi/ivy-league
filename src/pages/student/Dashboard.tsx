@@ -2,21 +2,18 @@ import { Card, CardContent, } from '@/components/ui/card';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Settings, User, Menu, Loader2, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { forwardRef, useCallback, useEffect, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import Error404Page from '@/components/404';
 import { cn } from '@/lib/utils';
 import PapersRegistration from './PapersRegistration';
 import { Button } from '@/components/ui/button';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { Dialog, DialogTitle, DialogHeader, DialogContent, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Paper } from '@/lib/data';
-import { api } from '@/lib/api';
-import { toast } from '@/hooks/use-toast';
 import { AxiosError } from 'axios';
-import { setUser } from '@/redux/userSlice';
+import { api } from '@/lib/api';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -48,7 +45,6 @@ export default function Dashboard() {
     const [isFull, setIsFull] = useState(false)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const user = useSelector((state: RootState) => state.user)
-    const allowPaperRegistration = useSelector((state: RootState) => state.utils.allowPaperRegistration)
 
     const HomePageItems = [
     {
@@ -116,18 +112,18 @@ export default function Dashboard() {
     })
 
     useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-          if (
-            event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
-            (event.metaKey || event.ctrlKey)
-          ) {
-            event.preventDefault()
-            toggleSidebar(!isFull)
-          }
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (
+          event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
+          (event.metaKey || event.ctrlKey)
+        ) {
+          event.preventDefault()
+          toggleSidebar(!isFull)
         }
-  
-        window.addEventListener("keydown", handleKeyDown)
-        return () => window.removeEventListener("keydown", handleKeyDown)
+      }
+
+      window.addEventListener("keydown", handleKeyDown)
+      return () => window.removeEventListener("keydown", handleKeyDown)
     }, [isFull, toggleSidebar])
 
     const sideItems = [
@@ -189,10 +185,6 @@ export default function Dashboard() {
                       onClick={() => {
                         if (item.title === 'Papers') {
                           if (!user.email_verified) {
-                            return;
-                          }
-                          if (user.user_status === 'signee') {
-                            navigate('/accounts/additional-info');
                             return;
                           }
                         }
@@ -310,29 +302,7 @@ export default function Dashboard() {
                           <Route path="/" element={<PapersPage menuItems={CoursePageItems}/>} />
                           <Route path="register" element={
                             <TabsContent value="register">
-                            {user.user_status === 'signee' && location.pathname.includes('papers') && !allowPaperRegistration ?
-                            (
-                              <Dialog open={user.user_status === 'signee' && location.pathname.includes('papers')} onOpenChange={() => {}}>
-                                <DialogContent className='dark:bg-gray-900 dark:border-gray-700 rounded-lg'>
-                                  <DialogHeader>
-                                    <DialogTitle>
-                                      Registration Status
-                                    </DialogTitle>
-                                  </DialogHeader>
-                                  <DialogDescription>
-                                    You need to complete your registration to access this page.
-                                  </DialogDescription>
-                                  <DialogFooter className='flex flex-col sm:justify-center'>
-                                    <Button className='bg-cyan-500 hover:bg-cyan-400 text-white' variant="outline" onClick={() => navigate('/accounts/additional-info')}>
-                                      Complete Registration
-                                    </Button>
-                                  </DialogFooter>
-                                </DialogContent>
-                              </Dialog>
-                            ) :
-                            (
                               <PapersRegistration/>
-                            )}
                             </TabsContent>
                           } />
                           <Route path="view" element={
@@ -348,6 +318,11 @@ export default function Dashboard() {
                           <Route path="print" element={
                             <TabsContent value="print">
                               <PapersPage menuItems={CoursePageItems}/>
+                            </TabsContent>
+                          } />
+                          <Route path="payment-status" element={
+                            <TabsContent value="payment-status">
+                              <PaymentStatus/>
                             </TabsContent>
                           } />
                         </Routes>
@@ -383,158 +358,142 @@ export default function Dashboard() {
 }
 
 const AvailablePapers = () => {
-  // const user = useSelector((state: RootState) => state.user)
+  const user = useSelector((state: RootState) => state.user)
   const [papers, setPapers] = useState<Paper[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const [error, setError] = useState('')
+  const [scholarships, setScholarships] = useState<{paper: string, percentage: number}[]>([])
 
   useEffect(() => {
     const fetchPapers = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get('/courses?api-key=AyomideEmmanuel&reg=true&acca_reg=001&user_status=signee&email=');
+        const response = await api.get('/courses?reg=true' + (user.user_status === 'student' ? '' : "&acca_reg=" + (user.acca_reg || '001')) + '&user_status=' + user.user_status + '&email=' + user.email);
         setPapers(response.data.papers);
+        setScholarships(response.data.scholarships);
       } catch (error) {
-        console.error('Error fetching papers:', error);
-        setError(true);
+        if (error instanceof Error) {
+          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+          if (message && typeof message !== 'object') {
+            setError(message)
+            return;
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+          setError(description)
+        } else if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response: { data: { error: string } } }
+          console.error('API Error:', axiosError.response.data.error)
+          setError(axiosError.response.data.error)
+        } else {
+          console.error('Unexpected error:', error)
+          setError('An unexpected error occurred')
+        }
       } finally {
         setIsLoading(false);
       }
     };
     if (isLoading) fetchPapers();
-  }, [isLoading]);
+  }, [isLoading, user.acca_reg, user.email, user.user_status]);
 
-    return (
-        <div className="space-y-8">
-            <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100/30 dark:from-gray-800 dark:to-gray-900">
-                <CardContent className="p-8">
-                    <div className="space-y-6">
-                        <div>
-                          <h2 className="text-2xl font-semibold">Available Papers</h2>
-                        </div>
+  const groupedPapers = papers?.reduce((acc, paper) => {
+    if (!acc[paper.category]) {
+      acc[paper.category] = [];
+    }
+    acc[paper.category].push(paper);
+    return acc;
+  }, {} as { [key: string]: Paper[] });
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {isLoading && <div className="flex justify-center items-center h-[50vh]">
-                            <Loader2 className="w-10 h-10 animate-spin" />
-                          </div>}
-                          {error && <div className="flex justify-center items-center h-[50vh]">
-                            <AlertCircle className="w-10 h-10" />
-                          </div>}
-                          {papers?.map((paper) => (
-                            <div key={paper.code[0]} className="p-4 border rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
-                              <h3 className="text-lg font-medium">{paper.name}</h3>
-                              <p className="text-muted-foreground">{paper.category} - {paper.code}</p>
-                              <p className="text-sm text-muted-foreground mt-2">Price: ₦{paper.price.toLocaleString()}</p>
+  return (
+    <div className="space-y-8">
+      <Card className="bg-gradient-to-br from-white via-white to-cyan-100 dark:from-gray-800 dark:to-gray-900">
+        <CardContent className="p-8">
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold">Available Papers</h2>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              {isLoading && <div className="flex justify-center items-center h-[50vh] col-span-2">
+                <Loader2 className="w-10 h-10 animate-spin" />
+              </div>}
+              {error && <div className="flex justify-center gap-2 items-center h-[50vh] col-span-2">
+                <AlertCircle className="w-10 h-10" />
+                <p className="text-muted-foreground mb-0">{error}</p>
+              </div>}
+              {Object.entries(groupedPapers ?? {}).map(([category, papers]) => (
+                <div key={category}>
+                  <h3 className="text-lg font-medium">{category}{" "}{'(' + papers.length + ' papers)'}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {papers.map((paper) => (
+                      <div key={paper.code[0]} className="p-4 relative border rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <div className="absolute top-0 right-0 flex gap-2">
+                          {scholarships?.find(s => s.paper === paper.code[0]) && (
+                            <div className="bg-blue-500 text-white px-2 py-1 rounded-full">
+                              <p className="text-xs">-{scholarships.find(s => s.paper === paper.code[0])?.percentage}%</p>
                             </div>
-                          ))}
+                          )}
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    )
+                        <h3 className="text-lg font-medium">{paper.name}</h3>
+                        {Array.isArray(paper.type) && paper.type.length > 0 && Array.isArray(paper.price) && (
+                          <span className="block text-sm text-gray-500 dark:text-gray-400">
+                            {paper.type?.map((t: string, idx: number) => (
+                              <span key={t + idx} data-type={t.toLowerCase()}>
+                                {t}: {t === '' ? `₦${paper.price?.[0]?.toLocaleString()}` : `₦${paper.price?.[idx]?.toLocaleString()}`}
+                                {idx < (paper.type?.length ?? 0) - 1 ? ' | ' : ''}
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                        {paper.type?.length === 0 && paper.price?.length > 0 && (
+                          <span className="block text-sm text-gray-500 dark:text-gray-400">
+                            Price: ₦{paper.price?.[0]?.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {Object.entries(groupedPapers ?? {}).length === 0 && !isLoading && !error && (
+                <div className="flex justify-center items-center h-[50vh]">
+                  <p className="text-muted-foreground">No papers found</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
 }
 
 const PapersList = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
-  const savedReference = localStorage.getItem('reference');
-  const reference = searchParams.get('reference') || searchParams.get('trxref') || savedReference;
-  const user = useSelector((state: RootState) => state.user)
+  // const savedReference = localStorage.getItem('reference');
+  const reference = searchParams.get('reference') || searchParams.get('trxref');
+  const user = useSelector((state: RootState) => state.user);
+  const index = useRef(0);
 
   useEffect(() => {
-    // 200 - Payment has been made; 202 - Payment pending; 410 - payment failed; 404 - payment not found
-    const verifyPayment = async () => {
-      if (!reference) {
-        navigate("/student-dashboard/papers/")
-        return
-      }
-
-      try {
-        const response = await api.get(`/verify/${reference}?api-key=AyomideEmmanuel`);
-
-        switch (response.status) {
-          case 200:
-            { toast({
-              title: response.data.status || "Payment Successful!",
-              description: response.data.message || "Your payment has been successfully processed.",
-              variant: "success"
-            })
-            dispatch(setUser({...user, acca_reg: response.data.data.acca_reg, reg_no: response.data.data.reg_no, papers: response.data.data.papers}))
-            localStorage.removeItem('reference');
-            const additional_info = JSON.parse(localStorage.getItem('additional_info_draft') || '{}')
-            localStorage.setItem('additional_info_draft', JSON.stringify({...additional_info, acca_reg_no: response.data.data.acca_reg_no}))
-            break; }
-          case 202:
-            toast({
-              title: response.data.status || "Payment Pending",
-              description: response.data.message || "Your payment is pending. Please wait while we verify your payment.",
-            })
-            break;
-          case 410:
-            toast({
-              title: "Payment Failed",
-              description: "Your payment has failed. Please try again.",
-              variant: "destructive"
-            })
-            break;
-          case 404:
-            toast({
-              title: "Payment Not Found",
-              description: "Your payment was not found. Please try again.",
-              variant: "destructive"
-            })
-            break;
-          default:
-            toast({
-              title: response.data.status || "Payment Verification Failed",
-              description: response.data.message || "There was an error verifying your payment.",
-              variant: "destructive"
-            })
-            break;
-        }
-      } catch (error) {
-        console.error('Error fetching papers:', error);
-        if (error instanceof Error) {
-          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
-          toast({
-            title: "Error",
-            description: description,
-            variant: "destructive"
-          })
-        } else if (error && typeof error === 'object' && 'response' in error) {
-          const axiosError = error as { response: { data: { error: string } } }
-          console.error('API Error:', axiosError.response.data.error)
-          toast({
-            title: "Error",
-            description: axiosError.response.data.error,
-            variant: "destructive"
-          })
-        } else {
-          console.error('Unexpected error:', error)
-          toast({
-            title: "Error",
-            description: "An unexpected error occurred",
-            variant: "destructive"
-          })
-        }
-      } finally {
-        // setIsVerifying(false)
-      }
+    if (reference && window.opener) {
+      window.opener.postMessage(
+        { index: index.current, type: 'paystack-auth', token: reference },
+        window.location.origin
+      );
+      index.current++;
+      window.close();
     }
-    verifyPayment()
-  }, [reference, navigate])
+  }, [reference]);
 
   return (
     <div className="space-y-8">
-      <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100/30 dark:from-gray-800 dark:to-gray-900">
+      <Card className="bg-gradient-to-br from-white via-white to-cyan-100 dark:from-gray-800 dark:to-gray-900">
         <CardContent className="p-8">
-          <div className="space-y-6">
+          <div className="space-y-2">
             <div>
-              <h2 className="text-2xl font-semibold">Papers List</h2>
+              <h2 className="text-2xl font-semibold">My Papers</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {user.papers?.map((paper) => (
@@ -543,12 +502,31 @@ const PapersList = () => {
                   <p className="text-muted-foreground">{Object.values(paper)[0]}</p>
                 </div>
               ))}
+              {user.papers?.length > 0 ? null : (
+                <div className="flex flex-col justify-center items-center gap-2 h-[50vh] col-span-2">
+                  <AlertCircle className="w-10 h-10" />
+                  <p className="text-muted-foreground">No papers found</p>
+                  <Button variant="outline" onClick={() => navigate('/student-dashboard/papers/register', { replace: true })}>Register for Papers</Button>
+                </div>
+              )}
             </div>
           </div>
           </CardContent>
         </Card>
       </div>
     )
+}
+
+const PaymentStatus = () => {
+  return (
+    <div>
+      <h1>Payment Status</h1>
+      <div className="flex flex-col justify-center items-center gap-2 h-[50vh] col-span-2">
+        <Loader2 className="w-10 h-10 animate-spin" />
+        <p className="text-muted-foreground">Please wait for your payment to be confirmed</p>
+      </div>
+    </div>
+  )
 }
 
 const PapersPage = ({ menuItems }:{ menuItems: CoursePageItems }) => {

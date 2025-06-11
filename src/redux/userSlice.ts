@@ -32,7 +32,7 @@ const initialState: UserState = {
     title: "",
     user_status: "signee",
     reg_no: "",
-    acca_reg: "",
+    acca_reg: "001",
     dob: "",
     phone_no: "",
     address: "",
