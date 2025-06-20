@@ -121,12 +121,12 @@ export default function ResetPassword() {
 
             <div className="sm:w-full sm:max-w-sm flex-1 sm:flex-auto">
               {success ? (
-                <div className="flex flex-col gap-2 justify-center items-center py-20 max-[640px]:px-10 bg-accent dark:bg-cyan-500 rounded-lg">
+                <div className="flex flex-col gap-2 justify-center items-center py-20 max-[640px]:px-10 bg-cyan-500 rounded-lg">
                   <CheckCircle className="text-white size-16" />
                   <p className="text-white text-sm">{successMessage}</p>
                 </div>
               ) : loading2 ? (
-                <div className="flex flex-col gap-2 justify-center items-center py-20 max-[640px]:px-10 bg-accent dark:bg-cyan-500 rounded-lg">
+                <div className="flex flex-col gap-2 justify-center items-center py-20 max-[640px]:px-10 bg-cyan-500 rounded-lg">
                   <LoaderCircle className="animate-spin text-white size-16" />
                   <p className="text-white text-sm">Please wait while we reset your password...</p>
                 </div>
@@ -148,22 +148,22 @@ export default function ResetPassword() {
                         </div>
                     )}
                     <div>
-                        <label htmlFor="email" className="block text-sm/6 font-medium text-cyan-500">
+                      <label htmlFor="email" className="block text-sm/6 font-medium text-cyan-500">
                         Email address
-                        </label>
-                        <div className="mt-2">
+                      </label>
+                      <div className="mt-2">
                         <Input
-                            disabled={loading}
-                            id="email"
-                            name="email"
-                            type="email"
-                            defaultValue={email}
-                            onChange={e => setEmail(e.target.value)}
-                            required
-                            autoComplete="email"
-                            className="block w-full rounded-md border-0 px-2 py-1.5 sm:text-primary sm:placeholder:text-primary sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
+                          disabled={loading}
+                          id="email"
+                          name="email"
+                          type="email"
+                          defaultValue={email}
+                          onChange={e => setEmail(e.target.value)}
+                          required
+                          autoComplete="email"
+                          className="block w-full rounded-md border-0 px-2 py-1.5 sm:text-primary sm:placeholder:text-primary shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
                         />
-                        </div>
+                      </div>
                     </div>
 
                     {token && (
@@ -181,7 +181,7 @@ export default function ResetPassword() {
                               value={password}
                               onChange={e => setPassword(e.target.value)}
                               required
-                              className="block w-full rounded-md border-0 px-2 py-1.5 sm:text-primary sm:placeholder:text-primary sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
+                              className="block w-full rounded-md border-0 px-2 py-1.5 sm:text-primary sm:placeholder:text-primary shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
                             />
                           </div>
                         </div>
@@ -199,7 +199,7 @@ export default function ResetPassword() {
                               value={confirmPassword}
                               onChange={e => setConfirmPassword(e.target.value)}
                               required
-                              className="block w-full rounded-md border-0 px-2 py-1.5 sm:text-primary sm:placeholder:text-primary sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
+                              className="block w-full rounded-md border-0 px-2 py-1.5 sm:text-primary sm:placeholder:text-primary shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
                             />
                           </div>
                         </div>
