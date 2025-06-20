@@ -1,6 +1,6 @@
 import { Card, CardContent, } from '@/components/ui/card';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Settings, User, Menu, Loader2, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Settings, User, Menu, Loader2, AlertCircle, CheckCircle, XCircle, Download } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -9,11 +9,14 @@ import Error404Page from '@/components/404';
 import { cn } from '@/lib/utils';
 import PapersRegistration from './PapersRegistration';
 import { Button } from '@/components/ui/button';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { Paper } from '@/lib/data';
 import { AxiosError } from 'axios';
 import { api } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
+import { updateUserProfile } from '@/redux/userSlice';
+import { ModeToggle } from '@/components/mode-toggle';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -21,6 +24,20 @@ interface AvProps {
   active?: boolean;
   className?: string;
   children?: React.ReactNode;
+}
+
+const DelayedMessage = () => {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setShow(true), 5000);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  if (!show) return null;
+  return (
+    <p className='text-muted-foreground'>It seems the response is taking a lot of time. Please you can reload the page.</p>
+  );
 }
 
 type CoursePageItems = {
@@ -76,7 +93,7 @@ export default function Dashboard() {
         path: "/student-dashboard/papers/register"
       },
       {
-        title: "View Papers", 
+        title: "My Papers", 
         description: "View your registered papers",
         path: "/student-dashboard/papers/view"
       },
@@ -218,9 +235,13 @@ export default function Dashboard() {
                       {isFull && <span className='dark:text-white'>Settings</span>}
                     </div>
 
-                    <div className='absolute bottom-3 p-2 rounded-full cursor-pointer flex items-center border hover:bg-gray-200 dark:hover:bg-gray-800' onClick={(e) => {e.stopPropagation();toggleSidebar(!isFull)}}>
-                      {isFull && "Collapse"}
-                      {isFull ? <ChevronLeft className="cursor-pointer size-4 ml-1"  /> : <ChevronRight className="cursor-pointer size-4 ml-1" />}
+                    <div className="absolute bottom-3 space-y-2">
+                      <ModeToggle align='start' className='rounded-full hover:bg-gray-200 dark:hover:bg-gray-800' label={isFull}/>
+
+                      <div className='p-2 rounded-full cursor-pointer flex items-center justify-center border hover:bg-gray-200 dark:hover:bg-gray-800' onClick={(e) => {e.stopPropagation();toggleSidebar(!isFull)}}>
+                        {isFull && "Collapse"}
+                        {isFull ? <ChevronLeft className="cursor-pointer size-4 ml-1"  /> : <ChevronRight className="cursor-pointer size-4 ml-1" />}
+                      </div>
                     </div>
                 </div>
                 
@@ -290,6 +311,11 @@ export default function Dashboard() {
                       <Route path="home" element={
                         <TabsContent value="home">
                           <PapersPage menuItems={HomePageItems}/>
+                        </TabsContent>
+                      } />
+                      <Route path="payments" element={
+                        <TabsContent value="payments">
+                      <PaymentHistoryPage />
                         </TabsContent>
                       } />
                       <Route path="profile" element={
@@ -362,11 +388,13 @@ const AvailablePapers = () => {
   const [papers, setPapers] = useState<Paper[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
-  const [scholarships, setScholarships] = useState<{paper: string, percentage: number}[]>([])
+  const [scholarships, setScholarships] = useState<{paper: string, percentage: number}[]>([]);
+  const count = useRef(0);
 
   useEffect(() => {
     const fetchPapers = async () => {
       try {
+        count.current += 1;
         setIsLoading(true);
         const response = await api.get('/courses?reg=true' + (user.user_status === 'student' ? '' : "&acca_reg=" + (user.acca_reg || '001')) + '&user_status=' + user.user_status + '&email=' + user.email);
         setPapers(response.data.papers);
@@ -393,7 +421,7 @@ const AvailablePapers = () => {
         setIsLoading(false);
       }
     };
-    if (isLoading) fetchPapers();
+    if (isLoading && count.current === 0) fetchPapers();
   }, [isLoading, user.acca_reg, user.email, user.user_status]);
 
   const groupedPapers = papers?.reduce((acc, paper) => {
@@ -470,22 +498,7 @@ const AvailablePapers = () => {
 
 const PapersList = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  // const savedReference = localStorage.getItem('reference');
-  const reference = searchParams.get('reference') || searchParams.get('trxref');
   const user = useSelector((state: RootState) => state.user);
-  const index = useRef(0);
-
-  useEffect(() => {
-    if (reference && window.opener) {
-      window.opener.postMessage(
-        { index: index.current, type: 'paystack-auth', token: reference },
-        window.location.origin
-      );
-      index.current++;
-      window.close();
-    }
-  }, [reference]);
 
   return (
     <div className="space-y-8">
@@ -518,12 +531,103 @@ const PapersList = () => {
 }
 
 const PaymentStatus = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const reference = searchParams.get('reference') || searchParams.get('trxref');
+  const dispatch = useDispatch();
+  const count = useRef(0);
+
+  const verifyPayment = useCallback(async (reference: string) => {
+    if (!reference) {
+      navigate("/student-dashboard/papers/", { replace: true })
+      return
+    }
+
+    try {
+      const response = await api.get(`/verify/${reference}`);
+
+      switch (response.status) {
+        case 200:
+        {
+          toast({
+            title: response.data.status || "Payment Successful!",
+            description: response.data.message || "Your payment has been successfully processed.",
+            variant: "success"
+          })
+          dispatch(updateUserProfile({ 
+            acca_reg: response.data.acca_reg_no || response.data.user_data.acca_reg_no, 
+            reg_no: response.data.reg_no || response.data.user_data.reg_no, 
+            fee: response.data?.fee || response.data.user_data?.fee,
+            user_status: response.data.user_status || response.data.user_data.user_status,
+            papers: response.data.papers || response.data.user_data.papers
+          }))
+          localStorage.removeItem('reference');
+          const additional_info = JSON.parse(localStorage.getItem('additional_info_draft') || '{}')
+          localStorage.setItem('additional_info_draft', JSON.stringify({ ...additional_info, acca_reg_no: response.data.acca_reg_no || response.data.user_data.acca_reg_no }))
+          navigate("/student-dashboard/papers/view", { replace: true })
+          break;
+        }
+        case 202:
+          toast({
+            title: response.data.status || "Payment Pending",
+            description: response.data.message || "Your payment is pending. Please wait while we verify your payment.",
+          })
+          break;
+        default:
+          toast({
+            title: response.data.status || "Payment Verification Failed",
+            description: response.data.message || "There was an error verifying your payment.",
+            variant: "destructive"
+          })
+          break;
+      }
+    } catch (error) {
+      console.error('Error fetching papers:', error);
+      if (error instanceof Error) {
+        const message = (error as AxiosError<{ error: { [x: string]: string } }>).response?.data?.error
+         
+        const [title, description] = Object.entries(message as { [x: string]: string })[0] || ['Error', 'An unexpected error occurred']
+        toast({
+          title: "Error",
+          description: title.includes("Uncaught Error") ? "An unexpected error occurred" : description,
+          variant: "destructive"
+        })
+      } else if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response: { data: { error: string } } }
+        console.error('API Error:', axiosError.response.data.error)
+        toast({
+          title: "Error",
+          description: axiosError.response.data.error,
+          variant: "destructive"
+        })
+      } else {
+        console.error('Unexpected error:', error)
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred",
+          variant: "destructive"
+        })
+      }
+    } finally {
+      // setIsVerifying(false)
+    }
+  }, [dispatch, navigate])
+
+  useEffect(() => {
+    if (reference && count.current === 0) {
+      count.current += 1;
+      verifyPayment(reference)
+    }
+  }, [reference, verifyPayment]);
+        
+
   return (
     <div>
       <h1>Payment Status</h1>
       <div className="flex flex-col justify-center items-center gap-2 h-[50vh] col-span-2">
         <Loader2 className="w-10 h-10 animate-spin" />
         <p className="text-muted-foreground">Please wait for your payment to be confirmed</p>
+        <DelayedMessage />
       </div>
     </div>
   )
@@ -547,6 +651,239 @@ const PapersPage = ({ menuItems }:{ menuItems: CoursePageItems }) => {
           ))}
         </div>
       </div>
+  )
+}
+
+const PaymentHistoryPage = () => {
+  const user = useSelector((state: RootState) => state.user)
+  const [payments, setPayments] = useState<{ papers: string[]; ref_id: string; amount: number; date: string }[]>([])
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('')
+  const count = useRef(0)
+
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        count.current += 1
+        setIsLoading(true)
+        const response = await api.get('/all-payments', {
+          params: { reg_no: user.reg_no }
+        })
+        setPayments(response.data)
+      } catch (error) {
+        if (error instanceof Error) {
+          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+          if (message && typeof message !== 'object') {
+            setError(message)
+            return;
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+          setError(description)
+        } else if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response: { data: { error: string } } }
+          console.error('API Error:', axiosError.response.data.error)
+          setError(axiosError.response.data.error)
+        } else {
+          console.error('Unexpected error:', error)
+          setError('An unexpected error occurred')
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    if (user.reg_no && count.current === 0) fetchPayments()
+  }, [user.reg_no])
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardContent className="p-8">
+          <h2 className="text-2xl font-semibold mb-4">Payment History</h2>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-32">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="flex items-center gap-2 text-red-500">
+              <AlertCircle className="w-5 h-5" />
+              <span>{error}</span>
+            </div>
+          ) : payments.length === 0 ? (
+            <div className="text-muted-foreground">No payment records found.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="py-2 px-4 text-left">Date</th>
+                    <th className="py-2 px-4 text-left">Reference</th>
+                    <th className="py-2 px-4 text-left">Papers</th>
+                    <th className="py-2 px-4 text-left">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map((payment, idx) => (
+                    <tr key={payment.ref_id + idx} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <td className="py-2 px-4">{new Date(payment.date).toLocaleString()}</td>
+                      <td className="py-2 px-4">{payment.ref_id}</td>
+                      <td className="py-2 px-4">{payment.papers.join(', ')}.</td>
+                      <td className="py-2 px-4">₦{payment.amount.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <ReceiptsCard />
+
+      <div className="text-center text-sm text-muted-foreground">
+        Note: Payments are processed through our secure payment gateway. If you have any issues, please contact support.
+      </div>
+    </div>
+  )
+}
+
+const ReceiptsCard = () => {
+  const user = useSelector((state: RootState) => state.user)
+  const [receipts, setReceipts] = useState<{ receipt_no: string; papers: string[]; amount: number; date: string }[]>([])
+  const [isLoading, setIsLoading] = useState(true);
+  const [isReceiptLoading, setIsReceiptLoading] = useState('');
+  const [error, setError] = useState('')
+  const count = useRef(0)
+
+  useEffect(() => {
+    const fetchReceipts = async () => {
+      try {
+        count.current += 1
+        setIsLoading(true)
+        const response = await api.get('/receipts', {
+          params: { reg_no: user.reg_no }
+        })
+        setReceipts(response.data)
+      } catch (error) {
+        if (error instanceof Error) {
+          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+          if (message && typeof message !== 'object') {
+            setError(message)
+            return;
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+          setError(description)
+        } else if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response: { data: { error: string } } }
+          setError(axiosError.response.data.error)
+        } else {
+          setError('An unexpected error occurred')
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    if (user.reg_no && count.current === 0) fetchReceipts()
+  }, [user.reg_no])
+
+  const getReceipt = async (receipt: typeof receipts[0]) => {
+    try {
+      setIsReceiptLoading(receipt.receipt_no);
+      const res = await api.get('/receipt', {
+        params: { receipt_no: receipt.receipt_no },
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `receipt_${receipt.receipt_no}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      if (error instanceof Error) {
+        const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+        if (message && typeof message !== 'object') {
+          setError(message)
+          return;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+        setError(description)
+      } else if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response: { data: { error: string } } }
+        console.error('API Error:', axiosError.response.data.error)
+        setError(axiosError.response.data.error)
+      } else {
+        console.error('Unexpected error:', error)
+        setError('An unexpected error occurred')
+      }
+    } finally {
+      setIsReceiptLoading('');
+    }
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-8">
+        <h2 className="text-2xl font-semibold mb-4">Receipts</h2>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-32">
+            <Loader2 className="w-8 h-8 animate-spin" />
+          </div>
+        ) : error ? (
+          <div className="flex items-center gap-2 text-red-500">
+            <AlertCircle className="w-5 h-5" />
+            <span>{error}</span>
+          </div>
+        ) : receipts.length === 0 ? (
+          <div className="text-muted-foreground">No receipts found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="py-2 px-4 text-left">Date</th>
+                  <th className="py-2 px-4 text-left">Receipt No</th>
+                  <th className="py-2 px-4 text-left">Papers</th>
+                  <th className="py-2 px-4 text-left">Amount</th>
+                  <th className="py-2 px-4 text-left">Receipt</th>
+                </tr>
+              </thead>
+              <tbody>
+                {receipts.map((receipt, idx) => (
+                  <tr key={receipt.receipt_no + idx} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <td className="py-2 px-4">{new Date(receipt.date).toLocaleString()}</td>
+                    <td className="py-2 px-4">{receipt.receipt_no}</td>
+                    <td className="py-2 px-4">{receipt.papers.join(', ')}.</td>
+                    <td className="py-2 px-4">₦{receipt.amount.toLocaleString()}</td>
+                    <td className="py-2 px-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => getReceipt(receipt)} 
+                        disabled={isReceiptLoading === receipt.receipt_no}
+                      >
+                        {isReceiptLoading === receipt.receipt_no ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
+                          </>
+                        )}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
@@ -646,53 +983,53 @@ const ProfilePage = () => {
 }
 
 const SettingsPage = () => {
-    const user = useSelector((state: RootState) => state.user)
-    return (
-        <div className="space-y-6">
-            
-            <Card>
-                <CardContent className="p-6">
-                    <div className="space-y-4">
-                        <div>
-                            <h2 className="text-lg font-semibold mb-2">Account Settings</h2>
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span>Email Address</span>
-                                    <span className="text-muted-foreground">{user.email}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span>Password</span>
-                                    <Button variant="outline" size="sm">Change Password</Button>
-                                </div>
-                            </div>
-                        </div>
+  const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.user)
+  return (
+    <div className="space-y-6">    
+      <Card>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold mb-2">Account Settings</h2>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span>Email Address</span>
+                  <span className="text-muted-foreground">{user.email}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Password</span>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/accounts/reset-password')}>Change Password</Button>
+                </div>
+              </div>
+            </div>
 
-                        {/* <div>
-                            <h2 className="text-lg font-semibold mb-2">Preferences</h2>
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span>Theme</span>
-                                    <span className="text-muted-foreground capitalize">
-                                        {student.preferences?.theme}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span>Language</span>
-                                    <span className="text-muted-foreground capitalize">
-                                        {student.preferences?.language}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span>Notifications</span>
-                                    <span className="text-muted-foreground capitalize">
-                                        {student.preferences?.notifications}
-                                    </span>
-                                </div>
-                            </div>
-                        </div> */}
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    )
+            {/* <div>
+              <h2 className="text-lg font-semibold mb-2">Preferences</h2>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <span>Theme</span>
+                    <span className="text-muted-foreground capitalize">
+                        {student.preferences?.theme}
+                    </span>
+                </div>
+                <div className="flex items-center justify-between">
+                    <span>Language</span>
+                    <span className="text-muted-foreground capitalize">
+                        {student.preferences?.language}
+                    </span>
+                </div>
+                <div className="flex items-center justify-between">
+                    <span>Notifications</span>
+                    <span className="text-muted-foreground capitalize">
+                        {student.preferences?.notifications}
+                    </span>
+                </div>
+              </div>
+            </div> */}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
 }

@@ -155,14 +155,15 @@ export default function PapersRegistration() {
       }
       const response = await api.post(`/register`, data);
       if (response.status === 200) {
-        console.log(response.data);
         localStorage.setItem('reference', response.data.data.reference);
         toast({
           variant: 'success',
           title: 'Payment Initiated!',
           description: 'Please wait while we redirect you to the payment page.'
         })
-        window.open(response.data.data.authorization_url, '_blank');
+        
+        window.location.href = response.data.data.authorization_url;
+        
         dispatch(setAllowPaperRegistration(false));
         navigate('/student-dashboard/papers/payment-status');
       }

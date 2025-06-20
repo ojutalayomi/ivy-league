@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +36,7 @@ const SponsorCard = ({hideBackButton}: {hideBackButton?: boolean}) => {
     const [scholarship, setScholarship] = useState<string[]>([]);
     const [fee, setFee] = useState<string[]>([]);
     const { toast } = useToast();
+    const location = useLocation();
 
     useEffect(() => {
       const fetchDetails = async () => {
@@ -67,7 +68,6 @@ const SponsorCard = ({hideBackButton}: {hideBackButton?: boolean}) => {
     const handleSubmit = async () => {
       try {
         const isValid = await sponsorForm.trigger();
-        console.log(isValid);
         if (!isValid && isSponsor) {
           toast({
             variant: "destructive",
@@ -104,7 +104,8 @@ const SponsorCard = ({hideBackButton}: {hideBackButton?: boolean}) => {
         if (response.status >= 200 && response.status < 300) {
           toast({
             title: "Your registration is complete.",
-            description: JSON.stringify(response.data)
+            description: "You can proceed to view your sponsored papers.",
+            variant: "success",
           })
 
           dispatch(updateUserProfile({
@@ -131,8 +132,7 @@ const SponsorCard = ({hideBackButton}: {hideBackButton?: boolean}) => {
       } catch (error) {
         setSuccess(false);
         if (error instanceof Error) {
-          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
-          console.log(message)
+          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error;
            
           const [title, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
           setIsError(title.includes('Initialization Error') ? 'An unexpected error occurred' : description);
@@ -178,37 +178,39 @@ const SponsorCard = ({hideBackButton}: {hideBackButton?: boolean}) => {
         </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <div className="space-y-4">
-                <div className="flex flex-col items-center space-y-2">
-                  <Label className="font-semibold">Are you sponsored by an organization?</Label>
-                  <div className="flex justify-between items-center gap-2 bg-blue-50 dark:bg-muted/20 dark:border p-1 rounded-full max-w-md">
-                      <Button 
-                          data-state={isSponsor ? 'checked' : 'unchecked'}
-                          onClick={() => setIsSponsor(true)}
-                          className={cn(
-                              "flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200",
-                              isSponsor 
-                                  ? "bg-cyan-500 text-white hover:bg-cyan-400 shadow-sm font-medium" 
-                                  : "bg-transparent shadow-none text-muted-foreground hover:bg-cyan-400/10"
-                          )}
-                      >
-                          Yes
-                          {isSponsor && <Check className='w-4 h-4' />}
-                      </Button>
-                      <Button
-                          data-state={!isSponsor ? 'checked' : 'unchecked'}
-                          onClick={() => setIsSponsor(false)}
-                          className={cn(
-                              "flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200",
-                              !isSponsor 
-                                  ? "bg-cyan-500 text-white hover:bg-cyan-400 shadow-sm font-medium" 
-                                  : "bg-transparent shadow-none text-muted-foreground hover:bg-cyan-400/10"
-                          )}
-                      >
-                          No
-                          {!isSponsor && <Check className='w-4 h-4' />}
-                      </Button>
+                {!location.pathname.includes('/papers') && (
+                  <div className="flex flex-col items-center space-y-2">
+                    <Label className="font-semibold">Are you sponsored by an organization?</Label>
+                    <div className="flex justify-between items-center gap-2 bg-blue-50 dark:bg-muted/20 dark:border p-1 rounded-full max-w-md">
+                        <Button 
+                            data-state={isSponsor ? 'checked' : 'unchecked'}
+                            onClick={() => setIsSponsor(true)}
+                            className={cn(
+                                "flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200",
+                                isSponsor 
+                                    ? "bg-cyan-500 text-white hover:bg-cyan-400 shadow-sm font-medium" 
+                                    : "bg-transparent shadow-none text-muted-foreground hover:bg-cyan-400/10"
+                            )}
+                        >
+                            Yes
+                            {isSponsor && <Check className='w-4 h-4' />}
+                        </Button>
+                        <Button
+                            data-state={!isSponsor ? 'checked' : 'unchecked'}
+                            onClick={() => setIsSponsor(false)}
+                            className={cn(
+                                "flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200",
+                                !isSponsor 
+                                    ? "bg-cyan-500 text-white hover:bg-cyan-400 shadow-sm font-medium" 
+                                    : "bg-transparent shadow-none text-muted-foreground hover:bg-cyan-400/10"
+                            )}
+                        >
+                            No
+                            {!isSponsor && <Check className='w-4 h-4' />}
+                        </Button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="space-y-4 bg-blue-50 max-w-lg mx-auto dark:bg-muted/20 dark:border rounded-lg transition-all p-4">
                 {isSponsor ? (

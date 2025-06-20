@@ -1,18 +1,20 @@
 import { updateUserProfile } from "@/redux/userSlice";
 import { CheckCircle, LoaderCircle, UsersRound, XCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Logo from "@/assets/ivyLight.png";
 import LogoDark from "@/assets/ivyDark.png";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
+import { RootState } from "@/redux/store";
 
 export default function VerifyEmail() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
+    const user = useSelector((state: RootState) => state.user)
     const [searchParams] = useSearchParams()
     const token = searchParams.get('token')
     const [error, setError] = useState<string>('')
@@ -21,10 +23,12 @@ export default function VerifyEmail() {
     const [loading2, setLoading2] = useState<boolean>(false)
     const [success, setSuccess] = useState<boolean>(false)
     const [successMessage, setSuccessMessage] = useState<string>('')
+    const count = useRef(0)
 
     useEffect(() => {
-      if (token) {
+      if (token && count.current === 0) {
         (async () => {
+          count.current += 1;
           await submit(false)
         })()
       }
@@ -33,31 +37,32 @@ export default function VerifyEmail() {
 
     const submit = async (getCode = true) => {
       try {
-          setError('')
-          if (token) {
-              setLoading2(true)
-          } else {
-              setLoading(true)
-          }
-          const userData = {
-            email: email,
-          }
+        setError('')
+        if (token) {
+            setLoading2(true)
+        } else {
+            setLoading(true)
+        }
+        const userData = {
+          email: email,
+        }
 
-          /* AXIOS */
-          const response = token && !getCode ? await api.post('/confirm-email?token='+token) : await api.post('/confirm-email', userData)
+        /* AXIOS */
+        const response = token && !getCode ? await api.post('/confirm-email?token='+token) : await api.post('/confirm-email', userData)
 
-          if (response.status >= 200 && response.status < 300) {
-            setSuccess(true)
-            setSuccessMessage(getCode ? 'Email verification link sent to your email' : 'Email verified successfully')
-            setTimeout(() => {
-              if(getCode) {
-                  return;
-              } else {
-                  navigate("/student-dashboard/home")
-              }
-              dispatch(updateUserProfile({email_verified: true}))
-            }, 3000)
-          }
+        if (response.status >= 200 && response.status < 300) {
+          setSuccess(true)
+          setSuccessMessage(getCode ? 'Email verification link sent to your email' : 'Email verified successfully')
+          setTimeout(() => {
+            if(getCode) {
+              return;
+            } else {
+              if (user.signed_in) navigate("/student-dashboard/home")
+              else navigate("/accounts/signin")
+            }
+            dispatch(updateUserProfile({email_verified: true}))
+          }, 3000)
+        }
 
       } catch (error: unknown) {
           if (error instanceof Error) {
@@ -77,15 +82,15 @@ export default function VerifyEmail() {
               setError('An unexpected error occurred')
           }
           if (token) {
-              setLoading2(false)
+            setLoading2(false)
           } else {
-              setLoading(false)
+            setLoading(false)
           }
       } finally {
         if (token) {
           setLoading2(false)
           setTimeout(() => {
-              setSuccess(false)
+            setSuccess(false)
           }, 3000)
         } else {
           setLoading(false)
@@ -114,12 +119,12 @@ export default function VerifyEmail() {
 
             <div className="sm:w-full sm:max-w-sm flex-1 sm:flex-auto">
               {success ? (
-                <div className="flex flex-col gap-2 justify-center items-center py-20 max-[640px]:px-10 bg-accent dark:bg-cyan-500 rounded-lg">
+                <div className="flex flex-col gap-2 justify-center items-center py-20 max-[640px]:px-10 bg-cyan-500 rounded-lg">
                   <CheckCircle className="text-white size-16" />
                   <p className="text-white text-sm">{successMessage}</p>
                 </div>
               ) : loading2 ? (
-                <div className="flex flex-col gap-2 justify-center items-center py-20 max-[640px]:px-10 bg-accent dark:bg-cyan-500 rounded-lg">
+                <div className="flex flex-col gap-2 justify-center items-center py-20 max-[640px]:px-10 bg-cyan-500 rounded-lg">
                   <LoaderCircle className="animate-spin text-white size-16" />
                   <p className="text-white text-sm">Please wait while we verify your email...</p>
                 </div>

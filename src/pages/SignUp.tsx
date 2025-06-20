@@ -40,47 +40,48 @@ export default function SignUp() {
     
     const submit: SubmitHandler<FormSchemaType> = async (data) => {
       try {
+        setError('');
         const isValid = await trigger();
         
         if (!isValid) {
           return;
         }
-          delete (data as Partial<FormSchemaType>).confirmPassword
-          data.gender = data.title === 'Mr' ? 'male' : 'female';
-          setIsLoading(true)
-          // await new Promise(resolve => setTimeout(resolve, 3000));
-          const response = await api.post("/signup", data)
+        delete (data as Partial<FormSchemaType>).confirmPassword
+        data.gender = data.title === 'Mr' ? 'male' : 'female';
+        setIsLoading(true)
+        // await new Promise(resolve => setTimeout(resolve, 3000));
+        const response = await api.post("/signup", data)
 
-          // console.log(response)
+        // console.log(response)
 
-          if (response.status >= 200 && response.status < 300) {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { password, confirmPassword, ...userData} = getValues();
-            dispatch(setUser({
-              ...userData,
-              signed_in: true,
-              user_status: 'signee',
-              gender: userData.title === 'Mr' ? 'male' : 'female',
-              reg_no: "",
-              acca_reg: "",
-              phone_no: "",
-              address: "",
-              fee: [],
-              scholarship: [],
-              email_verified: false,
-              papers: []
-            }))
-            localStorage.setItem('ivy_user_token', JSON.stringify({token: response.data.email, timestamp: Date.now()}))
-            toast({
-              variant: 'success',
-              title: "Welcome to Ivy League Associates. Please check your email for a verification link.",
-              description: "Thank you for joining Ivy League Associates! We look forward to helping you achieve your academic goals.",
-              duration: 15000
-            })
-            setIsLoading(false)
-            setError('')
-            navigate(redirect ? redirect : '/dashboard/home')
-          }
+        if (response.status >= 200 && response.status < 300) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { password, confirmPassword, ...userData} = getValues();
+          dispatch(setUser({
+            ...userData,
+            signed_in: true,
+            user_status: 'signee',
+            gender: userData.title === 'Mr' ? 'male' : 'female',
+            reg_no: "",
+            acca_reg: "",
+            phone_no: "",
+            address: "",
+            fee: [],
+            scholarship: [],
+            email_verified: false,
+            papers: []
+          }))
+          localStorage.setItem('ivy_user_token', JSON.stringify({token: response.data.email, timestamp: Date.now()}))
+          toast({
+            variant: 'success',
+            title: "Welcome to Ivy League Associates. Please check your email for a verification link.",
+            description: "Thank you for joining Ivy League Associates! We look forward to helping you achieve your academic goals.",
+            duration: 15000
+          })
+          setIsLoading(false)
+          setError('')
+          navigate(redirect ? redirect : '/dashboard/home')
+        }
   
       } catch (error: unknown) {
           

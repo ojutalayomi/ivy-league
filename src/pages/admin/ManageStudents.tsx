@@ -17,6 +17,7 @@ import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import Error404Page from '@/components/404';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ModeToggle } from '@/components/mode-toggle';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -166,9 +167,13 @@ export default function ManageStudents() {
                         return acc
                     }, [])}
 
-                    <div className='absolute bottom-3 p-2 rounded-full cursor-pointer flex items-center border hover:bg-gray-50 dark:hover:bg-gray-800' onClick={(e) => {e.stopPropagation();toggleSidebar(!isFull)}}>
+                    <div className="absolute bottom-3 space-y-2">
+                        <ModeToggle align='start' className='rounded-full hover:bg-gray-200 dark:hover:bg-gray-800' label={isFull}/>
+
+                        <div className='p-2 rounded-full cursor-pointer flex items-center justify-center border hover:bg-gray-200 dark:hover:bg-gray-800' onClick={(e) => {e.stopPropagation();toggleSidebar(!isFull)}}>
                         {isFull && "Collapse"}
-                        {isFull ? <ChevronLeft className="cursor-pointer size-4 text-muted-foreground ml-1"  /> : <ChevronRight className="cursor-pointer size-4 text-muted-foreground ml-1" />}
+                        {isFull ? <ChevronLeft className="cursor-pointer size-4 ml-1"  /> : <ChevronRight className="cursor-pointer size-4 ml-1" />}
+                        </div>
                     </div>
                 </div>
                 
@@ -348,8 +353,8 @@ const StudentList = () => {
                 {type === 'intensive' ? 'Intensive' : type === "Standard" ? 'Standard' : 'All'} Students ({filteredStudents()?.length})
             </div>
             <div className="flex flex-col gap-2">
-            {filteredStudents().map(student => (
-                <StudentCard key={student.registrationNumber} theStudent={student}/>
+            {filteredStudents().map((student, index) => (
+                <StudentCard key={student.registrationNumber + index} theStudent={student}/>
             ))}
             </div>
         </div>
