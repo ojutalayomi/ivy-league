@@ -151,33 +151,33 @@ export default function VerifyEmail() {
                         </label>
                         <div className="mt-2">
                         <Input
-                            disabled={loading}
-                            id="email"
-                            name="email"
-                            type={token ? "text" : "email"}
-                            defaultValue={email}
-                            onChange={e => setEmail(e.target.value)}
-                            required
-                            autoComplete="email"
-                            className="block w-full rounded-md border-0 px-2 py-1.5 text-white sm:dark:text-gray-100 sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
+                          disabled={loading}
+                          id="email"
+                          name="email"
+                          type={token ? "text" : "email"}
+                          defaultValue={email}
+                          onChange={e => setEmail(e.target.value)}
+                          required
+                          autoComplete="email"
+                          className="block w-full rounded-md border-0 px-3 py-1.5 sm:text-primary sm:placeholder:text-primary sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm/6"
                         />
                         </div>
                     </div>
 
                     <div>
                     <button
-                        type="submit"
-                        disabled={loading}
-                        className="flex w-full justify-center rounded-md bg-cyan-500 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600"
+                      type="submit"
+                      disabled={loading}
+                      className="flex w-full justify-center rounded-md bg-cyan-500 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600"
                     >
-                        {loading ? <LoaderCircle className="animate-spin text-white" /> : 'Verify Email'}
+                      {loading ? <LoaderCircle className="animate-spin text-white" /> : 'Verify Email'}
                     </button>
                     </div>
 
                     {error && !error.includes('token is invalid') && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                        {/* <strong className="font-bold">Error:</strong>  */}
-                        {error}
+                      {/* <strong className="font-bold">Error:</strong>  */}
+                      {error}
                     </div>
                     )}
                 </form>

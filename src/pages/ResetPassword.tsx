@@ -161,7 +161,7 @@ export default function ResetPassword() {
                             onChange={e => setEmail(e.target.value)}
                             required
                             autoComplete="email"
-                            className="block w-full rounded-md border-0 px-2 py-1.5 text-white sm:dark:text-gray-100 sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
+                            className="block w-full rounded-md border-0 px-2 py-1.5 sm:text-primary sm:placeholder:text-primary sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
                         />
                         </div>
                     </div>
@@ -181,7 +181,7 @@ export default function ResetPassword() {
                               value={password}
                               onChange={e => setPassword(e.target.value)}
                               required
-                              className="block w-full rounded-md border-0 px-2 py-1.5 text-white sm:dark:text-gray-100 sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
+                              className="block w-full rounded-md border-0 px-2 py-1.5 sm:text-primary sm:placeholder:text-primary sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
                             />
                           </div>
                         </div>
@@ -199,7 +199,7 @@ export default function ResetPassword() {
                               value={confirmPassword}
                               onChange={e => setConfirmPassword(e.target.value)}
                               required
-                              className="block w-full rounded-md border-0 px-2 py-1.5 text-white sm:dark:text-gray-100 sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-100 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
+                              className="block w-full rounded-md border-0 px-2 py-1.5 sm:text-primary sm:placeholder:text-primary sm:text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sidebar-primary/60 sm:text-sm/6"
                             />
                           </div>
                         </div>
