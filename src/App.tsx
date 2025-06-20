@@ -82,9 +82,11 @@ function Router() {
             </reactRouterDom.Routes>
           )}
         </div>
-        <div className="absolute top-0 mt-4 mr-4 right-0 z-[100]">
-          <ModeToggle />
-        </div>
+        {(location.pathname.startsWith('/accounts') || location.pathname ==='/') && (
+          <div className="absolute top-0 mt-4 mr-4 right-0 z-[100]">
+            <ModeToggle />
+          </div>
+        )}
       </div>
       {isLoading && !error && (
         <div className="absolute bottom-0 mb-4 mr-4 right-0 z-[100] animate-in animate-out fade-out-0 fade-in-0">
