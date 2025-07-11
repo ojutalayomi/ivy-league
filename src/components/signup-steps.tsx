@@ -37,7 +37,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
       <div className='space-y-1'>
         <Label className='sm:text-cyan-500' htmlFor="title">Title</Label>
         <Select onValueChange={(value) => register('title').onChange({ target: { value, name: 'title' } })}>
-          <SelectTrigger className="sm:text-primary sm:placeholder:text-primary">
+          <SelectTrigger className="sm:text-primary sm:placeholder:text-primary/50">
             <SelectValue placeholder="Select a title" />
           </SelectTrigger>
           <SelectContent>
@@ -56,7 +56,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           <Input
             id="firstname"
             {...register('firstname')}
-            className="sm:text-primary sm:placeholder:text-primary"
+            className="sm:text-primary sm:placeholder:text-primary/50"
             placeholder="John"
           />
           {errors.firstname && (
@@ -68,7 +68,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           <Input
             id="lastname"
             {...register('lastname')}
-            className="sm:text-primary sm:placeholder:text-primary"
+            className="sm:text-primary sm:placeholder:text-primary/50"
             placeholder="Doe"
           />
           {errors.lastname && (
@@ -82,7 +82,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           id="email"
           type="email"
           {...register('email')}
-          className="sm:text-primary sm:placeholder:text-primary"
+          className="sm:text-primary sm:placeholder:text-primary/50"
           placeholder="john.doe@example.com"
         />
         {errors.email && (
@@ -97,7 +97,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
             type="tel"
             onChange={(e) => setValue('phone', e.target.value)}
             value={watch('phone')}
-            className="sm:text-primary sm:placeholder:text-primary"
+            className="sm:text-primary sm:placeholder:text-primary/50"
             placeholder="0801 234 5678"
           />
           {errors.phone && (
@@ -135,7 +135,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
             id="password"
             type={showPassword ? "text" : "password"}
             {...register('password')}
-            className="sm:text-primary sm:placeholder:text-primary"
+            className="sm:text-primary sm:placeholder:text-primary/50"
           />
           <button
             type="button"
@@ -160,7 +160,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           id="confirmPassword"
           type={showPassword1 ? "text" : "password"}
           {...register('confirmPassword')}
-          className="sm:text-primary sm:placeholder:text-primary"
+          className="sm:text-primary sm:placeholder:text-primary/50"
           placeholder="Confirm Password"
           />
           <button
