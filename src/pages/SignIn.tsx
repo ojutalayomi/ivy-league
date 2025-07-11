@@ -25,7 +25,7 @@ export default function SignIn() {
     const { toast } = useToast()
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
-    const redirect = searchParams.get('redirect')
+    const redirect = searchParams.get('redirect') === '/' ? '/dashboard/home' : searchParams.get('redirect')
     const [error, setError] = useState<string>('')
     const [email, setEmail] = useState<string>('')
     const [password, setPassword] = useState<string>('')
