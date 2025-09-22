@@ -14,7 +14,7 @@ import { Step1 } from "@/components/signup-steps";
 import Logo from "@/assets/ivyLight.png";
 import LogoDark from "@/assets/ivyDark.png";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
 import { setUser } from "@/redux/userSlice";
@@ -23,7 +23,6 @@ export default function SignUp() {
     const dispatch = useDispatch()
     const [searchParams] = useSearchParams();
     const redirect = searchParams.get('redirect');
-    const { toast } = useToast()
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState('');
     const navigate = useNavigate()
@@ -65,6 +64,7 @@ export default function SignUp() {
             reg_no: "",
             acca_reg: "",
             phone_no: "",
+            profile_pic: "",
             address: "",
             fee: [],
             scholarship: [],
@@ -72,11 +72,8 @@ export default function SignUp() {
             papers: []
           }))
           localStorage.setItem('ivy_user_token', JSON.stringify({token: response.data.email, timestamp: Date.now()}))
-          toast({
-            variant: 'success',
-            title: "Welcome to Ivy League Associates. Please check your email for a verification link.",
-            description: "Thank you for joining Ivy League Associates! We look forward to helping you achieve your academic goals.",
-            duration: 15000
+          toast.success("Welcome to Ivy League Associates. Please check your email for a verification link.",{
+            description: "Thank you for joining Ivy League Associates! We look forward to helping you achieve your academic goals."
           })
           setIsLoading(false)
           setError('')

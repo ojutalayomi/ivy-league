@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, XCircle } from "lucide-react";
+import { Camera, Loader2, Upload, User, X, XCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
 import SponsorCard from "./Sponsored";
@@ -22,14 +22,13 @@ interface Question {
   key: string;
   subject: string;
   more_info: string;
-  type: 'short answer' | 'long answer' | 'checkboxes' | 'multiple choice' | 'terms' | 'boolean';
+  type: 'short answer' | 'long answer' | 'checkboxes' | 'multiple choice' | 'terms' | 'boolean' | 'file';
   options: string[];
 }
 
 const STORAGE_KEY = 'additional_info_draft';
 
 export default function AdditionalInfo() {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showClearDialog, setShowClearDialog] = useState(false);
@@ -37,6 +36,68 @@ export default function AdditionalInfo() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [formSchema, setFormSchema] = useState<z.ZodObject<z.ZodRawShape>>(z.object({}));
   const [error, setError] = useState<boolean>(false);
+  // const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleImageSelect = (file: File | undefined, fieldName?: string) => {
+    if (file && file.type.startsWith('image/')) {
+      if (file.size > 250000) {
+        toast.error("File size too large",{
+          description: "Please upload an image less than 250KB. You uploaded a file of " + (file.size / 1000).toFixed(2) + "KB. Please try again. You will not be able to submit the form until you upload a valid image."
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        const dataUrl = e.target?.result as string;
+        setImagePreview(dataUrl);
+        
+        // Store the image as binary string in form data
+        if (fieldName) {
+          form.setValue(fieldName, dataUrl);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+    const file = e.target.files?.[0];
+    handleImageSelect(file, fieldName);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, fieldName: string) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    handleImageSelect(file, fieldName);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const removeImage = (fieldName?: string) => {
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    if (fieldName) {
+      form.setValue(fieldName, '');
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
 
   // Create form schema based on questions
   useEffect(() => {
@@ -59,6 +120,8 @@ export default function AdditionalInfo() {
           }
         } else if (question.type === 'boolean') {
           schemaFields[fieldName] = z.boolean();
+        } else if (question.type === 'file') {
+          schemaFields[fieldName] = z.string().min(1, `${question.subject} is required`);
         } else {
           schemaFields[fieldName] = z.string().min(1, `${question.subject} is required`);
         }
@@ -95,6 +158,13 @@ export default function AdditionalInfo() {
   useEffect(() => {
     document.title = "Additional Info - Ivy League Associates";
     calculateProgress();
+    
+    // Restore image preview from saved form data
+    const formValues = form.getValues();
+    const profilePicValue = formValues.profile_pic;
+    if (profilePicValue && typeof profilePicValue === 'string' && profilePicValue.startsWith('data:image/')) {
+      setImagePreview(profilePicValue);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.watch()]);
 
@@ -120,6 +190,103 @@ export default function AdditionalInfo() {
     const fieldName = question.key;
 
     switch (question.type) {
+      case 'file':
+        return (
+          <div key={index} className="flex justify-center lg:col-span-1">
+            {/* Profile Picture Upload Card */}
+            <Card className="dark:bg-slate-800 border-slate-700 h-fit w-full sm:w-[20rem]">
+              <CardContent className="p-6">
+                <Label className="dark:text-white text-slate-800 font-medium mb-4 block">
+                  {question.subject}
+                </Label>
+                
+                <div className="space-y-4">
+                  {/* Image Preview or Upload Area */}
+                  <div
+                    className={`relative border-2 border-dashed rounded-lg p-4 transition-all duration-200 ${
+                      isDragging
+                        ? 'border-cyan-400 bg-cyan-400/5'
+                        : 'border-slate-600 hover:border-slate-500'
+                    }`}
+                    onDrop={(e) => handleDrop(e, fieldName)}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                  >
+                    {imagePreview ? (
+                      <div className="relative">
+                        <img
+                          src={imagePreview}
+                          alt="Profile preview"
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                        <Button
+                          onClick={() => removeImage(fieldName)}
+                          size="sm"
+                          variant="destructive"
+                          className="absolute top-2 right-2 h-8 w-8 p-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          onClick={triggerFileInput}
+                          size="sm"
+                          variant="secondary"
+                          className="absolute bottom-2 right-2 h-8 w-8 p-0"
+                        >
+                          <Camera className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={triggerFileInput}
+                        className="flex flex-col items-center justify-center h-48 cursor-pointer text-slate-400 hover:text-slate-300 transition-colors"
+                      >
+                        <User className="h-12 w-12 mb-3" />
+                        <p className="text-sm font-medium mb-1">Click to upload</p>
+                        <p className="text-xs text-slate-500">or drag and drop</p>
+                        <p className="text-xs text-slate-500 mt-2">
+                          PNG, JPG up to 250KB
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Hidden File Input */}
+                  <input
+                    ref={(el) => {
+                      if (el) fileInputRef.current = el;
+                      form.register(fieldName).ref(el);
+                    }}
+                    type="file"
+                    accept="image/*"
+                    name={question.key}
+                    onChange={(e) => handleFileInput(e, fieldName)}
+                    className="hidden"
+                  />
+
+                  {/* Upload Button */}
+                  {!imagePreview && (
+                    <Button
+                      onClick={triggerFileInput}
+                      variant="outline"
+                      className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Choose File
+                    </Button>
+                  )}
+
+                  <p className="text-xs text-slate-500">
+                    {question.more_info}
+                  </p>
+                  {form.formState.errors[fieldName] && (
+                    <p className="text-sm text-red-500">{form.formState.errors[fieldName]?.message as string}</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
       case 'boolean':
         return (
           <div key={index} className="grid gap-2">
@@ -239,17 +406,14 @@ export default function AdditionalInfo() {
     try {
       const isValid = await form.trigger();
       if (!isValid) {
-        toast({
-          variant: "destructive",
-          title: "Validation Error",
+        toast.error("Validation Error",{
           description: "Please fill in all required fields correctly"
         });
         return;
       }
 
       setIsLoading(true);
-      toast({
-        title: "Form Saved",
+      toast.success("Form Saved",{
         description: "Additional information saved successfully"
       });
       
@@ -262,16 +426,12 @@ export default function AdditionalInfo() {
         const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error;
         // console.log(message);
         const [title, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred'];
-        toast({
-          variant: 'destructive',
-          title: title || 'Error',
+        toast.error(title || "Error",{
           description: description || 'An unexpected error occurred'
         });
       } else {
         console.error('Unexpected error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
+        toast.error("Error",{
           description: 'An unexpected error occurred'
         });
       }
@@ -282,10 +442,13 @@ export default function AdditionalInfo() {
 
   const handleClearForm = () => {
     form.reset({});
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     localStorage.removeItem(STORAGE_KEY);
     setShowClearDialog(false);
-    toast({
-      title: "Form Reset",
+    toast.success("Form Reset",{
       description: "All form data has been cleared"
     });
   };
@@ -293,7 +456,7 @@ export default function AdditionalInfo() {
   return (
     <div className="flex min-h-full flex-1 flex-col items-center justify-center px-6 py-12 lg:px-8">
       {searchParams.get('step') === 'sponsor' ? <SponsorCard /> : (
-        <Card className="min-[641px]:min-w-[640px] mx-auto">
+        <Card className="min-[641px]:min-w-[640px] mx-auto max-w-2xl">
           <CardHeader>
             <CardTitle className="text-2xl/9 font-bold tracking-tight text-center text-cyan-500">
               Additional Information

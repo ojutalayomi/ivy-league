@@ -15,14 +15,13 @@ import { User } from "@/lib/types";
 import Logo from "@/assets/ivyLight.png";
 import LogoDark from "@/assets/ivyDark.png";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
 
 export default function SignIn() {
     const dispatch = useDispatch()
-    const { toast } = useToast()
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const redirect = searchParams.get('redirect') === '/' ? '/dashboard/home' : searchParams.get('redirect')
@@ -48,9 +47,7 @@ export default function SignIn() {
     const handleSwitchUser = (username: string) => {
       try {
           if (!username) {
-              toast({
-                  variant: 'destructive',
-                  title: "Oops!",
+              toast.error("Oops!",{
                   description: "No user found to switch to"
               })
               navigate('/accounts/login')
@@ -59,22 +56,18 @@ export default function SignIn() {
 
           const success = false //switchUser(username)
           if (success) {
-              toast({
-                  title: "Successfully switched user"
+              toast.success("Successfully switched user",{
+                description: "You are now signed in as " + username
               })
               navigate('/accounts/profile')
           } else {
-              toast({
-                  variant: 'destructive',
-                  title: "Oops!",
+              toast.error("Oops!",{
                   description: "Failed to switch user"
               })
           }
       } catch (error) {
           console.error('Switch user error:', error)
-          toast({
-              variant: 'destructive',
-              title: "Oops!",
+          toast.error("Oops!",{
               description: "An error occurred while switching user"
           })
       }
@@ -109,9 +102,8 @@ export default function SignIn() {
         if (response.status >= 200 && response.status < 300) {
           localStorage.setItem('ivy_user_token', JSON.stringify({token: response.data.email, timestamp: Date.now()}))
           dispatch(setUser({...response.data, signed_in: true}))
-          toast({
-            title: "You have signed in succesfully.",
-            // description: JSON.stringify(userData)
+          toast.success("You have signed in succesfully.",{
+            description: "Thank you for signing in to your account. We look forward to helping you achieve your academic goals."
           })
           navigate(redirect || "/dashboard/home")
         }

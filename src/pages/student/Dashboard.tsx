@@ -14,9 +14,9 @@ import { RootState } from '@/redux/store';
 import { Paper } from '@/lib/data';
 import { AxiosError } from 'axios';
 import { api } from '@/lib/api';
-import { toast } from '@/hooks/use-toast';
-import { updateUserProfile } from '@/redux/userSlice';
+import { updateUserProfile, UserState } from '@/redux/userSlice';
 import { ModeToggle } from '@/components/mode-toggle';
+import { toast } from 'sonner';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -47,12 +47,12 @@ type CoursePageItems = {
 }[]
 
 const Av = forwardRef<HTMLSpanElement, AvProps>(({ active, className, children }, ref) => (
-    <span 
-    ref={ref} 
-    className={cn(`${active && "border-cyan-500"} relative flex h-10 w-10 shrink-0 overflow-hidden group hover:border-cyan-500 border p-1 rounded-full`, className)}
-    >
-      <span className={`${active && "!bg-cyan-500 !text-white"} flex h-full w-full items-center justify-center group-hover:bg-cyan-500 group-hover:!text-white rounded-full bg-muted p-1`}>{children}</span>
-    </span>
+  <span 
+  ref={ref} 
+  className={cn(`${active && "border-cyan-500"} relative flex h-10 w-10 shrink-0 overflow-hidden group hover:border-cyan-500 border p-1 rounded-full`, className)}
+  >
+    <span className={`${active && "!bg-cyan-500 !text-white"} flex h-full w-full items-center justify-center group-hover:bg-cyan-500 group-hover:!text-white rounded-full bg-muted p-1`}>{children}</span>
+  </span>
 ))
 
 export default function Dashboard() {
@@ -276,34 +276,41 @@ export default function Dashboard() {
               <Card className="p-2 flex-1 overflow-y-auto w-full">
                 <CardContent className='px-2 py-2 space-y-4'>
 
-                  {!location.pathname.includes('profile') && (<div className="block space-y-4 p-6 max-[639px]:text-center hover:border-cyan-500 bg-cyan-100/30 backdrop-blur-sm hover:bg-cyan-100/30 transition-all duration-200 rounded-xl shadow-sm hover:shadow-md border">
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                      <div className="space-y-2">
-                        <h5 className="text-xl font-bold tracking-tight dark:text-white">{user.firstname} {user.lastname}</h5>
-                        <p className="font-normal dark:text-white">Registration Number: <b>{user.reg_no || 'N/A'}</b></p>
-                        <p className="font-normal dark:text-white flex items-center gap-2">
-                          Email: <b>{user.email || 'N/A'}</b> 
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                {user.email_verified ? <CheckCircle className="size-4 text-green-500" /> : <XCircle className="size-4 text-red-500" />}
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {user.email_verified ? 'Email verified' : 'Email not verified'}
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </p>
-                        {!user.email_verified && (
-                          <div className="flex items-center gap-2 p-2 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
-                            <AlertCircle className="size-4" />
-                            <p className="text-sm">Your email is not verified. Please verify your email to continue.</p>
-                            <Button variant="outline" size="sm" onClick={() => navigate('/accounts/confirm-email')}>Verify Email</Button>
+                  {!location.pathname.includes('profile') && (
+                    <div className="block space-y-4 p-6 max-[639px]:text-center hover:border-cyan-500 bg-cyan-100/30 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-cyan-100/30 transition-all duration-200 rounded-xl shadow-sm hover:shadow-md border">
+                      <div className="flex flex-col sm:flex-row items-center gap-4">
+                        {user.profile_pic && (
+                          <div className="w-24 h-24 rounded-full overflow-hidden">
+                            <img src={"data:image/png;base64,"+user.profile_pic} alt="Profile" className="w-full h-full object-cover" />
                           </div>
                         )}
+                        <div className="space-y-2">
+                          <h5 className="text-xl font-bold tracking-tight dark:text-white">{user.firstname} {user.lastname}</h5>
+                          <p className="font-normal dark:text-white">Registration Number: <b>{user.reg_no || 'N/A'}</b></p>
+                          <p className="font-normal dark:text-white flex items-center gap-2">
+                            Email: <b>{user.email || 'N/A'}</b> 
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  {user.email_verified ? <CheckCircle className="size-4 text-green-500" /> : <XCircle className="size-4 text-red-500" />}
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {user.email_verified ? 'Email verified' : 'Email not verified'}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </p>
+                          {!user.email_verified && (
+                            <div className="flex items-center gap-2 p-2 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                              <AlertCircle className="size-4" />
+                              <p className="text-sm">Your email is not verified. Please verify your email to continue.</p>
+                              <Button variant="outline" size="sm" onClick={() => navigate('/accounts/confirm-email')}>Verify Email</Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>)}
+                  )}
 
                   <Tabs defaultValue={'home'} value={type} onValueChange={(value) => navigate(`/student-dashboard/${value}`)}>
                     <Routes>
@@ -396,7 +403,7 @@ const AvailablePapers = () => {
       try {
         count.current += 1;
         setIsLoading(true);
-        const response = await api.get('/courses?reg=true' + (user.user_status === 'student' ? '' : "&acca_reg=" + (user.acca_reg || '001')) + '&user_status=' + user.user_status + '&email=' + user.email);
+        const response = await api.get('/courses?reg=false' + (user.user_status === 'student' ? '' : "&acca_reg=" + (user.acca_reg || '001')) + '&user_status=' + user.user_status + '&email=' + user.email);
         setPapers(response.data.papers);
         setScholarships(response.data.scholarships);
       } catch (error) {
@@ -549,10 +556,8 @@ const PaymentStatus = () => {
       switch (response.status) {
         case 200:
         {
-          toast({
-            title: response.data.status || "Payment Successful!",
-            description: response.data.message || "Your payment has been successfully processed.",
-            variant: "success"
+          toast.success(response.data.status || "Payment Successful!",{
+            description: response.data.message || "Your payment has been successfully processed."
           })
           dispatch(updateUserProfile({ 
             acca_reg: response.data.acca_reg_no || response.data.user_data.acca_reg_no, 
@@ -568,16 +573,13 @@ const PaymentStatus = () => {
           break;
         }
         case 202:
-          toast({
-            title: response.data.status || "Payment Pending",
+          toast.info(response.data.status || "Payment Pending",{
             description: response.data.message || "Your payment is pending. Please wait while we verify your payment.",
           })
           break;
         default:
-          toast({
-            title: response.data.status || "Payment Verification Failed",
-            description: response.data.message || "There was an error verifying your payment.",
-            variant: "destructive"
+          toast.error(response.data.status || "Payment Verification Failed",{
+            description: response.data.message || "There was an error verifying your payment."
           })
           break;
       }
@@ -587,25 +589,19 @@ const PaymentStatus = () => {
         const message = (error as AxiosError<{ error: { [x: string]: string } }>).response?.data?.error
          
         const [title, description] = Object.entries(message as { [x: string]: string })[0] || ['Error', 'An unexpected error occurred']
-        toast({
-          title: "Error",
-          description: title.includes("Uncaught Error") ? "An unexpected error occurred" : description,
-          variant: "destructive"
+        toast.error("Error",{
+          description: title.includes("Uncaught Error") ? "An unexpected error occurred" : description
         })
       } else if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response: { data: { error: string } } }
         console.error('API Error:', axiosError.response.data.error)
-        toast({
-          title: "Error",
-          description: axiosError.response.data.error,
-          variant: "destructive"
+        toast.error("Error",{
+          description: axiosError.response.data.error
         })
       } else {
         console.error('Unexpected error:', error)
-        toast({
-          title: "Error",
-          description: "An unexpected error occurred",
-          variant: "destructive"
+        toast.error("Error",{
+          description: "An unexpected error occurred"
         })
       }
     } finally {
@@ -654,8 +650,9 @@ const PapersPage = ({ menuItems }:{ menuItems: CoursePageItems }) => {
   )
 }
 
-const PaymentHistoryPage = () => {
+export const PaymentHistoryPage = ({ student }: { student?: UserState }) => {
   const user = useSelector((state: RootState) => state.user)
+  const effectiveUser = student || user
   const [payments, setPayments] = useState<{ papers: string[]; ref_id: string; amount: number; date: string }[]>([])
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('')
@@ -667,7 +664,7 @@ const PaymentHistoryPage = () => {
         count.current += 1
         setIsLoading(true)
         const response = await api.get('/all-payments', {
-          params: { reg_no: user.reg_no }
+          params: { reg_no: effectiveUser.reg_no }
         })
         setPayments(response.data)
       } catch (error) {
@@ -692,8 +689,8 @@ const PaymentHistoryPage = () => {
         setIsLoading(false)
       }
     }
-    if (user.reg_no && count.current === 0) fetchPayments()
-  }, [user.reg_no])
+    if (effectiveUser.reg_no && count.current === 0) fetchPayments()
+  }, [effectiveUser.reg_no])
 
   return (
     <div className="space-y-4">

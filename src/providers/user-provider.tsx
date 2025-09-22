@@ -60,7 +60,8 @@ export function UserProvider({ children }: UserProviderProps) {
         setError('An unexpected error occurred');
       }
     }
-  }, [dispatch, location.pathname, navigate, path])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -89,7 +90,7 @@ export function UserProvider({ children }: UserProviderProps) {
       setIsLoading(false);
     }
     fetchUser();
-  }, [dispatch, isLoading, navigate, refreshUser, path, location.pathname]);
+  }, [isLoading]);
 
   return (
     <UserContext.Provider value={{ isLoading, error }}>

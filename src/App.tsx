@@ -1,12 +1,11 @@
 import ManageStudents from '@/pages/admin/ManageStudents'
-import ManageStudentsMenu from '@/pages/admin/ManageStudentsMenu'
 import Menu from '@/pages/Menu'
 import SignIn from '@/pages/SignIn'
 import SignUp from '@/pages/SignUp'
 import * as reactRouterDom from 'react-router-dom'
 import { ThemeProvider } from '@/providers/theme-provider'
 import { ModeToggle } from '@/components/mode-toggle'
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import Error404Page from '@/components/404'
 import Dashboard from '@/pages/student/Dashboard'
 import { Provider } from 'react-redux';
@@ -57,8 +56,7 @@ function Router() {
               <reactRouterDom.Route path="/help-center" element={<HelpCenter />} />
               <reactRouterDom.Route path="/manage-students/*" element={
                 <reactRouterDom.Routes>
-                  <reactRouterDom.Route path='/' element={<ManageStudentsMenu />} />
-                  <reactRouterDom.Route path='/*' element={<ManageStudents />} />
+                  <reactRouterDom.Route path='*' element={<ManageStudents />} />
                 </reactRouterDom.Routes>
               } />
               <reactRouterDom.Route path="/dashboard/*" element={<reactRouterDom.Navigate to={pathSegments} replace />} />

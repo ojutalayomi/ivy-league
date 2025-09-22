@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-type UserState = {
+export type UserState = {
     email: string;
     firstname: string;
     gender: string;
@@ -11,6 +11,7 @@ type UserState = {
     acca_reg: string;
     dob: string;
     phone_no: string;
+    profile_pic: string;
     address: string;
     signed_in: boolean;
     email_verified: boolean;
@@ -35,6 +36,7 @@ const initialState: UserState = {
     acca_reg: "001",
     dob: "",
     phone_no: "",
+    profile_pic: "",
     address: "",
     signed_in: false,
     email_verified: false,

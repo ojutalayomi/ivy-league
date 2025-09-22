@@ -1,4 +1,4 @@
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface PopupOptions {
   url: string;
@@ -27,10 +27,8 @@ export const openPopup = ({ url, width = 600, height = 600, name = 'payment' }: 
     );
 
     if (!popup) {
-      toast({
-        title: "Popup Blocked",
+      toast.error("Popup Blocked",{
         description: "Please allow popups for this website to proceed with payment.",
-        variant: "destructive"
       });
       return null;
     }
@@ -38,10 +36,8 @@ export const openPopup = ({ url, width = 600, height = 600, name = 'payment' }: 
     return popup;
   } catch (err) {
     console.error('Failed to open popup:', err);
-    toast({
-      title: "Error",
+    toast.error("Error",{
       description: "Failed to open payment window. Please try again.",
-      variant: "destructive"
     });
     return null;
   }
@@ -59,10 +55,8 @@ export const handlePopupMessage = (
     callback(event.data as PopupMessage);
   } catch (err) {
     console.error('Error handling popup message:', err);
-    toast({
-      title: "Error",
+    toast.error("Error",{
       description: "Failed to process payment response. Please try again.",
-      variant: "destructive"
     });
   }
 }; 

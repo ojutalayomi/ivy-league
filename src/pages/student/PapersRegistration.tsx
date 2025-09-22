@@ -1,9 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Paper } from '@/lib/data';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, TableCell, TableFooter } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { AlertCircle, Check, Loader2 } from 'lucide-react';
@@ -36,25 +36,31 @@ export default function PapersRegistration() {
   const [partialPayment, setPartialPayment] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isSponsor, setIsSponsor] = useState(true);
+  const [isSponsor, setIsSponsor] = useState(false);
   const dispatch = useDispatch();
+  const dietName = useRef("");
+
+  useEffect(() => {
+    dietName.current = localStorage.getItem('selectedDiet') || '';
+  }, [localStorage.getItem('selectedDiet')]);
 
   useEffect(() => {
     if (isLoading) {
       (async () => {
         try {
           setIsLoading(true);
-            const response = await api.get(`/courses?reg=true&${user.user_status === 'student' ? '' : "acca_reg=" + (user.acca_reg || '001')}&user_status=${user.user_status}&email=${email}`);
-            setCurrentPapers(response.data.current_papers);
-            setCoursesLimit(response.data.course_limit);
-            setScholarships(response.data.scholarships);
-            setPartialPayment(response.data.partial_payment);
-            const currentFees = response.data.fee;
-            const filteredPapers = response.data.papers.filter((paper: Paper) => 
-              user.user_status === 'student' ? !paper.code.some(code => response.data.current_papers.includes(code)) : true
-            );
-            setPapers(filteredPapers);
-            setCurrentFees(currentFees);
+          // if(user.user_status === 'signee') return;
+          const response = await api.get(`/courses?reg=true&${user.user_status === 'student' ? '' : "acca_reg=" + (user.acca_reg || '001')}&user_status=${user.user_status}&email=${email}&diet_name=${dietName.current}`);
+          setCurrentPapers(response.data.current_papers);
+          setCoursesLimit(response.data.course_limit);
+          setScholarships(response.data.scholarships);
+          setPartialPayment(response.data.partial_payment);
+          const currentFees = response.data.fee;
+          const filteredPapers = response.data.papers.filter((paper: Paper) => 
+            user.user_status === 'student' ? !paper.code.some(code => response.data.current_papers.includes(code)) : true
+          );
+          setPapers(filteredPapers);
+          setCurrentFees(currentFees);
         } catch (error) {
           console.error('Error fetching papers:', error);
           if (error instanceof Error) {
@@ -108,9 +114,7 @@ export default function PapersRegistration() {
   useEffect(() => {
     if (searchParams.get('paymentSummary') === 'true' && totalAmount() === 0) {
       navigate(-1);
-      toast({
-        variant: 'destructive',
-        title: 'Oops!',
+      toast.error("Oops!",{
         description: 'Please select at least one paper'
       })
     }
@@ -126,6 +130,7 @@ export default function PapersRegistration() {
         });
     }) : [];
   }
+  
   const getDiscountPercentage = () => {
     return scholarships.length ? scholarships.filter(s => getDiscountPapers().includes(s.paper)).map(s => s.percentage) : [0];
   }
@@ -136,7 +141,6 @@ export default function PapersRegistration() {
       const additionalInfo = localStorage.getItem(STORAGE_KEY);
       setIsLoading(true);
       const data = {
-        diet: 2,
         amount: totalAmount(),
         email: user.email,
         firstname: user.firstname,
@@ -151,14 +155,13 @@ export default function PapersRegistration() {
           papers: Object.entries(selectedPapers).map(([name, {type}]) => papers.find(p => p.name === name)?.code[type.index] || '').filter(Boolean),
           ...(user.user_status === 'signee' ? JSON.parse(additionalInfo || '{}') : {}),
           retaking: false,
+          diet_name: localStorage.getItem('selectedDiet') || '',
         },
       }
       const response = await api.post(`/register`, data);
       if (response.status === 200) {
         localStorage.setItem('reference', response.data.data.reference);
-        toast({
-          variant: 'success',
-          title: 'Payment Initiated!',
+        toast.success("Payment Initiated!",{
           description: 'Please wait while we redirect you to the payment page.'
         })
         
@@ -203,20 +206,18 @@ export default function PapersRegistration() {
         <Loader2 className="w-10 h-10 animate-spin" />
       </div>
     )
-  } else if (error) {
+  } else if (error && !isSponsor) {
     content = (
       <div className="flex flex-col justify-center items-center gap-2 h-[50vh]">
         <div className='flex flex-col items-center gap-2'>
           <AlertCircle className="w-10 h-10 text-red-500" />
           <p className="text-red-500">{error}</p>
         </div>
-        <Button onClick={() => navigate(-1)} className='bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full max-w-md'>Go Back</Button>
+        {/* <Button onClick={() => navigate(-1)} className='bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full max-w-md'>Go Back</Button> */}
       </div>
     )
-  } else if (user.user_status === 'student' && (!allowPaperRegistration || isSponsor)) {
-    content = <SponsorCard hideBackButton={true} />
   } else {
-    content = (
+    content = !isSponsor ? (
       <div className="max-w-6xl mx-auto rounded-lg">
         {Object.entries(groupedPapers ?? {}).map(([category, categoryPapers]) => (
           <div key={category} className="mb-8">
@@ -343,17 +344,16 @@ export default function PapersRegistration() {
 
             <Button
               onClick={() => {
-                if (!email) return toast({
-                  variant: 'destructive', 
-                  title: "Oops!",
+                if (!email) return toast.error("Oops!",{
                   description: 'Please enter your email address'
                 });
-                if (totalAmount() === 0) return toast({
-                  variant: 'destructive',
-                  title: "Oops!",
+                if (totalAmount() === 0) return toast.error("Oops!",{
                   description: 'Please select at least one paper'
                 });
-                setSearchParams({paymentSummary: 'true'});
+                if(localStorage.getItem('selectedDiet') === '') return toast.error("Oops!",{
+                  description: 'Please select a diet'
+                });
+                setSearchParams({ paymentSummary: 'true' });
               }}
               disabled={totalAmount() === 0}
               className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full max-w-md"
@@ -538,50 +538,51 @@ export default function PapersRegistration() {
           </DialogContent>
         </Dialog>
       </div>
-    )
+    ) : null
   }
 
   return (
-    <div className="space-y-4">
-      {user.user_status === 'student' && (
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-xl font-semibold text-gray-700 dark:text-gray-200">
-            Do you have a sponsor code?
-          </h1>
-          <div className="flex justify-between items-center gap-2 bg-gray-100 dark:bg-zinc-900 dark:text-gray-200 p-1 rounded-full">
-            <Button 
-              data-state={isSponsor ? 'checked' : 'unchecked'}
-              onClick={() => setIsSponsor(true)}
-              className={cn(
-                `flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200`,
-                isSponsor 
-                  ? "bg-white dark:bg-zinc-600 text-gray-800 dark:text-gray-200 hover:bg-inherit shadow-bar dark:shadow-bar-dark font-medium" 
-                  : "bg-transparent shadow-none text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800"
-              )}
-            >
-              Yes
-              {isSponsor && <Check className='w-4 h-4' />}
-            </Button>
-            <Button
-              data-state={!isSponsor ? 'checked' : 'unchecked'}
-              onClick={() => {
-                setIsSponsor(false)
-                dispatch(setAllowPaperRegistration(true));
-              }}
-              className={cn(
-                "flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200",
-                !isSponsor 
-                  ? "bg-white dark:bg-zinc-600 text-gray-800 dark:text-gray-200 hover:bg-inherit shadow-bar dark:shadow-bar-dark font-medium" 
-                  : "bg-transparent shadow-none text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800"
-              )}
-            >
-              No
-              {!isSponsor && <Check className='w-4 h-4' />}
-            </Button>
-          </div>
+    <>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-semibold text-gray-700 dark:text-gray-200">
+          Do you have a sponsor code?
+        </h1>
+        <div className="flex justify-between items-center gap-2 bg-gray-100 dark:bg-zinc-900 dark:text-gray-200 p-1 rounded-full">
+          <Button 
+            data-state={isSponsor ? 'checked' : 'unchecked'}
+            onClick={() => setIsSponsor(true)}
+            className={cn(
+              `flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200`,
+              isSponsor 
+                ? "bg-white dark:bg-zinc-600 text-gray-800 dark:text-gray-200 hover:bg-inherit shadow-bar dark:shadow-bar-dark font-medium" 
+                : "bg-transparent shadow-none text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800"
+            )}
+          >
+            Yes
+            {isSponsor && <Check className='w-4 h-4' />}
+          </Button>
+          <Button
+            data-state={!isSponsor ? 'checked' : 'unchecked'}
+            onClick={() => {
+              setIsSponsor(false)
+              dispatch(setAllowPaperRegistration(true));
+            }}
+            className={cn(
+              "flex gap-1 items-center flex-1 py-2 px-4 rounded-full transition-all duration-200",
+              !isSponsor 
+                ? "bg-white dark:bg-zinc-600 text-gray-800 dark:text-gray-200 hover:bg-inherit shadow-bar dark:shadow-bar-dark font-medium" 
+                : "bg-transparent shadow-none text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800"
+            )}
+          >
+            No
+            {!isSponsor && <Check className='w-4 h-4' />}
+          </Button>
         </div>
-      )}
-      {content}
+      </div>
+      <div className="space-y-4">
+        <SponsorCard hideBackButton={true} hideSponsor={!isSponsor} />
+        {content}
+      </div>
       <Dialog open={user.user_status === 'signee' && !allowPaperRegistration} onOpenChange={() => {}}>
         <DialogContent className='dark:bg-gray-900 dark:border-gray-700 rounded-lg'>
           <DialogHeader>
@@ -599,6 +600,6 @@ export default function PapersRegistration() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

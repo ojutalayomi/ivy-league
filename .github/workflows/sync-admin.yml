@@ -1,0 +1,33 @@
+name: Sync admin branch with main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync-admin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Fetch all branches
+        run: git fetch --all
+
+      - name: Push main to admin branch
+        run: |
+          git push origin main:admin --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Optional: Deploy to Vercel after syncing
+      - name: Deploy to Vercel
+        run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm

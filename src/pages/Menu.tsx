@@ -6,7 +6,7 @@ import LogoDark from "@/assets/ivyDark.png"
 import { useEffect } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/redux/store"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 
 export default function Menu() {
@@ -22,13 +22,7 @@ export default function Menu() {
     const isExpired = !timestamp || Date.now() - timestamp > 3600000;
     if (user.signed_in && !isExpired) {
       // navigate("/dashboard/home", { replace: true })
-      toast({
-        title: "You are signed in",
-        description: "You are signed in to your account",
-        variant: "default",
-        action: <Button onClick={() => navigate("/dashboard/home")}>Go to Dashboard</Button>,
-        duration: 10000
-      })
+      toast.success(<div className="flex justify-between gap-2 items-center"><p>You are signed in</p><Button onClick={() => navigate("/dashboard/home")}>Go to Dashboard</Button></div>)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

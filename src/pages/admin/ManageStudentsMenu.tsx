@@ -1,7 +1,55 @@
 import { Link } from "react-router-dom"
-import Logo from "@/assets/ivyLight.png"
-import { ArrowUpRight } from "lucide-react"
 import { useEffect } from "react";
+import { BookOpen, Users, GraduationCap, DollarSign, TrendingUp, TrendingDown, Eye } from "lucide-react";
+
+interface MetricData {
+    id: string;
+    title: string;
+    value: string;
+    change: string;
+    changeType: 'positive' | 'negative';
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    iconColor: string;
+}
+
+const metrics: MetricData[] = [
+    {
+      id: '1',
+      title: 'Total Students',
+      value: '1,247',
+      change: '+12% from last month',
+      changeType: 'positive',
+      icon: Users,
+      iconColor: 'bg-gradient-to-br from-blue-500 to-blue-600'
+    },
+    {
+      id: '2',
+      title: 'Active Courses',
+      value: '42',
+      change: '+3 new courses',
+      changeType: 'positive',
+      icon: BookOpen,
+      iconColor: 'bg-gradient-to-br from-green-500 to-green-600'
+    },
+    {
+      id: '3',
+      title: 'Active Instructors',
+      value: '28',
+      change: '+2 this month',
+      changeType: 'positive',
+      icon: GraduationCap,
+      iconColor: 'bg-gradient-to-br from-amber-500 to-amber-600'
+    },
+    {
+      id: '4',
+      title: 'Monthly Revenue',
+      value: '$24.7K',
+      change: '+18% from last month',
+      changeType: 'positive',
+      icon: DollarSign,
+      iconColor: 'bg-gradient-to-br from-purple-500 to-purple-600'
+    }
+];
 
 /**
  * ManageStudentsMenu Component
@@ -28,19 +76,7 @@ export default function ManageStudentsMenu() {
     {
       title: "View Students",
       description: "See all registered students",
-      path: "/manage-students/all",
-      sub: [
-        {
-          title: "Intensive Students",
-          description: "See all intensive students",
-          path: "/manage-students/intensive"
-        },
-        {
-          title: "Standard Students",
-          description: "See all standard students",
-          path: "/manage-students/standard"
-        }
-      ],
+      path: "/manage-students/students"
     },
     {
       title: "Add Student", 
@@ -56,25 +92,52 @@ export default function ManageStudentsMenu() {
       title: "Delete Students",
       description: "Remove student accounts",
       path: "/manage-students/delete"
+    },
+    {
+      title: "Payments",
+      description: "Manage payments",
+      path: "/manage-students/payments"
+    },
+    {
+      title: "Diets",
+      description: "Manage diets",
+      path: "/manage-students/diets"
     }
   ]
 
   return (
-    <div className={`flex flex-1 flex-col gap-3 h-full items-center justify-center overflow-y-scroll px-6 py-12 lg:px-8`}>
-      <div className="absolute blur-sm flex items-center inset-0 z-0 h-full w-full">
-        <img src={Logo} alt="Ivy League" className="opacity-70 mx-auto" />
-      </div>
+    <div className={`h-full`}>
 
-      <div className="flex items-center justify-center gap-2 sm:mx-auto sm:w-full sm:max-w-sm z-10">
+      {/* <div className="flex items-center justify-center gap-2 sm:mx-auto sm:w-full sm:max-w-sm z-10">
         <span className="bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-3xl drop-shadow-2xl text-transparent animate-gradient-x truncate font-semibold">IVY LEAGUE ASSOCIATES</span>
-      </div>
-      
-      <h1 className="text-center text-4xl text-primary font-bold drop-shadow-2xl my-2 z-10">What would you like to do today?</h1>
+      </div> */}
 
-      <div className="flex flex-col max-[639px]:px-4 sm:grid gap-3 pt-3 max-h-[70vh] sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 w-full sm:justify-center z-10 overflow-x-scroll">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <p className="text-gray-600 mt-1">
+            Today, {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} • Welcome back, Admin
+          </p>
+        </div>
+        <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+          <Eye className="h-4 w-4" />
+          View Reports
+        </button>
+      </div>
+
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {metrics.map((metric) => (
+          <MetricCard key={metric.id} data={metric} />
+        ))}
+      </div>
+
+      <div className="text-xl font-bold mb-2">Quick Links</div>
+      <ul className="flex flex-col gap-2 py-2 w-full max-[639px]:px-4 list-none">
         {menuItems.map((item, index) => (
-          <div key={index} className={`w-full p-6 min-w-60 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700`}>
-            <h3 className="text-xl font-bold mb-2">
+          <li key={index} className="w-full px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex flex-col">
+            <h3 className="text-lg font-semibold mb-1">
               <Link 
                 to={item.path}
                 className="text-cyan-500 hover:text-cyan-600 no-underline"
@@ -82,26 +145,46 @@ export default function ManageStudentsMenu() {
                 {item.title}
               </Link>
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-2">{item.description}</p>
-            {item.sub && (
-              <ul className="mb-2 space-y-2">
-                {item.sub.map(i => (
-                  <li className="list-disc text-xs hover:underline" key={i.path}>
-                    <Link to={i.path}>{i.title}</Link>
-                    <ArrowUpRight className="size-2 inline-block ml-1" />
-                  </li>
-                ))}
-              </ul>
-            )}
+            <p className="text-gray-600 dark:text-gray-300 mb-1">{item.description}</p>
             <Link 
               to={item.path}
               className="text-sm text-cyan-500 hover:text-cyan-600"
             >
               Visit →
             </Link>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   )
 }
+
+const MetricCard: React.FC<{ data: MetricData }> = ({ data }) => {
+  const Icon = data.icon;
+  const TrendIcon = data.changeType === 'positive' ? TrendingUp : TrendingDown;
+  
+  return (
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 border border-gray-100">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`p-3 rounded-xl ${data.iconColor}`}>
+          <Icon className="h-8 w-8 text-white" />
+        </div>
+      </div>
+      
+      <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+        {data.value}
+      </div>
+      
+      <div className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+        {data.title}
+      </div>
+      
+      <div className={`flex items-center gap-1 text-xs font-semibold ${
+        data.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
+      }`}>
+        <TrendIcon className="h-3 w-3" />
+        {data.change}
+      </div>
+    </div>
+  );
+};

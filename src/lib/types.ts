@@ -16,6 +16,40 @@ export type User = {
 
 export type UserType = 'all' | 'intensive' | 'standard'
 
+export type Diet = {
+    available: boolean;
+    title: string;
+    diet_name?: string;
+    description: string;
+    exam_month: string;
+    exam_year: string;
+    diet_ends: string;
+    reg_starts: string;
+    reg_ends: string;
+    revision_starts: string;
+    revision_ends: string;
+    revision_deadline?: string;
+    papers: string[];
+}
+
+// API Paper format (from /courses endpoint)
+export type APIPaper = {
+    category: string;
+    code: string;
+    name: string;
+    price: number;
+}
+
+// Union type to handle both local and API paper formats
+export type PaperData = APIPaper | {
+    category: string;
+    name: string;
+    code: string[];
+    price: number[];
+    revisionPrice?: number;
+    type?: ('Standard' | 'Intensive' | '')[]
+}
+
 export type Student = {
     registrationNumber: string;
     name: string;
