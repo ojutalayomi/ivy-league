@@ -1,20 +1,20 @@
-name: Sync admin branch with main
+name: Sync admin-preview branch with main
 
 on:
   push:
     branches:
-      - main
+      - main-preview
 
 jobs:
-  sync-admin:
+  sync-admin-preview:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Checkout main branch
+      - name: Checkout main-preview branch
         uses: actions/checkout@v3
         with:
-          ref: main
+          ref: main-preview
 
       - name: Set up Git
         run: |
@@ -24,7 +24,7 @@ jobs:
       - name: Fetch all branches
         run: git fetch --all
 
-      - name: Push main to admin branch
+      - name: Push main-preview to admin-preview branch
         run: |
           git remote set-url origin https://x-access-token:${{ secrets.Ivy_league_PAT }}@github.com/${{ github.repository }}
-          git push origin main:admin --force
+          git push origin main-preview:admin-preview --force
