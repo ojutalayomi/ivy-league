@@ -57,7 +57,7 @@ export default function VerifyEmail() {
             if(getCode) {
               return;
             } else {
-              if (user.signed_in) navigate("/student-dashboard/home")
+              if (user.signed_in) navigate("/home")
               else navigate("/accounts/signin")
             }
             dispatch(updateUserProfile({email_verified: true}))

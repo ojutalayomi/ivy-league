@@ -77,7 +77,7 @@ export default function SignUp() {
           })
           setIsLoading(false)
           setError('')
-          navigate(redirect ? redirect : '/dashboard/home')
+          navigate(redirect ? redirect : '/')
         }
   
       } catch (error: unknown) {

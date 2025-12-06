@@ -19,12 +19,13 @@ import { toast } from "sonner";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
+import { setBearerToken } from "@/redux/utilsSlice";
 
 export default function SignIn() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
-    const [searchParams] = useSearchParams()
-    const redirect = searchParams.get('redirect') === '/' ? '/dashboard/home' : searchParams.get('redirect')
+    const [searchParams] = useSearchParams();
+    const redirect = searchParams.get('redirect');
     const [error, setError] = useState<string>('')
     const [email, setEmail] = useState<string>('')
     const [password, setPassword] = useState<string>('')
@@ -102,10 +103,12 @@ export default function SignIn() {
         if (response.status >= 200 && response.status < 300) {
           localStorage.setItem('ivy_user_token', JSON.stringify({token: response.data.email, timestamp: Date.now()}))
           dispatch(setUser({...response.data, signed_in: true}))
+          dispatch(setBearerToken(response.data.bearer_token))
           toast.success("You have signed in succesfully.",{
             description: "Thank you for signing in to your account. We look forward to helping you achieve your academic goals."
           })
-          navigate(redirect || "/dashboard/home")
+          
+          navigate(redirect ? redirect : '/');
         }
 
       } catch (error: unknown) {
