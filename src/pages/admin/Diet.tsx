@@ -27,7 +27,7 @@ export const DietPage = ({ all }: { all?: boolean }) => {
         const fetchDiets = async () => {
             try {
                 setIsLoading(true);
-                const response = await api.get('/diets?user_status=staff');
+                const response = await api.get('/all-diets?user_status=staff');
                 setDiets(response.data);
                 setError(null);
             } catch (error) {
@@ -51,7 +51,7 @@ export const DietPage = ({ all }: { all?: boolean }) => {
                 <CardTitle className="flex items-center justify-between">
                     Diet Management
                     <div className="flex gap-2">
-                        <Link to="/manage-students/diets/create" replace>
+                        <Link to="/diets/create" replace>
                             <Button size="sm">Create Diet</Button>
                         </Link>
                     </div>
@@ -89,7 +89,7 @@ export const DietPage = ({ all }: { all?: boolean }) => {
                         
                         {diets.length > 3 && (
                             <div className="flex justify-center pt-4">
-                                <Link to="/manage-students/diets/all">
+                                <Link to="/diets/all">
                                     <Button variant="outline">
                                         View All Diets ({diets.length})
                                     </Button>
@@ -220,12 +220,12 @@ export const DietCreate = ({ diet, edit }: { diet?: Diet, edit?: boolean }) => {
         try {
             setIsLoading(true);
             formData.diet_name = `${formData.exam_year}_${formData.exam_month}`;
-            const response = await api.post(edit ? '/edit-diet' : '/create-diet', formData);
+            const response = edit ? await api.put('/edit-diet', formData) : await api.post('/create-diet', formData);
             
             if (response.status === 200 || response.status === 201) {
                 toast.success(edit ? "Diet updated successfully!" : "Diet created successfully!");
                 if (edit) {
-                    navigate(`/manage-students/diets/${formData.diet_name}`);
+                    navigate(`/diets/${formData.diet_name}`);
                 } else {
                     setFormData({
                         title: '',
@@ -328,7 +328,7 @@ export const DietCreate = ({ diet, edit }: { diet?: Diet, edit?: boolean }) => {
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                         {edit ? 'Edit Diet' : 'Create New Diet'}
-                        <Link to="/manage-students/diet" replace>
+                        <Link to="/diet" replace>
                             <Button variant="outline" size="sm">Back to Diet Home</Button>
                         </Link>
                     </CardTitle>
@@ -692,7 +692,7 @@ export const DietView = () => {
             try {
                 setIsLoading(true);
                 const [dietsResponse, papersResponse] = await Promise.all([
-                    api.get('/diets?user_status=staff'),
+                    api.get('/all-diets?user_status=staff'),
                     api.get('/courses?user_status=staff')
                 ]);
                 const diet = dietsResponse.data.find((diet: Diet) => diet.diet_name === diet_name);
@@ -707,7 +707,7 @@ export const DietView = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [diet_name, papers.length]);
 
     return (
             <div className="flex flex-col gap-2">
@@ -739,7 +739,7 @@ export const DietCard = ({index, diet, papers}: {index: number | string, diet: D
     }, [] as APIPaper[])
 
     return (
-        <Card key={`featured-diet-${index}-${diet.title}`} onClick={() => navigate(`/manage-students/diets/${diet.diet_name}`)} className={`h-full min-h-full`}>
+        <Card key={`featured-diet-${index}-${diet.title}`} onClick={() => navigate(`/diets/${diet.diet_name}`)} className={`h-full min-h-full`}>
             <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center justify-between">
                     {diet.title}
@@ -810,7 +810,7 @@ export const DietCard = ({index, diet, papers}: {index: number | string, diet: D
                 </div>
                 <div className="flex justify-between">
                     <span className={`text-xs text-muted-foreground cursor-pointer hover:underline ${location.pathname.includes(`diets/${diet.diet_name}`) ? 'hidden' : ''}`}>View more details</span>
-                    <Link to={`/manage-students/diets/${diet.diet_name}/edit`} onClick={(e) => e.stopPropagation()}>
+                    <Link to={`/diets/${diet.diet_name}/edit`} onClick={(e) => e.stopPropagation()}>
                         <Button variant="outline" size="sm">
                             Edit
                             <PencilIcon className="size-4 ml-1" />
@@ -826,13 +826,14 @@ export const DietEdit = () => {
     const { diet_name } = useParams();
     const [diet, setDiet] = useState<Diet | null>(null);
 
+    const fetchData = async () => {
+        const response = await api.get(`/all-diets?user_status=staff`);
+        setDiet(response.data.find((diet: Diet) => diet.diet_name === diet_name));
+    };
+
     useEffect(() => {
-        const fetchData = async () => {
-            const response = await api.get(`/diets?user_status=staff`);
-            setDiet(response.data.find((diet: Diet) => diet.diet_name === diet_name));
-        };
         fetchData();
-    }, []);
+    }, [diet_name]);
 
     return <DietCreate diet={diet || undefined} edit={true} />
 }
