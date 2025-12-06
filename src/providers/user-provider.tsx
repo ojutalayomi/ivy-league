@@ -1,15 +1,17 @@
 import { createContext, useContext, ReactNode, useEffect, useRef, useState, useCallback } from 'react';
-import { useDispatch } from 'react-redux';
-import { clearUser, setUser } from '@/redux/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { clearUser, initialState, setUser, UserState } from '@/redux/userSlice';
 import { api } from '@/lib/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
+import { RootState } from '@/redux/store';
 
 interface UserProviderProps {
   children: ReactNode;
 }
 
-const UserContext = createContext<{ isLoading: boolean, error: string }>({ isLoading: true, error: '' });
+type UserContextType = { isLoading: boolean, error: string, Mode: "staff" | "student" | null, user: UserState }
+const UserContext = createContext<UserContextType>({ isLoading: true, error: '', Mode: null, user: initialState });
 
 export function UserProvider({ children }: UserProviderProps) {
   const dispatch = useDispatch();
@@ -17,10 +19,12 @@ export function UserProvider({ children }: UserProviderProps) {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const user = useSelector((state: RootState) => state.user)
   const refreshStatus = useRef(false);
   const whiteList = useRef(['/accounts/signin', '/accounts/signup', '/accounts/reset-password', '/accounts/confirm-email', '/accounts/additional-info']);
   const path = location.pathname + location.search;
   const count = useRef(0)
+  const Mode = (window.location.host.includes("staff") || window.location.port === "5174") ? "staff" : (window.location.host.includes("lms") || window.location.port === "5173") ? "student" : null;
 
   const refreshUser = useCallback(async (email: string) => {
     try {
@@ -39,9 +43,14 @@ export function UserProvider({ children }: UserProviderProps) {
       }));
       refreshStatus.current = true;
     } catch (error) {
-      console.error('Error refreshing user data:', error);
+      const err = (error as AxiosError).response?.data || null;
+      if (err && typeof err === 'object' && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
+        console.error('Error refreshing user data:', err.message);
+        setError((err as { message: string }).message);
+        return;
+      }
       if (error instanceof Error) {
-        const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+        const message = (error as AxiosError<{ error: { [x: string]: string } }>).response?.data?.error;
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const [_, description] = Object.entries(message as { [x: string]: string })[0] || { 'Error': 'An unexpected error occurred' };
         setError(description);
@@ -93,7 +102,7 @@ export function UserProvider({ children }: UserProviderProps) {
   }, [isLoading]);
 
   return (
-    <UserContext.Provider value={{ isLoading, error }}>
+    <UserContext.Provider value={{ isLoading, error, Mode, user }}>
       {children}
     </UserContext.Provider>
   );

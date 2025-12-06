@@ -130,13 +130,13 @@ const columns: ColumnDef<UserState>[] = [
             <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuItem asChild>
-                <Link to={`/manage-students/students/${student.reg_no}`}>
+                <Link to={`/students/${student.reg_no}`}>
                     <Eye className="mr-2 h-4 w-4" />
                     View Details
                 </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                <Link to={`/manage-students/students/${student.reg_no}/edit`}>
+                <Link to={`/students/${student.reg_no}/edit`}>
                     <Edit className="mr-2 h-4 w-4" />
                     Edit Student
                 </Link>
@@ -294,7 +294,7 @@ export const StudentCard = ({theStudent, filteredData}: {theStudent?: UserState,
     useEffect(() => {
         if (theStudent) setStudent(theStudent)
         else if (reg_no) setStudent(filteredData?.find(student => student.reg_no === reg_no))
-        else navigate('/manage-students/students')
+        else navigate('/students')
     }, [reg_no, theStudent, navigate, filteredData])
 
 
@@ -351,13 +351,13 @@ export const StudentCard = ({theStudent, filteredData}: {theStudent?: UserState,
                             </div>
                         </div>
                         <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                            <Link to={`/manage-students/students/${student.reg_no}`}>
+                            <Link to={`/students/${student.reg_no}`}>
                                 <Button variant="outline" size="sm" className="flex items-center gap-1">
                                     <Eye className="size-4" />
                                     <span>View</span>
                                 </Button>
                             </Link>
-                            <Link to={`/manage-students/students/${student.reg_no}/edit`}>
+                            <Link to={`/students/${student.reg_no}/edit`}>
                                 <Button variant="ghost" size="sm" className="flex items-center gap-1">
                                     <EditIcon className="size-4" />
                                     <span>Edit</span>
@@ -482,7 +482,7 @@ export const StudentView = () => {
                                         {student.reg_no}
                                     </div>
                                 </div>
-                                <Link to={`/manage-students/students/${student.reg_no}/edit`}>
+                                <Link to={`/students/${student.reg_no}/edit`}>
                                     <Button variant="outline" size="sm" className="flex items-center gap-1">
                                         <EditIcon className="size-4" />
                                         Edit
@@ -668,7 +668,7 @@ export const EditStudent = () => {
     useEffect(() => {
         if (id) setStudent(students.find(student => student.reg_no === id))
         else if (reg_no) setStudent(students.find(student => student.reg_no === reg_no))
-        else navigate('/manage-students/students')
+        else navigate('/students')
     }, [id, navigate, reg_no, students])
 
     useEffect(() => {
@@ -684,7 +684,7 @@ export const EditStudent = () => {
     }
 
     const handleCancel = () => {
-        navigate('/manage-students/students')
+        navigate('/students')
     }
 
     const handleReset = () => {

@@ -76,32 +76,42 @@ export default function ManageStudentsMenu() {
     {
       title: "View Students",
       description: "See all registered students",
-      path: "/manage-students/students"
+      path: "/students"
     },
     {
       title: "Add Student", 
       description: "Create a new student account",
-      path: "/manage-students/add"
+      path: "/add"
     },
     {
       title: "Edit Students details",
       description: "Modify existing student accounts", 
-      path: "/manage-students/edit"
+      path: "/edit"
+    },
+    {
+      title: "Create Scholarship",
+      description: "Create Scholarship for students", 
+      path: "/scholarship/create"
+    },
+    {
+      title: "Create Sponsorship",
+      description: "Create Sponsorship for students", 
+      path: "/sponsorship/create"
     },
     {
       title: "Delete Students",
       description: "Remove student accounts",
-      path: "/manage-students/delete"
+      path: "/delete"
     },
     {
       title: "Payments",
       description: "Manage payments",
-      path: "/manage-students/payments"
+      path: "/payments"
     },
     {
       title: "Diets",
       description: "Manage diets",
-      path: "/manage-students/diets"
+      path: "/diets"
     }
   ]
 

@@ -16,7 +16,7 @@ const faqs = [
   {
     question: "How do I register for papers?",
     answer: "Navigate to the student dashboard, select 'Papers', and follow the registration steps.",
-    link: "/student-dashboard/papers/register",
+    link: "/papers/register",
     linkText: "Register for Papers"
   },
   {
@@ -28,13 +28,13 @@ const faqs = [
   {
     question: "How do I update my profile information?",
     answer: "Go to your dashboard, click on 'Profile', and edit your details.",
-    link: "/student-dashboard/profile",
+    link: "/profile",
     linkText: "Update Profile"
   },
   {
     question: "Where can I find payment information?",
     answer: "Payment details and history are available in the 'Payments' section of your dashboard.",
-    link: "/student-dashboard/payments",
+    link: "/payments",
     linkText: "Payment Information"
   }
 ];

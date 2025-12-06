@@ -146,9 +146,9 @@ const SponsorCard = ({hideBackButton, hideSponsor}: {hideBackButton?: boolean, h
           setIsLoading(false);
           setSuccess(false);
           if (!isSponsor) {
-            navigate("/student-dashboard/papers/register");
+            navigate("/papers/register");
           } else {
-            navigate("/student-dashboard/papers/view");
+            navigate("/papers/view");
           }
         }, 3000);
       }
@@ -174,7 +174,7 @@ const SponsorCard = ({hideBackButton, hideSponsor}: {hideBackButton?: boolean, h
 
   const handleSkip = async () => {
     dispatch(setAllowPaperRegistration(true));
-    navigate('/student-dashboard/papers/register');
+    navigate('/papers/register');
   };
   
   return (

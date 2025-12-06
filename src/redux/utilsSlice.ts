@@ -5,6 +5,7 @@ const initialState = {
     error: null,
     success: null,
     allowPaperRegistration: false,
+    bearer_token: "",
 }
 
 const utilsSlice = createSlice({
@@ -14,11 +15,14 @@ const utilsSlice = createSlice({
         setLoading: (state, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
         },
+        setBearerToken: (state, action: PayloadAction<string>) => {
+            state.bearer_token = action.payload;
+        },
         setAllowPaperRegistration: (state, action: PayloadAction<boolean>) => {
             state.allowPaperRegistration = action.payload;
         },
     },
 });
 
-export const { setLoading, setAllowPaperRegistration } = utilsSlice.actions;
+export const { setLoading, setBearerToken, setAllowPaperRegistration } = utilsSlice.actions;
 export default utilsSlice.reducer;

@@ -67,17 +67,17 @@ export default function Dashboard() {
     {
       title: "Papers", 
       description: "Visit the papers page",
-      path: "/student-dashboard/papers"
+      path: "/papers"
     },
     {
       title: "Payments",
       description: "Visit the payments page",
-      path: "/student-dashboard/payments"
+      path: "/payments"
     },
     // {
     //   title: "Resources",
     //   description: "Visit the resources page",
-    //   path: "/student-dashboard/resources"
+    //   path: "/resources"
     // },
     // {
     //   title: "Additional Info",
@@ -90,22 +90,22 @@ export default function Dashboard() {
       {
         title: "Register",
         description: "Register for a paper",
-        path: "/student-dashboard/papers/register"
+        path: "/papers/register"
       },
       {
         title: "My Papers", 
         description: "View your registered papers",
-        path: "/student-dashboard/papers/view"
+        path: "/papers/view"
       },
       {
         title: "View",
         description: "View available papers",
-        path: "/student-dashboard/papers/available"
+        path: "/papers/available"
       },
       {
         title: "Print Papers",
         description: "Print paper materials",
-        path: "/student-dashboard/papers/print"
+        path: "/papers/print"
       }
     ]
     
@@ -169,6 +169,8 @@ export default function Dashboard() {
         icon: <Library className={`size-4 ${isFull && 'mr-1'}`} />
       }
     ]
+
+    if (user.user_status === '') return <Navigate to="/accounts/signin" replace />
     
     return (
         <div className='flex'>
@@ -181,7 +183,7 @@ export default function Dashboard() {
                 onClick={toggleMobileSidebar}
             >
 
-                <Link to="/">
+                <Link to="/menu">
                   <div className={`flex flex-col items-center space-y-1.5 ${isFull ? 'p-4' : 'p-3'} rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow`}>
                       {isFull ? 
                         <div className={`font-semibold leading-none tracking-tight ${!isFull && 'overflow-hidden'}`}>
@@ -205,7 +207,7 @@ export default function Dashboard() {
                             return;
                           }
                         }
-                        navigate('/student-dashboard/' + item.title.toLowerCase());
+                        navigate('/' + item.title.toLowerCase());
                       }}
                       >
                         <TooltipProvider>
@@ -229,7 +231,7 @@ export default function Dashboard() {
                       ${type === "settings" && "border-cyan-500"} 
                       space-x-3`
                     }
-                    onClick={() => navigate('/student-dashboard/settings')}
+                    onClick={() => navigate('/settings')}
                     >
                       <Settings className={`w-5 h-5 group-hover:text-cyan-500 ${type === 'settings' && !isFull && '!text-cyan-500'} ${type === "settings" && "text-cyan-500"}`} />
                       {isFull && <span className='dark:text-white'>Settings</span>}
@@ -312,9 +314,9 @@ export default function Dashboard() {
                     </div>
                   )}
 
-                  <Tabs defaultValue={'home'} value={type} onValueChange={(value) => navigate(`/student-dashboard/${value}`)}>
+                  <Tabs defaultValue={'home'} value={type} onValueChange={(value) => navigate(`/${value}`)}>
                     <Routes>
-                      <Route path="/" element={<Navigate to="/student-dashboard/home" replace />} />
+                      <Route path="/" element={<Navigate to="/home" replace />} />
                       <Route path="home" element={
                         <TabsContent value="home">
                           <PapersPage menuItems={HomePageItems}/>
@@ -403,7 +405,8 @@ const AvailablePapers = () => {
       try {
         count.current += 1;
         setIsLoading(true);
-        const response = await api.get('/courses?reg=false' + (user.user_status === 'student' ? '' : "&acca_reg=" + (user.acca_reg || '001')) + '&user_status=' + user.user_status + '&email=' + user.email);
+        const response = await api.get('/courses?reg=true' + (user.user_status === 'student' ? '' : "&acca_reg=" + (user.acca_reg || '001')) + '&user_status=' + user.user_status + '&email=' + user.email);
+        console.log(response); 
         setPapers(response.data.papers);
         setScholarships(response.data.scholarships);
       } catch (error) {
@@ -526,7 +529,7 @@ const PapersList = () => {
                 <div className="flex flex-col justify-center items-center gap-2 h-[50vh] col-span-2">
                   <AlertCircle className="w-10 h-10" />
                   <p className="text-muted-foreground">No papers found</p>
-                  <Button variant="outline" onClick={() => navigate('/student-dashboard/papers/register', { replace: true })}>Register for Papers</Button>
+                  <Button variant="outline" onClick={() => navigate('/papers/register', { replace: true })}>Register for Papers</Button>
                 </div>
               )}
             </div>
@@ -546,7 +549,7 @@ const PaymentStatus = () => {
 
   const verifyPayment = useCallback(async (reference: string) => {
     if (!reference) {
-      navigate("/student-dashboard/papers/", { replace: true })
+      navigate("/papers/", { replace: true })
       return
     }
 
@@ -569,7 +572,7 @@ const PaymentStatus = () => {
           localStorage.removeItem('reference');
           const additional_info = JSON.parse(localStorage.getItem('additional_info_draft') || '{}')
           localStorage.setItem('additional_info_draft', JSON.stringify({ ...additional_info, acca_reg_no: response.data.acca_reg_no || response.data.user_data.acca_reg_no }))
-          navigate("/student-dashboard/papers/view", { replace: true })
+          navigate("/papers/view", { replace: true })
           break;
         }
         case 202:
@@ -638,7 +641,7 @@ const PapersPage = ({ menuItems }:{ menuItems: CoursePageItems }) => {
           {menuItems.map((item, index) => (
             <Link 
               key={index}
-              to={item.path === '/student-dashboard/papers/register' && !user.email_verified ? '/accounts/confirm-email' : item.path}
+              to={item.path === '/papers/register' && !user.email_verified ? '/accounts/confirm-email' : item.path}
               className={`block p-6 max-[639px]:text-center bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 ${(item.title === 'Papers' && !user.email_verified) || (item.title === 'Payments' && user.user_status === 'signee') ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">{item.title}</h5>

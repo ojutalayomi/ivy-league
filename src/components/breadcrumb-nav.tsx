@@ -16,7 +16,7 @@ import {
     // console.log(pathSegments)
     
     // If no segments (just '/'), return empty breadcrumb
-    if (pathSegments.length === 0) return null
+    if (pathSegments.length === 0) return <div>/</div>
   
     const breadcrumbItems = pathSegments.map((segment, index) => {
       const path = `/${pathSegments.slice(0, index + 1).join('/')}`

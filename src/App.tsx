@@ -6,7 +6,6 @@ import * as reactRouterDom from 'react-router-dom'
 import { ThemeProvider } from '@/providers/theme-provider'
 import { ModeToggle } from '@/components/mode-toggle'
 import { Toaster } from "@/components/ui/sonner";
-import Error404Page from '@/components/404'
 import Dashboard from '@/pages/student/Dashboard'
 import { Provider } from 'react-redux';
 import { store } from '@/redux/store'
@@ -39,11 +38,11 @@ function App() {
 export default App
 
 function Router() {
-  const { isLoading, error } = useUser();
-  const location = reactRouterDom.useLocation()
+  const { isLoading, error, Mode } = useUser();
+  const location = reactRouterDom.useLocation();
   const state = location.state as { backgroundLocation?: Location };
   const user = useSelector((state: RootState) => state.user);
-  const pathSegments = (user.user_status === '' && location.pathname.startsWith('/dashboard')) ? location.pathname.replace("dashboard", "manage-students") : location.pathname.replace("dashboard", "student-dashboard")
+  const pathSegments = (user.user_status === '' && location.pathname.startsWith('/dashboard')) ? location.pathname.replace("dashboard", "") : location.pathname.replace("dashboard", "")
   const backgroundLocation = state?.backgroundLocation;
 
   return (
@@ -52,31 +51,15 @@ function Router() {
         <div className="relative backdrop-blur-sm z-10 w-full h-full overflow-y-auto">
           {!isLoading && (
             <reactRouterDom.Routes location={backgroundLocation || location}>
-              <reactRouterDom.Route path="/" element={<Menu />} />
+              <reactRouterDom.Route path="/menu" element={<Menu />} />
               <reactRouterDom.Route path="/help-center" element={<HelpCenter />} />
-              <reactRouterDom.Route path="/manage-students/*" element={
-                <reactRouterDom.Routes>
-                  <reactRouterDom.Route path='*' element={<ManageStudents />} />
-                </reactRouterDom.Routes>
-              } />
               <reactRouterDom.Route path="/dashboard/*" element={<reactRouterDom.Navigate to={pathSegments} replace />} />
-              <reactRouterDom.Route path="/student-dashboard/*" element={
-                (user.user_status !== '' ? (
-                  <reactRouterDom.Routes>
-                    <reactRouterDom.Route path='/*' element={<Dashboard />} />
-                  </reactRouterDom.Routes>
-                ) : (() => {
-                  return (
-                    <reactRouterDom.Navigate to="/accounts/signin" replace />
-                  )
-                })())
-              } />
               <reactRouterDom.Route path="/accounts/signin" element={<SignIn />} />
               <reactRouterDom.Route path="/accounts/signup" element={<SignUp />} />
               <reactRouterDom.Route path="/accounts/additional-info" element={<AdditionalInfo />} />
               <reactRouterDom.Route path="/accounts/reset-password" element={<ResetPassword />} />
               <reactRouterDom.Route path="/accounts/confirm-email" element={<VerifyEmail />} />
-              <reactRouterDom.Route path="/*" element={<Error404Page />} />
+              <reactRouterDom.Route path="/*" element={Mode === "student" ? <Dashboard /> : <ManageStudents />} />
             </reactRouterDom.Routes>
           )}
         </div>

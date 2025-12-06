@@ -168,7 +168,7 @@ export default function PapersRegistration() {
         window.location.href = response.data.data.authorization_url;
         
         dispatch(setAllowPaperRegistration(false));
-        navigate('/student-dashboard/papers/payment-status');
+        navigate('/papers/payment-status');
       }
     } catch (error) {
       console.error('Error initializing payment:', error);

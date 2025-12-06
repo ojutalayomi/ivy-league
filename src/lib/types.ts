@@ -38,6 +38,7 @@ export type APIPaper = {
     code: string;
     name: string;
     price: number;
+    description: string;
 }
 
 // Union type to handle both local and API paper formats

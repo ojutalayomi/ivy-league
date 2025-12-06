@@ -25,7 +25,7 @@ export type UserState = {
     }[]
 }
 
-const initialState: UserState = {
+export const initialState: UserState = {
     email: "",
     firstname: "",
     gender: "",

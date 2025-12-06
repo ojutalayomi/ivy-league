@@ -8,8 +8,10 @@ import { useSelector } from "react-redux"
 import { RootState } from "@/redux/store"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { useUser } from "@/providers/user-provider"
 
 export default function Menu() {
+  const { Mode } = useUser();
   const user = useSelector((state: RootState) => state.user);
   const navigate = useNavigate();
 
@@ -41,14 +43,9 @@ export default function Menu() {
     ...((() => {
       return import.meta.env.VITE_NODE_ENV === 'development' ? [
         {
-          title: "Manage Students",
-          description: "Manage students",
-          path: "/manage-students/"
-        },
-        {
-          title: "Student Dashboard",
-          description: "Go to student dashboard",
-          path: "/student-dashboard/"
+          title: Mode === "student" ? "Student Dashboard" : "Manage Students",
+          description: Mode === "student" ? "Go to student dashboard" : "Manage students",
+          path: "/"
         }
       ] : [];
     })())

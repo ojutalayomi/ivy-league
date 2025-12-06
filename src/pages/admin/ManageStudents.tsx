@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { ChevronLeft, ChevronRight, GraduationCap, Menu, Pen, Search, Settings, Users, Wallet } from 'lucide-react';
-import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { BookOpen, ChevronLeft, ChevronRight, GraduationCap, Menu, Pen, Search, Settings, Text, Users, Wallet } from 'lucide-react';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { forwardRef, useCallback, useEffect, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
@@ -12,6 +12,9 @@ import { DietPage, DietCreate, DietView, DietEdit } from './Diet';
 import ManageStudentsMenu from './ManageStudentsMenu';
 import { StudentList, StudentView, EditStudent, SearchStudent } from './Students';
 import { PaymentsPage } from './Payments';
+import { useUser } from '@/providers/user-provider';
+import { PapersRoutesWithModals } from './Papers';
+import { ScholarshipRoutesWithModals } from './Scholarship';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -34,6 +37,7 @@ export default function ManageStudents() {
     const location = useLocation()
     const navigate = useNavigate()
     const type = location.pathname.split('/').pop()
+    const { user } = useUser();
     const [isFull, setIsFull] = useState(false)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     
@@ -72,9 +76,29 @@ export default function ManageStudents() {
 
     const sideItems = [
         {
+            title: "Dashboard",
+            icon: <Text className={`size-4 ${isFull && 'mr-1'}`} />,
+            description: "View the dashboard"
+        },
+        {
             title: "Students",
             icon: <Users className={`size-4 ${isFull && 'mr-1'}`} />,
             description: "View all students"
+        },
+        {
+            title:"Papers",
+            icon: <BookOpen className={`size-4 ${isFull && 'mr-1'}`} />,
+            description: "View all papers"
+        },
+        {
+            title: "Diets",
+            icon: <Pen className={`size-4 ${isFull && 'mr-1'}`} />,
+            description: "View diet details"
+        },
+        {
+            title: "Scholarship",
+            icon: <Pen className={`size-4 ${isFull && 'mr-1'}`} />,
+            description: "View scholarship details"
         },
         {
             title: "Diets",
@@ -92,6 +116,8 @@ export default function ManageStudents() {
             description: "Go to settings"
         }
     ]
+
+    if (user.user_status === '') return <Navigate to="/accounts/signin" replace />
     
     return (
         <div className='flex'>
@@ -103,7 +129,7 @@ export default function ManageStudents() {
                 onClick={toggleMobileSidebar}
             >
 
-                <Link to="/">
+                <Link to="/menu">
                   <div className={`flex flex-col items-center space-y-1.5 ${isFull ? 'p-3' : 'p-3'} rounded-xl border bg-gradient-to-br from-white via-white to-cyan-50 dark:from-gray-800 dark:to-gray-900 shadow`}>
                       {isFull ? 
                         <div className={`bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text drop-shadow-2xl text-transparent animate-gradient-x truncate font-semibold ${!isFull && 'overflow-hidden'}`}>
@@ -117,7 +143,7 @@ export default function ManageStudents() {
                 <div className="flex flex-col flex-1 items-center space-y-1.5 p-2 rounded-3xl text-sm border bg-gradient-to-br from-white via-white to-cyan-50 dark:from-gray-800 dark:to-gray-900 relative shadow">
                     <div 
                     className={`flex items-center ${type === 'search' && (isFull ? 'bg-gray-50 dark:bg-gray-800' : '!border-cyan-500')} ${isFull ? 'hover:bg-slate-300 dark:hover:bg-gray-800 justify-start w-full' : 'justify-center group hover:border-cyan-500'} p-2 rounded-full border border-slate-300 overflow-hidden cursor-pointer relative`}
-                    onClick={() => navigate('/manage-students/search')}
+                    onClick={() => navigate('/search')}
                     >
                         {/* {type === "search" && <div className="h-full w-1 absolute left-0 bg-cyan-500 rounded-full"/>} */}
                         <Search className={`size-4 text-muted-foreground group-hover:text-cyan-500 ${type === 'search' && !isFull && '!text-cyan-500'} ${isFull && 'mr-1'}`} />
@@ -134,7 +160,7 @@ export default function ManageStudents() {
                             <div 
                             key={`menu-item-${item.title}-${index}`} 
                             className={`flex items-center ${type === item.title.toLowerCase() && isFull && 'bg-gray-50 shadow dark:border dark:border-gray-500 dark:bg-gray-800'} ${isFull ? 'justify-start hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:border dark:hover:border-gray-500 p-2' : 'justify-center'} p-1 overflow-hidden rounded-full cursor-pointer relative w-full transition-colors`}
-                            onClick={() => navigate('/manage-students/' + item.title.toLowerCase())}
+                            onClick={() => navigate('/' + item.title.toLowerCase())}
                             >
                                 <TooltipProvider>
                                     <Tooltip>
@@ -191,7 +217,7 @@ export default function ManageStudents() {
                 </div>
                 <Card className="p-2 flex-1 overflow-y-auto w-full bg-gradient-to-br from-white via-white to-cyan-50 dark:from-gray-800 dark:to-gray-900">
                     <CardContent className='px-2'>
-                        <Tabs defaultValue={''} value={type} onValueChange={(value) => navigate(`/manage-students/${value}`)}>
+                        <Tabs defaultValue={''} value={type} onValueChange={(value) => navigate(`/${value}`)}>
                             <Routes>
                                 <Route index element={
                                     <ManageStudentsMenu/>
@@ -200,6 +226,17 @@ export default function ManageStudents() {
                                     <TabsContent value="">
                                         <ManageStudentsMenu/>
                                     </TabsContent>
+                                } />
+                                <Route path="/dashboard" element={
+                                    <TabsContent value="">
+                                        <ManageStudentsMenu/>
+                                    </TabsContent>
+                                } />
+                                <Route path="papers/*" element={
+                                    <PapersRoutesWithModals/>
+                                } />
+                                <Route path="scholarship/*" element={
+                                    <ScholarshipRoutesWithModals/>
                                 } />
                                 <Route path="students/*" element={
                                     <Routes>
@@ -248,9 +285,7 @@ export default function ManageStudents() {
                                         <Route path=":diet_name" element={
                                             <Routes>
                                                 <Route index element={
-                                                    <TabsContent value="view">
-                                                        <DietView />
-                                                    </TabsContent>
+                                                    <DietView />
                                                 } />
                                             </Routes>
                                         } />
