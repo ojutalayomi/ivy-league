@@ -27,7 +27,7 @@ export function UserProvider({ children }: UserProviderProps) {
   const location = useLocation();
   const user = useSelector((state: RootState) => state.user)
   const refreshStatus = useRef(false);
-  const whiteList = useRef(['/accounts/signin', '/accounts/signup', '/accounts/reset-password', '/accounts/confirm-email', '/accounts/additional-info']);
+  const whiteList = useRef(['/a','/accounts/signin', '/accounts/signup', '/accounts/reset-password', '/accounts/confirm-email', '/accounts/additional-info']);
   const path = location.pathname + location.search;
   const count = useRef(0)
   const Mode = import.meta.env.VITE_Is_Staff && ModeEnum[import.meta.env.VITE_Is_Staff as keyof typeof ModeEnum] ? ModeEnum[import.meta.env.VITE_Is_Staff as keyof typeof ModeEnum] : null;

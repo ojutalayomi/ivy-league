@@ -26,6 +26,7 @@ import { api } from "@/lib/api";
 import { UserState } from "@/redux/userSlice";
 import { APIPaper } from "@/lib/types";
 import { PaymentHistoryPage } from "../student/Dashboard";
+import { StudentState } from "@/redux/studentSlice";
 
 // Column definitions for the data table
 const columns: ColumnDef<UserState>[] = [
@@ -431,9 +432,11 @@ export const StudentView = () => {
             }
         };
         (async () => {
+            if (!reg_no) return;
+            if (student) return;
             await fetchStudents();
         })();
-    }, []);
+    }, [reg_no, student]);
 
 
     useEffect(() => {
@@ -629,55 +632,53 @@ export const EditStudent = () => {
     const [is1Expanded, setIs1Expanded] = useState(false)
     const [is2Expanded, setIs2Expanded] = useState(true)
     const [is3Expanded, setIs3Expanded] = useState(false)
-    const [student, setStudent] = useState<UserState | undefined>(undefined)
-    const [students, setStudents] = useState<UserState[]>([])
-    const initialStudent = students.find(student => student.reg_no === id)
+    const [student, setStudent] = useState<StudentState | undefined>(undefined)
+    const [initialStudent, setInitialStudent] = useState<StudentState | undefined>(undefined)
 
     useEffect(() => {
-        const fetchStudents = async () => {
+        const fetchStudent = async () => {
             try {
-                const response = await api.get('/list-students?criteria=all');
+                const response = await api.get(`/view-student?reg_no=${id}`);
                 if (response.status !== 200) {
                     throw new Error(`Error: ${response.status} ${response.statusText}`);
                 }
-                const data = await response.data;
-                // Transform API data to match Student type if needed
-                const mapped = data.map((item: UserState) => ({
-                    title: item.title,
-                    firstname: item.firstname,
-                    lastname: item.lastname,
-                    profile_pic: item.profile_pic,
-                    email: item.email,
-                    reg_no: item.reg_no,
-                    gender: item.gender,
-                    newStudent: item.user_status === 'student',
-                    dateOfBirth: item.dob,
-                    papers: item.papers,
-                }));
-                setStudents(mapped);
+                const data: StudentState = await response.data;
+                const mapped = {
+                    reg_no: data.reg_no,
+                    title: data.title,
+                    firstname: data.firstname,
+                    lastname: data.lastname,
+                    profile_pic: data.profile_pic,
+                    email: data.email,
+                    gender: data.gender,
+                    newStudent: data.newStudent,
+                    dob: data.dob,
+                    papers: data.papers,
+                    acca_reg: data.acca_reg,
+                    address: data.address,
+                    date_joined: data.date_joined,
+                    partial_payment: data.partial_payment,
+                    phone_no: data.phone_no,
+                    terms: data.terms
+                };
+                setStudent(mapped);
+                setInitialStudent(mapped);
             } catch (error) {
-                // Optionally, you could set an error state here
                 console.error("Failed to fetch students:", error);
             }
         };
         (async () => {
-            await fetchStudents();
+            await fetchStudent();
         })();
-    }, []);
+    }, [id]);
 
     useEffect(() => {
-        if (id) setStudent(students.find(student => student.reg_no === id))
-        else if (reg_no) setStudent(students.find(student => student.reg_no === reg_no))
-        else navigate('/students')
-    }, [id, navigate, reg_no, students])
+        if (!reg_no) navigate('/students')
+    }, [navigate, reg_no])
 
     useEffect(() => {
         document.title = (student?.firstname || '') + " " + (student?.lastname || '') + " - Ivy League Associates";
     }, [student?.firstname, student?.lastname]);
-
-    useEffect(() => {
-        if (student) setStudent(student)
-    }, [student])
 
     const handleSave = () => {
         console.log(student)
@@ -688,7 +689,7 @@ export const EditStudent = () => {
     }
 
     const handleReset = () => {
-        setStudent(initialStudent)
+        if (initialStudent) setStudent(initialStudent)
     }
 
     if(!student) return <Error404Page title='Student'/>
@@ -734,9 +735,9 @@ export const EditStudent = () => {
                                                 <SelectValue placeholder="Select gender" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="male">Male</SelectItem>
-                                                <SelectItem value="female">Female</SelectItem>
-                                                <SelectItem value="other">Other</SelectItem>
+                                                <SelectItem value="Male">Male</SelectItem>
+                                                <SelectItem value="Female">Female</SelectItem>
+                                                <SelectItem value="Other">Other</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>

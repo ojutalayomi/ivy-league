@@ -101,9 +101,9 @@ export default function ManageStudents() {
             description: "View scholarship details"
         },
         {
-            title: "Diets",
+            title: "Sponsorship",
             icon: <Pen className={`size-4 ${isFull && 'mr-1'}`} />,
-            description: "View diet details"
+            description: "View sponsorship details"
         },
         {
             title: "Payments",

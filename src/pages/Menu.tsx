@@ -35,11 +35,16 @@ export default function Menu() {
       description: "Access your account",
       path: "/accounts/signin"
     },
-    {
-      title: "Sign Up", 
-      description: "Create a new account",
-      path: "/accounts/signup"
-    },
+    ...((() => {
+      return Mode === "student" ? [
+        {
+          title: "Sign Up", 
+          description: "Create a new account",
+          path: "/accounts/signup"
+        }
+      ] : [];
+    })())
+    ,
     ...((() => {
       return import.meta.env.VITE_NODE_ENV === 'development' ? [
         {
@@ -56,7 +61,7 @@ export default function Menu() {
       <Card className="min-[641px]:min-w-[640px] mx-auto bg-transparent dark:bg-transparent border-none shadow-none sm:bg-white dark:sm:bg-gray-900 sm:border-1 sm:border-solid sm:shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl/9 font-bold tracking-tight text-center text-cyan-500">
-            Welcome to <br /> Ivy League Associates <br /> Student Portal
+            Welcome to <br /> Ivy League Associates <br /> {Mode === "student" ? "Student" : "Manage Students"} Portal
           </CardTitle>
           <CardDescription className="text-center text-muted-foreground">Please select an option to continue</CardDescription>
         </CardHeader>
