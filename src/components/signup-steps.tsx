@@ -37,7 +37,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
       <div className='space-y-1'>
         <Label className='sm:text-cyan-500' htmlFor="title">Title</Label>
         <Select onValueChange={(value) => register('title').onChange({ target: { value, name: 'title' } })}>
-          <SelectTrigger className="sm:text-primary sm:placeholder:text-primary/50">
+          <SelectTrigger className="sm:text-primary sm:placeholder:text-primary/50 dark:border-slate-700">
             <SelectValue placeholder="Select a title" />
           </SelectTrigger>
           <SelectContent>
@@ -56,7 +56,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           <Input
             id="firstname"
             {...register('firstname')}
-            className="sm:text-primary sm:placeholder:text-primary/50"
+            className="sm:text-primary sm:placeholder:text-primary/50 dark:border-slate-700"
             placeholder="John"
           />
           {errors.firstname && (
@@ -68,7 +68,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           <Input
             id="lastname"
             {...register('lastname')}
-            className="sm:text-primary sm:placeholder:text-primary/50"
+            className="sm:text-primary sm:placeholder:text-primary/50 dark:border-slate-700"
             placeholder="Doe"
           />
           {errors.lastname && (
@@ -82,7 +82,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           id="email"
           type="email"
           {...register('email')}
-          className="sm:text-primary sm:placeholder:text-primary/50"
+          className="sm:text-primary sm:placeholder:text-primary/50 dark:border-slate-700"
           placeholder="john.doe@example.com"
         />
         {errors.email && (
@@ -97,7 +97,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
             type="tel"
             onChange={(e) => setValue('phone', e.target.value)}
             value={watch('phone')}
-            className="sm:text-primary sm:placeholder:text-primary/50"
+            className="sm:text-primary sm:placeholder:text-primary/50 dark:border-slate-700"
             placeholder="0801 234 5678"
           />
           {errors.phone && (
@@ -107,7 +107,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
         <div className='flex-1 space-y-1'>
           <Label className='sm:text-cyan-500' htmlFor="dob">Date of Birth</Label><br/>
           <AntdDatePicker
-            className='h-9'
+            className={`h-9 sm:text-primary sm:placeholder:!text-primary/50`}
             id="dob"
             value={watch('dob') ? dayjs(watch('dob')) : null}
             onChange={(date) => setValue('dob', date?.format('YYYY-MM-DD'))}
@@ -115,13 +115,19 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
             placeholder="Select your date of birth"
             format="YYYY-MM-DD"
             allowClear
-            style={{ width: "100%" }}
+            style={{
+              width: "100%",
+              backgroundColor: typeof window !== "undefined" && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#00000000' : 'white',
+              color: typeof window !== "undefined" && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#fff' : '#000',
+              borderColor: typeof window !== "undefined" && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#334155' : undefined
+            }}
             minDate={dayjs('1980-01-01')}
             maxDate={dayjs('2010-12-31')}
             disabledDate={current =>
               current && (dayjs(current).isAfter(dayjs('2010-12-31')) || dayjs(current).isBefore(dayjs('1980-01-01')))
             }
             inputReadOnly
+            popupClassName={typeof window !== "undefined" && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'antd-datepicker-dark' : ''}
           />
           {errors.dob && (
             <p className="text-sm text-red-500 mt-1">{errors.dob.message}</p>
@@ -135,7 +141,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
             id="password"
             type={showPassword ? "text" : "password"}
             {...register('password')}
-            className="sm:text-primary sm:placeholder:text-primary/50"
+            className="sm:text-primary sm:placeholder:text-primary/50 dark:border-slate-700"
           />
           <button
             type="button"
@@ -160,7 +166,7 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           id="confirmPassword"
           type={showPassword1 ? "text" : "password"}
           {...register('confirmPassword')}
-          className="sm:text-primary sm:placeholder:text-primary/50"
+          className="sm:text-primary sm:placeholder:text-primary/50 dark:border-slate-700"
           placeholder="Confirm Password"
           />
           <button

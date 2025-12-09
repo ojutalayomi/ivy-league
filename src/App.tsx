@@ -18,6 +18,7 @@ import VerifyEmail from './pages/VerifyEmail'
 import ResetPassword from './pages/ResetPassword'
 import HelpCenter from './pages/HelpCenter'
 import { UserProvider, useUser } from './providers/user-provider'
+import AccountsLayout from './components/AccountsLayout'
 // import './App.css'
 
 function App() {
@@ -47,11 +48,12 @@ function Router() {
 
   return (
     <>
-      <div className="w-screen h-screen bg-gradient-to-br from-white via-white to-cyan-100 dark:from-gray-800 dark:to-gray-900">
-        <div className="relative backdrop-blur-sm z-10 w-full h-full overflow-y-auto">
+      <div className="w-screen h-screen bg-gradient-to-br from-white via-white to-cyan-100 dark:from-neutral-800 dark:to-neutral-900">
+        <div className="relative backdrop-blur-sm z-10 w-full 2xl:max-w-6xl mx-auto h-full overflow-y-auto">
           {!isLoading && (
             <reactRouterDom.Routes location={backgroundLocation || location}>
               <reactRouterDom.Route path="/menu" element={<Menu />} />
+              <reactRouterDom.Route path="/a" element={<AccountsLayout />} />
               <reactRouterDom.Route path="/help-center" element={<HelpCenter />} />
               <reactRouterDom.Route path="/dashboard/*" element={<reactRouterDom.Navigate to={pathSegments} replace />} />
               <reactRouterDom.Route path="/accounts/signin" element={<SignIn />} />
@@ -59,7 +61,7 @@ function Router() {
               <reactRouterDom.Route path="/accounts/additional-info" element={<AdditionalInfo />} />
               <reactRouterDom.Route path="/accounts/reset-password" element={<ResetPassword />} />
               <reactRouterDom.Route path="/accounts/confirm-email" element={<VerifyEmail />} />
-              <reactRouterDom.Route path="/*" element={Mode === "student" ? <Dashboard /> : <ManageStudents />} />
+              <reactRouterDom.Route path="/*" element={Mode === "staff" ? <ManageStudents /> :<Dashboard /> } />
             </reactRouterDom.Routes>
           )}
         </div>
