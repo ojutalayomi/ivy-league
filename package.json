@@ -4,9 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
-    "staff": "vite --host --port 5174",
+    "dev": "export VITE_Is_Staff=student && vite --host",
+    "staff": "export VITE_Is_Staff=staff && vite --host --port 5174",
     "build": "tsc -b && vite build",
+    "build:student": "export VITE_Is_Staff=student && tsc -b && vite build",
+    "build:staff": "export VITE_Is_Staff=staff && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

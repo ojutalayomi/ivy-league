@@ -1,3 +1,4 @@
+/* eslint-disable no-extra-boolean-cast */
 import { createContext, useContext, ReactNode, useEffect, useRef, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearUser, initialState, setUser, UserState } from '@/redux/userSlice';
@@ -10,7 +11,12 @@ interface UserProviderProps {
   children: ReactNode;
 }
 
-type UserContextType = { isLoading: boolean, error: string, Mode: "staff" | "student" | null, user: UserState }
+enum ModeEnum {
+  staff = "staff",
+  student = "student"
+}
+
+type UserContextType = { isLoading: boolean, error: string, Mode: ModeEnum | null, user: UserState }
 const UserContext = createContext<UserContextType>({ isLoading: true, error: '', Mode: null, user: initialState });
 
 export function UserProvider({ children }: UserProviderProps) {
@@ -24,7 +30,7 @@ export function UserProvider({ children }: UserProviderProps) {
   const whiteList = useRef(['/accounts/signin', '/accounts/signup', '/accounts/reset-password', '/accounts/confirm-email', '/accounts/additional-info']);
   const path = location.pathname + location.search;
   const count = useRef(0)
-  const Mode = (window.location.host.includes("staff") || window.location.port === "5174") ? "staff" : (window.location.host.includes("lms") || window.location.port === "5173") ? "student" : null;
+  const Mode = import.meta.env.VITE_Is_Staff && ModeEnum[import.meta.env.VITE_Is_Staff as keyof typeof ModeEnum] ? ModeEnum[import.meta.env.VITE_Is_Staff as keyof typeof ModeEnum] : null;
 
   const refreshUser = useCallback(async (email: string) => {
     try {
