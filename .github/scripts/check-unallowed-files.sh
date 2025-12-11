@@ -95,7 +95,7 @@ if [ -n "$VIOLATIONS" ]; then
   echo "❌ ERROR: Unallowed files detected in commit!"
   echo ""
   echo "The following files violate the merge policy:"
-  printf "$VIOLATIONS"
+  printf '%b' "$VIOLATIONS"
   echo ""
   echo "Please remove these files before merging."
   exit 1
