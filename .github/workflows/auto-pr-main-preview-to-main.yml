@@ -1,0 +1,76 @@
+name: Build and Create Pull Request from main-preview to admin
+
+on:
+  push:
+    branches:
+      - main-preview
+
+jobs:
+  build-and-create-pull-request:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout main-preview branch
+        uses: actions/checkout@v3
+        with:
+          ref: main-preview
+          fetch-depth: 0
+
+      - name: Check for unallowed files
+        run: |
+          chmod +x .github/scripts/check-unallowed-files.sh
+          ./.github/scripts/check-unallowed-files.sh
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Build project
+        run: npm run build:staff
+
+      - name: Create Pull Request from main-preview to admin
+        env:
+          GITHUB_TOKEN: ${{ secrets.Ivy_league_PAT }}
+        run: |          
+          PR_RESPONSE=$(curl -s -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls" \
+            -d "{
+              \"title\": \"Auto-merge from main-preview to main [skip ci]\",
+              \"head\": \"main-preview\",
+              \"base\": \"main\",
+              \"body\": \"Automatically created by GitHub Actions after successful build and validation.\"
+            }")
+          
+          PR_NUMBER=$(echo "$PR_RESPONSE" | grep -o '"number":[0-9]*' | grep -o '[0-9]*' | head -1)
+          
+          if [ -z "$PR_NUMBER" ]; then
+            EXISTING_PR=$(curl -s -X GET \
+              -H "Accept: application/vnd.github.v3+json" \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:main-preview&base=main&state=open")
+            
+            PR_NUMBER=$(echo "$EXISTING_PR" | grep -o '"number":[0-9]*' | grep -o '[0-9]*' | head -1)
+            
+            if [ -z "$PR_NUMBER" ]; then
+              echo "❌ Failed to create or find pull request"
+              echo "$PR_RESPONSE"
+              exit 1
+            else
+              echo "✅ Found existing pull request #$PR_NUMBER"
+            fi
+          else
+            echo "✅ Created pull request #$PR_NUMBER"
+          fi
+
