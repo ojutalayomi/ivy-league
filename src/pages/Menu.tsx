@@ -23,8 +23,8 @@ export default function Menu() {
     const timestamp = JSON.parse(localStorage.getItem('ivy_user_token') || '{}').timestamp;
     const isExpired = !timestamp || Date.now() - timestamp > 3600000;
     if (user.signed_in && !isExpired) {
-      // navigate("/dashboard/home", { replace: true })
-      toast.success(<div className="flex justify-between gap-2 items-center"><p>You are signed in</p><Button onClick={() => navigate("/dashboard/home")}>Go to Dashboard</Button></div>)
+      // navigate("/", { replace: true })
+      toast.success(<div className="flex justify-between gap-2 items-center"><p>You are signed in</p><Button onClick={() => navigate("/")}>Go to Dashboard</Button></div>)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

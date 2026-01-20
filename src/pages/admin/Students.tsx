@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
-import { ChevronDown, ChevronUp, Users, Eye, Edit, Trash2, MoreHorizontal } from "lucide-react";
+import { ChevronDown, ChevronUp, Users, Eye, Edit, MoreHorizontal, Lock } from "lucide-react";
 import { EditIcon } from "lucide-react";
 import Error404Page from "@/components/404";
 import { DataTable } from "@/components/ui/data-table";
@@ -144,8 +144,8 @@ const columns: ColumnDef<UserState>[] = [
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-red-600">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Student
+                    <Lock className="mr-2 h-4 w-4" />
+                    Block Student
                 </DropdownMenuItem>
             </DropdownMenuContent>
             </DropdownMenu>
@@ -248,14 +248,6 @@ export const StudentList = () => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Students</SelectItem>
-                            <SelectItem value="new">New Students</SelectItem>
-                            <SelectItem value="returning">Returning Students</SelectItem>
-                            <SelectItem value="beginner">Beginner Level</SelectItem>
-                            <SelectItem value="intermediate">Intermediate Level</SelectItem>
-                            <SelectItem value="advanced">Advanced Level</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
