@@ -1,18 +1,20 @@
 import { useEffect } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, FileDown, FolderTree, UploadCloud } from "lucide-react";
+import { Activity, FileDown, FolderTree, Shield, UploadCloud, UserPlus } from "lucide-react";
 import Error404Page from "@/components/404";
 import AdminExport from "./AdminExport";
 import AdminCourseTemplates from "./AdminCourseTemplates";
 import AdminResources from "./AdminResources";
 import AdminActivities from "./AdminActivities";
+import AdminCreate from "./AdminCreate";
 
 export function AdminRoutesWithModals() {
     return (
         <>
             <Routes>
                 <Route index element={<AdminPage />} />
+                <Route path="create-admin" element={<AdminCreate />} />
                 <Route path="export" element={<AdminExport />} />
                 <Route path="course-templates" element={<AdminCourseTemplates />} />
                 <Route path="resources" element={<AdminResources />} />
@@ -29,6 +31,18 @@ function AdminPage() {
     }, []);
 
     const cards = [
+        {
+            title: "Manage Admin Users",
+            description: "Manage admin users and their permissions.",
+            href: "/admin/users",
+            icon: Shield
+        },
+        {
+            title: "Create Admin",
+            description: "Add a new admin account and access.",
+            href: "/admin/create-admin",
+            icon: UserPlus
+        },
         {
             title: "Export Data",
             description: "Download students and payments in CSV or XLSX.",

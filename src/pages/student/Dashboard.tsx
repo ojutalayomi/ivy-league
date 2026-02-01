@@ -1,8 +1,9 @@
 import { Card, CardContent, } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Settings, User, Menu, Loader2, AlertCircle, CheckCircle, XCircle, Download } from 'lucide-react';
-import { Link, Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
+import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Settings, User, Menu, Loader2, AlertCircle, CheckCircle, XCircle, Download, Folder, FileText, Link2 } from 'lucide-react';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { BreadcrumbNav } from '@/components/breadcrumb-nav';
 import Error404Page from '@/components/404';
@@ -58,12 +59,18 @@ const Av = forwardRef<HTMLSpanElement, AvProps>(({ active, className, children }
 export default function Dashboard() {
     const location = useLocation()
     const navigate = useNavigate()
-    const type = location.pathname.split('/').pop()
+    const isMyStudyRoute = location.pathname.includes('/my-study')
+    const type = isMyStudyRoute ? 'my-study' : location.pathname.split('/').pop()
     const [isFull, setIsFull] = useState(false)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const user = useSelector((state: RootState) => state.user)
 
     const HomePageItems = [
+    {
+      title: "My Study",
+      description: "Visit the my study page",
+      path: "/my-study"
+    },
     {
       title: "Papers", 
       description: "Visit the papers page",
@@ -74,11 +81,6 @@ export default function Dashboard() {
       description: "Visit the payments page",
       path: "/payments"
     },
-    // {
-    //   title: "Resources",
-    //   description: "Visit the resources page",
-    //   path: "/resources"
-    // },
     // {
     //   title: "Additional Info",
     //   description: "Visit the additional info page",
@@ -169,8 +171,6 @@ export default function Dashboard() {
         icon: <Library className={`size-4 ${isFull && 'mr-1'}`} />
       }
     ]
-
-    if (user.user_status === '') return <Navigate to="/accounts/signin" replace />
     
     return (
         <div className='flex'>
@@ -283,7 +283,7 @@ export default function Dashboard() {
                       <div className="flex flex-col sm:flex-row items-center gap-4">
                         {user.profile_pic && (
                           <div className="w-24 h-24 rounded-full overflow-hidden">
-                            <img src={"data:image/png;base64,"+user.profile_pic} alt="Profile" className="w-full h-full object-cover" />
+                            <img src={user.profile_pic} alt="Profile" className="w-full h-full object-cover" />
                           </div>
                         )}
                         <div className="space-y-2">
@@ -330,6 +330,15 @@ export default function Dashboard() {
                       <Route path="profile" element={
                         <TabsContent value="profile">
                           <ProfilePage />
+                        </TabsContent>
+                      } />
+                      <Route path="my-study/*" element={
+                        <TabsContent value="my-study">
+                          <Routes>
+                            <Route path="/" element={<MyStudyPage />} />
+                            <Route path=":dietName" element={<MyStudyPageForDiet />} />
+                            <Route path=":dietName/:paperCode/*" element={<StudyFolderPage />} />
+                          </Routes>
                         </TabsContent>
                       } />
                       <Route path="papers/*" element={
@@ -392,12 +401,461 @@ export default function Dashboard() {
     )
 }
 
+type StudyPaperItem = {
+  code: string;
+  name: string;
+  diet: string;
+}
+
+type StudyDirItem = {
+  name: string;
+  path: string;
+  type: "dir" | "url" | "file" | "test";
+  url?: string;
+}
+
+const MyStudyPage = () => {
+  const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.user)
+  
+  console.log(user.papers);
+
+  const groupedPapers = useMemo(() => {
+    const grouped: Record<string, StudyPaperItem[]> = {};
+    (user.papers ?? []).forEach((entry) => {
+      const entryRecord = entry as Record<string, string[] | string | undefined>;
+      const code = Object.keys(entryRecord)[0];
+      const rawValue = entryRecord?.[code];
+      let paperName = '';
+      let dietName = '';
+
+      if (Array.isArray(rawValue)) {
+        [paperName, dietName] = rawValue;
+      } else if (typeof rawValue === 'string') {
+        const parsed = rawValue.split('|').map((segment) => segment.trim());
+        if (parsed.length >= 2) {
+          paperName = parsed[0];
+          dietName = parsed.slice(1).join(' | ');
+        } else {
+          paperName = rawValue;
+        }
+      }
+
+      const entryDiet = (entry as { diet?: string; diet_name?: string }).diet
+        || (entry as { diet?: string; diet_name?: string }).diet_name
+        || '';
+      if (!dietName && entryDiet) {
+        dietName = entryDiet;
+      }
+
+      if (!code) return;
+      if (!dietName) {
+        dietName = 'Unassigned';
+      }
+      if (!grouped[dietName]) {
+        grouped[dietName] = [];
+      }
+      grouped[dietName].push({
+        code,
+        name: paperName || code,
+        diet: dietName
+      });
+    });
+    return grouped;
+  }, [user.papers]);
+
+  const diets = Object.entries(groupedPapers);
+
+  return (
+    <div className="space-y-8">
+      <Card className="bg-gradient-to-br from-white via-white to-cyan-100 dark:from-gray-800 dark:to-gray-900">
+        <CardContent className="p-8">
+          <div className="space-y-6">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-2xl font-semibold">My Study</h2>
+              <span className="text-sm text-muted-foreground">
+                {diets.length} {diets.length === 1 ? 'diet' : 'diets'}
+              </span>
+            </div>
+
+            {diets.length === 0 ? (
+              <div className="flex flex-col justify-center items-center gap-2 h-[40vh]">
+                <AlertCircle className="w-10 h-10" />
+                <p className="text-muted-foreground">No papers found</p>
+                <Button variant="outline" onClick={() => navigate('/papers/register')}>
+                  Register for Papers
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {diets.map(([dietName, papers]) => (
+                  <div key={dietName} className="space-y-3">
+                    <h3 className="text-lg font-medium">{dietName}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {papers.map((paper) => (
+                        <Link
+                          key={`${paper.code}-${paper.diet}`}
+                          to={`/my-study/${encodeURIComponent(paper.diet)}/${encodeURIComponent(paper.code)}`}
+                          className="block p-4 border rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Folder className="w-5 h-5 text-cyan-500" />
+                            <div className="space-y-1">
+                              <p className="font-medium">{paper.name}</p>
+                              <p className="text-xs text-muted-foreground">{paper.code}</p>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+const MyStudyPageForDiet = () => {
+  const navigate = useNavigate();
+  const { dietName } = useParams();
+  const user = useSelector((state: RootState) => state.user)
+  const resolvedDietName = decodeURIComponent(dietName || '');
+
+  const papersForDiet = useMemo(() => {
+    const papers: StudyPaperItem[] = [];
+    (user.papers ?? []).forEach((entry) => {
+      const entryRecord = entry as Record<string, string[] | string | undefined>;
+      const code = Object.keys(entryRecord)[0];
+      const rawValue = entryRecord?.[code];
+      let paperName = '';
+      let entryDiet = '';
+
+      if (Array.isArray(rawValue)) {
+        [paperName, entryDiet] = rawValue;
+      } else if (typeof rawValue === 'string') {
+        const parsed = rawValue.split('|').map((segment) => segment.trim());
+        if (parsed.length >= 2) {
+          paperName = parsed[0];
+          entryDiet = parsed.slice(1).join(' | ');
+        } else {
+          paperName = rawValue;
+        }
+      }
+
+      const fallbackDiet = (entry as { diet?: string; diet_name?: string }).diet
+        || (entry as { diet?: string; diet_name?: string }).diet_name
+        || '';
+
+      const normalizedDiet = entryDiet || fallbackDiet;
+      if (!code || !normalizedDiet) return;
+      if (normalizedDiet !== resolvedDietName) return;
+
+      papers.push({
+        code,
+        name: paperName || code,
+        diet: normalizedDiet
+      });
+    });
+
+    return papers;
+  }, [resolvedDietName, user.papers]);
+
+  return (
+    <div className="space-y-8">
+      <Card className="bg-gradient-to-br from-white via-white to-cyan-100 dark:from-gray-800 dark:to-gray-900">
+        <CardContent className="p-8">
+          <div className="space-y-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold">{resolvedDietName || 'Diet Papers'}</h2>
+                <p className="text-sm text-muted-foreground">Select a paper to view materials</p>
+              </div>
+              <Button variant="outline" onClick={() => navigate('/my-study')}>
+                Back to My Study
+              </Button>
+            </div>
+
+            {papersForDiet.length === 0 ? (
+              <div className="flex flex-col justify-center items-center gap-2 h-[40vh]">
+                <AlertCircle className="w-10 h-10" />
+                <p className="text-muted-foreground">No papers found for this diet</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {papersForDiet.map((paper) => (
+                  <Link
+                    key={`${paper.code}-${paper.diet}`}
+                    to={`/my-study/${encodeURIComponent(paper.diet)}/${encodeURIComponent(paper.code)}`}
+                    className="block p-4 border rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Folder className="w-5 h-5 text-cyan-500" />
+                      <div className="space-y-1">
+                        <p className="font-medium">{paper.name}</p>
+                        <p className="text-xs text-muted-foreground">{paper.code}</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+const StudyFolderPage = () => {
+  const navigate = useNavigate();
+  const params = useParams();
+  const resolvedDietName = decodeURIComponent(params.dietName || '');
+  const resolvedPaperCode = decodeURIComponent(params.paperCode || '');
+  const extraPath = params["*"] || '';
+  const relativeSegments = extraPath
+    .split('/')
+    .filter(Boolean)
+    .map((segment) => decodeURIComponent(segment));
+  const rootPathLabel = `${resolvedPaperCode} ${resolvedDietName}`;
+  const currentPath = `/${rootPathLabel}${relativeSegments.length ? `/${relativeSegments.join('/')}` : ''}`;
+  const [items, setItems] = useState<StudyDirItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [fileDialogOpen, setFileDialogOpen] = useState(false);
+  const [fileItem, setFileItem] = useState<StudyDirItem | null>(null);
+  const [fileLoading, setFileLoading] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+
+  const openFileDialog = useCallback((item: StudyDirItem) => {
+    setFileItem(item);
+    setFileDialogOpen(true);
+    setFileError(null);
+    setFileLoading(true);
+  }, []);
+
+  const closeFileDialog = useCallback(() => {
+    setFileDialogOpen(false);
+    setFileItem(null);
+    setFileError(null);
+  }, []);
+
+  useEffect(() => {
+    if (!fileDialogOpen || !fileItem || fileItem.type !== 'file') return;
+    let revoked = false;
+    const controller = new AbortController();
+    api.get('/view-file', { params: { file_name: fileItem.name }, responseType: 'blob', signal: controller.signal })
+      .then((res) => {
+        if (revoked) return;
+        const fileUrl = URL.createObjectURL(res.data as Blob);
+        const wrapperHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+          html, body { margin: 0; height: 100%; overflow: hidden; }
+          iframe { width: 100%; height: 100%; border: none; }
+          @media print { html, body, * { display: none !important; } }
+        </style></head><body><iframe src="${fileUrl}" title="File"></iframe></body></html>`;
+        const wrapperBlob = new Blob([wrapperHtml], { type: 'text/html' });
+        const wrapperUrl = URL.createObjectURL(wrapperBlob);
+        window.open(wrapperUrl, '_blank', 'noopener,noreferrer');
+        setTimeout(() => URL.revokeObjectURL(wrapperUrl), 1000);
+        setFileLoading(false);
+        setFileDialogOpen(false);
+        setFileItem(null);
+        setFileError(null);
+      })
+      .catch((err) => {
+        if (revoked) return;
+        setFileError(err?.response?.data?.message ?? 'Failed to load file');
+        setFileLoading(false);
+      });
+    return () => {
+      revoked = true;
+      controller.abort();
+    };
+  }, [fileDialogOpen, fileItem]);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      if (!resolvedDietName || !resolvedPaperCode) {
+        setError('Missing paper details');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setError('');
+        setIsLoading(true);
+        const response = await api.get(`/view-dir?path=${encodeURIComponent(currentPath)}`);
+        setItems(response.data || []);
+      } catch (error) {
+        if (error instanceof Error) {
+          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+          if (message && typeof message !== 'object') {
+            setError(message)
+            return;
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+          setError(description)
+        } else if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response: { data: { error: string } } }
+          console.error('API Error:', axiosError.response.data.error)
+          setError(axiosError.response.data.error)
+        } else {
+          console.error('Unexpected error:', error)
+          setError('An unexpected error occurred')
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchItems();
+  }, [currentPath, resolvedDietName, resolvedPaperCode]);
+
+  return (
+    <div className="space-y-8">
+      <Card className="bg-gradient-to-br from-white via-white to-cyan-100 dark:from-gray-800 dark:to-gray-900">
+        <CardContent className="p-8">
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold">{resolvedPaperCode || 'Study Folder'}</h2>
+                <p className="text-sm text-muted-foreground">{resolvedDietName}</p>
+              </div>
+              <Button variant="outline" onClick={() => navigate('/my-study')}>
+                Back to My Study
+              </Button>
+            </div>
+
+            {isLoading ? (
+              <div className="flex justify-center items-center h-[40vh]">
+                <Loader2 className="w-10 h-10 animate-spin" />
+              </div>
+            ) : error ? (
+              <div className="flex justify-center gap-2 items-center h-[40vh]">
+                <AlertCircle className="w-10 h-10" />
+                <p className="text-muted-foreground mb-0">{error}</p>
+              </div>
+            ) : items.length === 0 ? (
+              <div className="flex justify-center items-center h-[40vh]">
+                <p className="text-muted-foreground">No materials found</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {items.map((item) => {
+                  const isExternalLink = item.type === 'url' && item.url;
+                  const isFile = item.type === 'file';
+                  const showOpen = isExternalLink || isFile;
+                  const icon = item.type === 'dir'
+                    ? <Folder className="w-5 h-5 text-cyan-500" />
+                    : item.type === 'url'
+                      ? <Link2 className="w-5 h-5 text-cyan-500" />
+                      : <FileText className="w-5 h-5 text-cyan-500" />;
+                  const pathLabel = item.type === 'url' && !isExternalLink ? '/my-study'+item.path : '';
+
+                  const row = (
+                    <div className="flex items-center justify-between gap-4 p-3 rounded-lg border bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      <div className="flex items-center gap-3">
+                        {icon}
+                        <div className="space-y-1">
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.type}{pathLabel ? ` • ${pathLabel}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      {showOpen && (
+                        <span className="text-xs text-cyan-600">Open</span>
+                      )}
+                      {item.type === 'test' && (
+                        <span className="text-xs text-cyan-600">Take test</span>
+                      )}
+                    </div>
+                  );
+
+                  if (item.type === 'url' && item.url) {
+                    return (
+                      <a key={item.path} href={item.url} target="_blank" rel="noreferrer">
+                        {row}
+                      </a>
+                    );
+                  }
+
+                  if (item.type === 'file') {
+                    return (
+                      <div
+                        key={item.path}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openFileDialog(item)}
+                        onKeyDown={(e) => e.key === 'Enter' && openFileDialog(item)}
+                        className="cursor-pointer"
+                      >
+                        {row}
+                      </div>
+                    );
+                  }
+
+                  if (item.type === 'dir' || item.type === 'url') {
+                    const backendSegments = item.path.split('/').filter(Boolean);
+                    const matchesRoot = backendSegments[0] === rootPathLabel;
+                    const derivedSegments = matchesRoot
+                      ? backendSegments.slice(1)
+                      : [...relativeSegments, item.name];
+                    const uiPath = `/my-study/${encodeURIComponent(resolvedDietName)}/${encodeURIComponent(resolvedPaperCode)}${derivedSegments.length ? `/${derivedSegments.map((segment) => encodeURIComponent(segment)).join('/')}` : ''}`;
+
+                    return (
+                      <Link key={item.path} to={uiPath}>
+                        {row}
+                      </Link>
+                    );
+                  }
+
+                  if (item.type === 'test') {
+                    const testPath = item.path.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+                    return (
+                      <Link key={item.path} to={`/test/${testPath}`}>
+                        {row}
+                      </Link>
+                    );
+                  }
+
+                  return (
+                    <div key={item.path}>
+                      {row}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <Dialog open={fileDialogOpen} onOpenChange={(open) => { setFileDialogOpen(open); if (!open) closeFileDialog(); }}>
+              <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+                <DialogHeader>
+                  <DialogTitle>{fileItem?.name ?? 'File'}</DialogTitle>
+                </DialogHeader>
+                {fileLoading && (
+                  <p className="text-muted-foreground">Please wait while the file is being received.</p>
+                )}
+                {fileError && (
+                  <p className="text-destructive">{fileError}</p>
+                )}
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
 const AvailablePapers = () => {
   const user = useSelector((state: RootState) => state.user)
   const [papers, setPapers] = useState<Paper[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
-  const [scholarships, setScholarships] = useState<{paper: string, percentage: number}[]>([]);
   const count = useRef(0);
 
   useEffect(() => {
@@ -405,10 +863,9 @@ const AvailablePapers = () => {
       try {
         count.current += 1;
         setIsLoading(true);
-        const response = await api.get('/courses?reg=true' + (user.user_status === 'student' ? '' : "&acca_reg=" + (user.acca_reg || '001')) + '&user_status=' + user.user_status + '&email=' + user.email);
+        const response = await api.get('/courses?reg=false' + (user.user_status === 'student' ? '' : "&acca_reg=" + (user.acca_reg || '001')) + '&user_status=' + user.user_status + '&email=' + user.email);
         console.log(response); 
-        setPapers(response.data.papers);
-        setScholarships(response.data.scholarships);
+        setPapers(response.data);
       } catch (error) {
         if (error instanceof Error) {
           const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
@@ -447,58 +904,95 @@ const AvailablePapers = () => {
       <Card className="bg-gradient-to-br from-white via-white to-cyan-100 dark:from-gray-800 dark:to-gray-900">
         <CardContent className="p-8">
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-semibold">Available Papers</h2>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold tracking-tight">Available Papers</h2>
+                <p className="text-sm text-muted-foreground mt-1">Browse and explore courses available for registration</p>
+              </div>
+              {!isLoading && !error && Object.keys(groupedPapers ?? {}).length > 0 && (
+                <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
+                  {papers.length} paper{papers.length !== 1 ? 's' : ''} available
+                </span>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-              {isLoading && <div className="flex justify-center items-center h-[50vh] col-span-2">
-                <Loader2 className="w-10 h-10 animate-spin" />
-              </div>}
-              {error && <div className="flex justify-center gap-2 items-center h-[50vh] col-span-2">
-                <AlertCircle className="w-10 h-10" />
-                <p className="text-muted-foreground mb-0">{error}</p>
-              </div>}
-              {Object.entries(groupedPapers ?? {}).map(([category, papers]) => (
-                <div key={category}>
-                  <h3 className="text-lg font-medium">{category}{" "}{'(' + papers.length + ' papers)'}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {papers.map((paper) => (
-                      <div key={paper.code[0]} className="p-4 relative border rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <div className="absolute top-0 right-0 flex gap-2">
-                          {scholarships?.find(s => s.paper === paper.code[0]) && (
-                            <div className="bg-blue-500 text-white px-2 py-1 rounded-full">
-                              <p className="text-xs">-{scholarships.find(s => s.paper === paper.code[0])?.percentage}%</p>
+            {isLoading && (
+              <div className="flex flex-col justify-center items-center h-[50vh] gap-3">
+                <Loader2 className="w-10 h-10 animate-spin text-cyan-500" />
+                <p className="text-muted-foreground">Loading papers...</p>
+                <DelayedMessage />
+              </div>
+            )}
+
+            {error && (
+              <div className="flex flex-col justify-center items-center h-[50vh] gap-3">
+                <div className="p-4 rounded-full bg-destructive/10">
+                  <AlertCircle className="w-8 h-8 text-destructive" />
+                </div>
+                <p className="text-muted-foreground text-center max-w-md">{error}</p>
+              </div>
+            )}
+
+            {!isLoading && !error && Object.entries(groupedPapers ?? {}).length === 0 && (
+              <div className="flex flex-col justify-center items-center h-[50vh] gap-3">
+                <div className="p-4 rounded-full bg-muted">
+                  <BookOpen className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground">No papers found</p>
+              </div>
+            )}
+
+            {!isLoading && !error && (
+              <div className="space-y-8">
+                {Object.entries(groupedPapers ?? {}).map(([category, papers]) => (
+                  <div key={category} className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-1 bg-cyan-500 rounded-full" />
+                      <div>
+                        <h3 className="text-lg font-semibold">{category}</h3>
+                        <p className="text-xs text-muted-foreground">{papers.length} paper{papers.length !== 1 ? 's' : ''}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {papers.map((paper) => (
+                        <div 
+                          key={paper.code[0]} 
+                          className="group p-5 border rounded-xl bg-white dark:bg-gray-800/50 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/5 transition-all duration-200"
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <h4 className="font-medium leading-tight group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                              {paper.name}
+                            </h4>
+                            <span className="text-xs font-mono bg-muted px-2 py-1 rounded shrink-0">
+                              {paper.code}
+                            </span>
+                          </div>
+                          {Array.isArray(paper.type) && paper.type.length > 0 && Array.isArray(paper.price) && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              {paper.type?.map((t: string, idx: number) => (
+                                <span 
+                                  key={t + idx} 
+                                  className="inline-flex items-center text-xs px-2.5 py-1 rounded-full bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800"
+                                >
+                                  {t || 'Standard'}: ₦{(t === '' ? paper.price?.[0] : paper.price?.[idx])?.toLocaleString()}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {paper.type?.length === 0 && paper.price?.length > 0 && (
+                            <div className="mt-3">
+                              <span className="inline-flex items-center text-sm font-medium text-cyan-600 dark:text-cyan-400">
+                                ₦{paper.price?.[0]?.toLocaleString()}
+                              </span>
                             </div>
                           )}
                         </div>
-                        <h3 className="text-lg font-medium">{paper.name}</h3>
-                        {Array.isArray(paper.type) && paper.type.length > 0 && Array.isArray(paper.price) && (
-                          <span className="block text-sm text-gray-500 dark:text-gray-400">
-                            {paper.type?.map((t: string, idx: number) => (
-                              <span key={t + idx} data-type={t.toLowerCase()}>
-                                {t}: {t === '' ? `₦${paper.price?.[0]?.toLocaleString()}` : `₦${paper.price?.[idx]?.toLocaleString()}`}
-                                {idx < (paper.type?.length ?? 0) - 1 ? ' | ' : ''}
-                              </span>
-                            ))}
-                          </span>
-                        )}
-                        {paper.type?.length === 0 && paper.price?.length > 0 && (
-                          <span className="block text-sm text-gray-500 dark:text-gray-400">
-                            Price: ₦{paper.price?.[0]?.toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-              {Object.entries(groupedPapers ?? {}).length === 0 && !isLoading && !error && (
-                <div className="flex justify-center items-center h-[50vh]">
-                  <p className="text-muted-foreground">No papers found</p>
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -519,12 +1013,27 @@ const PapersList = () => {
               <h2 className="text-2xl font-semibold">My Papers</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {user.papers?.map((paper) => (
-                <div key={Object.keys(paper)[0]} className="p-4 border rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
-                  <h3 className="text-lg font-medium">{Object.keys(paper)[0]}</h3>
-                  <p className="text-muted-foreground">{Object.values(paper)[0]}</p>
-                </div>
-              ))}
+              {user.papers?.map((paper) => {
+                const paperCode = Object.keys(paper)[0] ?? 'Paper';
+                const details = Object.values(paper)[0];
+                const detailList = Array.isArray(details)
+                  ? details
+                  : details
+                    ? [String(details)]
+                    : [];
+
+                return (
+                  <div key={paperCode} className="p-4 border rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <h3 className="text-lg font-medium">{paperCode}</h3>
+                    {detailList.map((value: string, index: number) => (
+                      <p key={`${paperCode}-${index}`} className="text-muted-foreground">
+                        {index === 0 ? 'Name: ' : index === 1 ? 'Diet: ' : ''}
+                        {value}
+                      </p>
+                    ))}
+                  </div>
+                );
+              })}
               {user.papers?.length > 0 ? null : (
                 <div className="flex flex-col justify-center items-center gap-2 h-[50vh] col-span-2">
                   <AlertCircle className="w-10 h-10" />

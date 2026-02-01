@@ -1,12 +1,13 @@
 import { api } from "@/lib/api";
-import type { AdminActivity, AdminPayment, AdminResource, AdminTemplateNode } from "@/lib/types";
+import type { AdminActivity, AdminPayment, AdminResource } from "@/lib/types";
+import { AxiosRequestConfig } from "axios";
 
 export const fetchAdminPayments = async (params?: {
     from?: string;
     to?: string;
     search?: string;
 }) => {
-    const response = await api.get("/admin/payments", { params });
+    const response = await api.get("/payments", { params });
     return (response.data?.payments ?? response.data ?? []) as AdminPayment[];
 };
 
@@ -15,26 +16,31 @@ export const fetchAdminActivities = async (params?: {
     to?: string;
     type?: string;
 }) => {
-    const response = await api.get("/admin/activities", { params });
+    const response = await api.get("/activities", { params });
     return (response.data?.activities ?? response.data ?? []) as AdminActivity[];
 };
 
-export const fetchCourseTemplates = async () => {
-    const response = await api.get("/admin/course-templates");
-    return (response.data?.nodes ?? response.data ?? []) as AdminTemplateNode[];
+export type CourseTemplatePayload = {
+    title: string;
+    template: Record<string, unknown>;
 };
 
-export const saveCourseTemplates = async (nodes: AdminTemplateNode[]) => {
-    await api.put("/admin/course-templates", { nodes });
+export const fetchCourseTemplates = async (...params: Parameters<AxiosRequestConfig['params']>) => {
+    const response = await api.get("/course-templates", { params });
+    return (response.data ?? null) as CourseTemplatePayload[] | null;
+};
+
+export const saveCourseTemplates = async (payload: CourseTemplatePayload) => {
+    await api.post("/create-template", payload);
 };
 
 export const fetchAdminResources = async () => {
-    const response = await api.get("/admin/resources");
+    const response = await api.get("/resources");
     return (response.data?.resources ?? response.data ?? []) as AdminResource[];
 };
 
 export const uploadAdminResources = async (formData: FormData) => {
-    const response = await api.post("/admin/resources", formData, {
+    const response = await api.post("/resources", formData, {
         headers: {
             "Content-Type": "multipart/form-data"
         }
@@ -43,5 +49,5 @@ export const uploadAdminResources = async (formData: FormData) => {
 };
 
 export const deleteAdminResource = async (resourceId: string) => {
-    await api.delete(`/admin/resources/${resourceId}`);
+    await api.delete(`/resources/${resourceId}`);
 };

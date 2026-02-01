@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { Award, BookOpen, ChevronLeft, ChevronRight, GraduationCap, Handshake, Menu, Search, Settings, Shield, Text, Users, Utensils, Wallet } from 'lucide-react';
+import { Award, BookOpen, ChevronLeft, ChevronRight, GraduationCap, Handshake, Menu, Settings, Shield, Text, Users, Utensils, Wallet } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { forwardRef, useCallback, useEffect, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -10,13 +10,15 @@ import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
 import { DietPage, DietCreate, DietView, DietEdit } from './Diet';
 import ManageStudentsMenu from './ManageStudentsMenu';
-import { StudentList, StudentView, EditStudent, SearchStudent } from './Students';
+import { StudentList, StudentView, EditStudent, SearchStudent, BlockStudent } from './Students';
 import { PaymentsPage } from './Payments';
 import { useUser } from '@/providers/user-provider';
 import { PapersRoutesWithModals } from './Papers';
 import { ScholarshipRoutesWithModals } from './Scholarship';
 import { SponsorshipRoutesWithModals } from './Sponsorsip';
 import { AdminRoutesWithModals } from './Admin';
+import AdminComplete from './AdminComplete';
+import SettingsPage from './Settings';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -128,7 +130,7 @@ export default function ManageStudents() {
         }
     ]
 
-    if (user.user_status === '') return <Navigate to="/accounts/signin" replace />
+    if (!user.user_status) return <Navigate to="/accounts/signin" replace />
     
     return (
         <div className='flex'>
@@ -238,7 +240,7 @@ export default function ManageStudents() {
                                     </TabsContent>
                                 } />
                                 <Route path="/dashboard" element={
-                                    <TabsContent value="">
+                                    <TabsContent value="dashboard">
                                         <ManageStudentsMenu/>
                                     </TabsContent>
                                 } />
@@ -277,6 +279,11 @@ export default function ManageStudents() {
                                                 <Route path="edit" element={
                                                     <TabsContent value="edit">
                                                         <EditStudent/>
+                                                    </TabsContent>
+                                                } />
+                                                <Route path="block" element={
+                                                    <TabsContent value="block">
+                                                        <BlockStudent/>
                                                     </TabsContent>
                                                 } />
                                             </Routes>
@@ -325,6 +332,16 @@ export default function ManageStudents() {
                                 <Route path="payments" element={
                                     <TabsContent value="payments">
                                         <PaymentsPage />
+                                    </TabsContent>
+                                } />
+                                <Route path="settings" element={
+                                    <TabsContent value="settings">
+                                        <SettingsPage />
+                                    </TabsContent>
+                                } />
+                                <Route path="accounts/complete-admin" element={
+                                    <TabsContent value="complete-admin">
+                                        <AdminComplete />
                                     </TabsContent>
                                 } />
                                 <Route path="*" element={

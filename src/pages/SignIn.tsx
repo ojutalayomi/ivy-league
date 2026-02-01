@@ -11,6 +11,7 @@ import { AxiosError } from "axios";
 import { setBearerToken } from "@/redux/utilsSlice";
 import { useUser } from "@/providers/user-provider";
 import AccountsLayout from "@/components/AccountsLayout";
+import { CheckForIncorrectPermission } from "@/lib/utils";
 
 export default function SignIn() {
   const { Mode } = useUser();
@@ -56,9 +57,13 @@ export default function SignIn() {
       const response = await api.post('/signin', userData)
 
       if (response.status >= 200 && response.status < 300) {
-        localStorage.setItem('ivy_user_token', JSON.stringify({token: response.data.email, timestamp: Date.now()}))
-        dispatch(setUser({...response.data, signed_in: true}))
-        dispatch(setBearerToken(response.data.bearer_token))
+        const data = response.data;
+        const correctPermission = CheckForIncorrectPermission(data, toast, Mode, dispatch, navigate)
+        console.log(correctPermission)
+        if (correctPermission === 1) return;
+        localStorage.setItem('ivy_user_token', JSON.stringify({token: data.email, timestamp: Date.now()}))
+        dispatch(setUser({...data, signed_in: true}))
+        dispatch(setBearerToken(data.bearer_token))
         toast.success("You have signed in succesfully.",{
           description: "Thank you for signing in to your account. We look forward to helping you achieve your academic goals."
         })

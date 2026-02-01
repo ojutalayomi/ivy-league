@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
@@ -27,6 +28,7 @@ import { UserState } from "@/redux/userSlice";
 import { APIPaper } from "@/lib/types";
 import { PaymentHistoryPage } from "../student/Dashboard";
 import { StudentState } from "@/redux/studentSlice";
+import { toast } from "sonner";
 
 // Column definitions for the data table
 const columns: ColumnDef<UserState>[] = [
@@ -52,7 +54,7 @@ const columns: ColumnDef<UserState>[] = [
                 {(student.firstname || '').split(' ').map(n => n[0]).join('').toUpperCase()}
                 {(student.lastname || '').split(' ').map(n => n[0]).join('').toUpperCase()}
                 </AvatarFallback>
-                <AvatarImage src={"data:image/jpeg;base64,"+student.profile_pic || ''} />
+                <AvatarImage src={student.profile_pic || ''} />
             </Avatar>
             <div>
                 <div className="font-medium">{student.firstname || ''} {student.lastname || ''}</div>
@@ -69,87 +71,59 @@ const columns: ColumnDef<UserState>[] = [
         <div className="font-mono text-sm">{row.getValue("reg_no") || 'N/A'}</div>
         ),
     },
-//   {
-//     accessorKey: "preferences.level",
-//     header: "Level",
-//     cell: ({ row }) => {
-//       const level = row.original.preferences.level;
-//       const levelColors = {
-//         beginner: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-//         intermediate: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-//         advanced: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-//       };
-//       return (
-//         <Badge className={levelColors[level]}>
-//           {level.charAt(0).toUpperCase() + level.slice(1)}
-//         </Badge>
-//       );
-//     },
-//   },
-//   {
-//     accessorKey: "papers",
-//     header: "Papers",
-//     cell: ({ row }) => {
-//       const papers = row.getValue("papers") as string[];
-//       return (
-//         <div className="max-w-[200px]">
-//           <div className="text-sm">
-//             {papers.length > 2 
-//               ? `${papers.slice(0, 2).join(", ")} +${papers.length - 2} more`
-//               : papers.join(", ")
-//             }
-//           </div>
-//         </div>
-//       );
-//     },
-//   },
-//   {
-//     accessorKey: "paymentDetails.paymentStatus",
-//     header: "Payment Status",
-//     cell: ({ row }) => {
-//       const status = row.original.paymentDetails.paymentStatus;
-//       return (
-//         <Badge variant={status === "active" ? "default" : "destructive"}>
-//           {status === "active" ? "Active" : "Inactive"}
-//         </Badge>
-//       );
-//     },
-//   },
+    {
+        accessorKey: "blocked",
+        header: "Blocked",
+        cell: ({ row }) => (
+            <span
+                data-blocked={row.original.blocked}
+                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-normal ${
+                    row.original.blocked
+                        ? 'bg-destructive/10 text-destructive border border-destructive/30'
+                        : 'bg-muted text-muted-foreground'
+                }`}
+            >
+                {row.original.blocked ? 'Blocked' : 'Unblocked'}
+            </span>
+        ),
+    },
     {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
         const student = row.original;
         return (
-            <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem asChild>
-                <Link to={`/students/${student.reg_no}`}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    View Details
-                </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                <Link to={`/students/${student.reg_no}/edit`}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit Student
-                </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-600">
-                    <Lock className="mr-2 h-4 w-4" />
-                    Block Student
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-            </DropdownMenu>
-        );
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem asChild>
+                            <Link to={`/students/${student.reg_no}`}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Details
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link to={`/students/${student.reg_no}/edit`}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit Student
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-600" asChild>
+                            <Link to={`/students/${student.reg_no}/block`}>
+                                <Lock className="mr-2 h-4 w-4" />
+                                Block Student
+                            </Link>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            );
         },
     },
 ];
@@ -168,7 +142,7 @@ export const StudentList = () => {
             if (value && value !== 'all') {
                 return filteredData.filter(student => 
                     student.gender === value || 
-                    student.papers.find(paper => paper.name === value) ||
+                    student.papers.find(paper => paper.name[0] === value) ||
                     student.user_status === value
                 )
             }
@@ -198,6 +172,7 @@ export const StudentList = () => {
                     newStudent: item.user_status === 'student',
                     dateOfBirth: item.dob,
                     papers: item.papers,
+                    blocked: item.blocked,
                 }));
                 setFilteredData(mapped);
             } catch (error) {
@@ -237,7 +212,7 @@ export const StudentList = () => {
                 <div className="flex items-center space-x-2">
                     <Select defaultValue={type || 'all'} onValueChange={(value) => {
                         const filtered = value === 'all' ? filteredData : filteredData.filter(student => 
-                            student.papers.find(paper => paper.name === value) ||
+                            student.papers.find(paper => paper.name[0] === value) ||
                             student.user_status === value ||
                             student.gender === value
                         )
@@ -314,7 +289,7 @@ export const StudentCard = ({theStudent, filteredData}: {theStudent?: UserState,
                             {(student.firstname || '').split(' ')[0]?.[0] || ''}
                             {(student.lastname || '').split(' ')[0]?.[0] || ''}
                         </AvatarFallback>
-                        <AvatarImage src={"data:image/jpeg;base64," + student.profile_pic || ''} />
+                        <AvatarImage src={student.profile_pic || ''} />
                     </Avatar>
                     <span className="mt-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-200 shadow">
                         {student.user_status === 'student' ? 'New Student' : 'Returning Student'}
@@ -460,7 +435,7 @@ export const StudentView = () => {
                                     {(student.firstname || '').split(' ')[0]?.[0] || ''}
                                     {(student.lastname || '').split(' ')[0]?.[0] || ''}
                                 </AvatarFallback>
-                                <AvatarImage src={"data:image/jpeg;base64," + (student.profile_pic || '')} />
+                                <AvatarImage src={student.profile_pic || ''} />
                             </Avatar>
                             {/* <span className="mt-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-200 shadow">
                                 {student.user_status === 'student' ? 'New Student' : 'Returning Student'}
@@ -885,6 +860,120 @@ export const SearchStudent = () => {
                     </div>
                 )}
             </div>
+        </div>
+    )
+}
+
+export const BlockStudent = () => {
+    const navigate = useNavigate();
+    const { reg_no } = useParams();
+    const [reason, setReason] = useState("");
+    const [duration, setDuration] = useState("indefinite");
+    const [effectiveDate, setEffectiveDate] = useState(() => new Date().toISOString().split("T")[0]);
+    const [isBlocking, setIsBlocking] = useState(false);
+
+    useEffect(() => {
+        document.title = "Block Student - Ivy League Associates";
+    }, []);
+
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!reg_no || !reason.trim()) return;
+        try {
+            setIsBlocking(true);    
+
+            const response = await api.patch(`/block-student`, {
+                reg_no,
+                reason,
+                duration,
+                effectiveDate
+            });
+
+            if (response.status >= 200 && response.status < 300) {
+                toast.success("Student blocked successfully");
+                navigate(-1);
+            } else {
+                throw new Error(`Error: ${response.status} ${response.statusText}`);
+            }   
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error("Failed to block student. Please try again.",{
+                    description: error.message
+                });
+            } else {
+                toast.error("Failed to block student. Please try again.",{
+                    description: "An unexpected error occurred. Please try again."
+                });
+            }
+        } finally {
+            setIsBlocking(false);
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Block Student</CardTitle>
+                    <CardDescription>
+                        Restrict student access and record the reason for this action.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form className="space-y-4" onSubmit={handleSubmit}>
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-200">
+                            Blocking a student will prevent them from accessing their account until lifted.
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label>Registration Number</Label>
+                                <Input value={reg_no ?? ""} disabled />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="effective-date">Effective Date</Label>
+                                <Input
+                                    id="effective-date"
+                                    type="date"
+                                    value={effectiveDate}
+                                    onChange={(event) => setEffectiveDate(event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="duration">Duration</Label>
+                                <Select value={duration} onValueChange={setDuration}>
+                                    <SelectTrigger id="duration">
+                                        <SelectValue placeholder="Select duration" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="indefinite">Indefinite</SelectItem>
+                                        <SelectItem value="7_days">7 days</SelectItem>
+                                        <SelectItem value="30_days">30 days</SelectItem>
+                                        <SelectItem value="90_days">90 days</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="reason">Reason</Label>
+                                <Textarea
+                                    id="reason"
+                                    rows={4}
+                                    placeholder="Provide a reason for blocking this student."
+                                    value={reason}
+                                    onChange={(event) => setReason(event.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={isBlocking || !reason.trim() || !reg_no}>
+                                {isBlocking ? "Blocking..." : "Block Student"}
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
         </div>
     )
 }

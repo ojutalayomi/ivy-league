@@ -12,13 +12,12 @@ import { store } from '@/redux/store'
 import AdditionalInfo from './pages/student/AdditionalInfo'
 import LogoDark from "@/assets/ivyDark.png";
 import LogoLight from "@/assets/ivyLight.png";
-import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
 import VerifyEmail from './pages/VerifyEmail'
 import ResetPassword from './pages/ResetPassword'
 import HelpCenter from './pages/HelpCenter'
 import { UserProvider, useUser } from './providers/user-provider'
 import AccountsLayout from './components/AccountsLayout'
+import Test from './pages/student/Test'
 // import './App.css'
 
 function App() {
@@ -42,8 +41,6 @@ function Router() {
   const { isLoading, error, Mode } = useUser();
   const location = reactRouterDom.useLocation();
   const state = location.state as { backgroundLocation?: Location };
-  const user = useSelector((state: RootState) => state.user);
-  const pathSegments = (user.user_status === '' && location.pathname.startsWith('/dashboard')) ? location.pathname.replace("dashboard", "") : location.pathname.replace("dashboard", "")
   const backgroundLocation = state?.backgroundLocation;
 
   return (
@@ -55,12 +52,12 @@ function Router() {
               <reactRouterDom.Route path="/menu" element={<Menu />} />
               <reactRouterDom.Route path="/a" element={<AccountsLayout />} />
               <reactRouterDom.Route path="/help-center" element={<HelpCenter />} />
-              <reactRouterDom.Route path="/dashboard/*" element={<reactRouterDom.Navigate to={pathSegments} replace />} />
               <reactRouterDom.Route path="/accounts/signin" element={<SignIn />} />
               <reactRouterDom.Route path="/accounts/signup" element={<SignUp />} />
               <reactRouterDom.Route path="/accounts/additional-info" element={<AdditionalInfo />} />
               <reactRouterDom.Route path="/accounts/reset-password" element={<ResetPassword />} />
               <reactRouterDom.Route path="/accounts/confirm-email" element={<VerifyEmail />} />
+              <reactRouterDom.Route path="/test/*" element={Mode === "student" ? <Test /> : <reactRouterDom.Navigate to="/" />} />
               <reactRouterDom.Route path="/*" element={Mode === "staff" ? <ManageStudents /> :<Dashboard /> } />
             </reactRouterDom.Routes>
           )}

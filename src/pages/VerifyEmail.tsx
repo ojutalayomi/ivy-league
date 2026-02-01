@@ -46,7 +46,14 @@ export default function VerifyEmail() {
         }
 
         /* AXIOS */
-        const response = token && !getCode ? await api.post('/confirm-email?token='+token) : await api.post('/confirm-email', userData)
+        const config = {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        };
+        const response = token && !getCode
+            ? await api.post('/confirm-email', {token}, config)
+            : await api.post('/confirm-email', userData, config);
 
         if (response.status >= 200 && response.status < 300) {
           setSuccess(true)
@@ -99,14 +106,14 @@ export default function VerifyEmail() {
     return (
       <AccountsLayout>
         {success ? (
-          <div className="flex flex-col gap-2 justify-center items-center py-20 max-[640px]:px-10 bg-cyan-500 rounded-lg">
-            <CheckCircle className="text-white size-16" />
-            <p className="text-white text-sm">{successMessage}</p>
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+            <CheckCircle className="text-cyan-500 size-16" /> 
+            <div className="text-center text-muted-foreground">{successMessage}</div>
           </div>
         ) : loading2 ? (
-          <div className="flex flex-col gap-2 justify-center items-center py-20 max-[640px]:px-10 bg-cyan-500 rounded-lg">
-            <LoaderCircle className="animate-spin text-white size-16" />
-            <p className="text-white text-sm">Please wait while we verify your email...</p>
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+            <LoaderCircle className="animate-spin" /> 
+            <div className="text-center text-muted-foreground">Please wait while we verify your email... <br /> This may take a few seconds.</div>
           </div>
         ) : (
           <>

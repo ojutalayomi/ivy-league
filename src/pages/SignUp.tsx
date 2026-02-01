@@ -65,7 +65,9 @@ export default function SignUp() {
             fee: [],
             scholarship: [],
             email_verified: false,
-            papers: []
+            papers: [],
+            blocked: false,
+            role: null
           }))
           localStorage.setItem('ivy_user_token', JSON.stringify({token: response.data.email, timestamp: Date.now()}))
           toast.success("Welcome to Ivy League Associates. Please check your email for a verification link.",{

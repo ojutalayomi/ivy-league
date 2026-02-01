@@ -17,6 +17,7 @@ export type User = {
 export type UserType = 'all' | 'intensive' | 'standard'
 
 export type Diet = {
+    diet_template: string;
     available: boolean;
     title: string;
     diet_name?: string;

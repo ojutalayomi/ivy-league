@@ -557,6 +557,9 @@ export const SponsorshipView: React.FC<SponsorshipViewProps> = ({ sch_code }) =>
                 <strong>Last Name:</strong> {sponsorship.last_name}
             </div>
             <div>
+                <strong>Token:</strong> {sponsorship.token}
+            </div>
+            <div>
                 <strong>Company Name:</strong> {sponsorship.company_name}
             </div>
             <div>

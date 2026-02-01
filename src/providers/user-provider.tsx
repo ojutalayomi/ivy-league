@@ -1,4 +1,3 @@
-/* eslint-disable no-extra-boolean-cast */
 import { createContext, useContext, ReactNode, useEffect, useRef, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearUser, initialState, setUser, UserState } from '@/redux/userSlice';
@@ -6,14 +5,31 @@ import { api } from '@/lib/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { RootState } from '@/redux/store';
+import { toast } from 'sonner';
+import { CheckForIncorrectPermission } from '@/lib/utils';
 
 interface UserProviderProps {
   children: ReactNode;
 }
 
-enum ModeEnum {
+export enum ModeEnum {
   staff = "staff",
   student = "student"
+}
+
+export enum AdminModeEnum {
+  admin = "admin",
+  tutor = "tutor",
+  liteAdmin = "lite_admin",
+  proAdmin = "pro_admin",
+  superAdmin = "super_admin",
+  boardMember = "board_member"
+}
+
+export enum EmployeeEnum {
+  Intern = "Intern",
+  PartTime = "Part-Time",
+  FullTime = "Full-Time"
 }
 
 type UserContextType = { isLoading: boolean, error: string, Mode: ModeEnum | null, user: UserState }
@@ -37,6 +53,7 @@ export function UserProvider({ children }: UserProviderProps) {
       if (refreshStatus.current && count.current === 0) return;
       count.current += 1;
       const response = await api.get(`/refresh?email=${email}`);
+      if (CheckForIncorrectPermission(response.data, toast, Mode, dispatch, navigate, location, path, whiteList.current) === 1) return;
       const now = Date.now();
       dispatch(setUser({
         ...response.data,
@@ -75,37 +92,38 @@ export function UserProvider({ children }: UserProviderProps) {
         setError('An unexpected error occurred');
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [dispatch, navigate, path, location.pathname])
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const storedToken = JSON.parse(localStorage.getItem('ivy_user_token') || '{}');    
-      if (storedToken.token) {
-        const now = Date.now();
-        const storedTime = storedToken.timestamp;
-        
-        // Check if stored data is less than 24 hours old
-        if (now - storedTime < 24 * 60 * 60 * 1000) {
-          // Refresh user data from server
-          await refreshUser(storedToken.token);
-        } else {
-          // Clear expired data
-          localStorage.removeItem('ivy_user_token');
-          dispatch(clearUser());
-          if (!whiteList.current.includes(location.pathname)) {
-            navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
-          }
-        }
+  const fetchUser = useCallback(async () => {
+    const storedToken = JSON.parse(localStorage.getItem('ivy_user_token') || '{}');    
+    if (storedToken.token) {
+      const now = Date.now();
+      const storedTime = storedToken.timestamp;
+      
+      // Check if stored data is less than 24 hours old
+      if (now - storedTime < 24 * 60 * 60 * 1000) {
+        // Refresh user data from server
+        await refreshUser(storedToken.token);
       } else {
+        // Clear expired data
+        localStorage.removeItem('ivy_user_token');
+        dispatch(clearUser());
         if (!whiteList.current.includes(location.pathname)) {
           navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
         }
       }
-      setIsLoading(false);
+    } else {
+      if (!whiteList.current.includes(location.pathname)) {
+        navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
+      }
     }
+    setIsLoading(false);
+  }, [dispatch, navigate, location.pathname, path, refreshUser])
+
+  useEffect(() => {
     fetchUser();
-  }, [isLoading]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <UserContext.Provider value={{ isLoading, error, Mode, user }}>

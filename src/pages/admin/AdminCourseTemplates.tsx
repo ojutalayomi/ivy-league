@@ -1,16 +1,50 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { FolderPlus, FilePlus, ChevronDown, ChevronRight, ArrowUp, ArrowDown, Pencil, Trash2, Save } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Folder, FolderPlus, Pencil, Save, Trash2 } from "lucide-react";
 import type { AdminTemplateNode } from "@/lib/types";
-import { fetchCourseTemplates, saveCourseTemplates } from "@/lib/admin-api";
+import { CourseTemplatePayload, fetchCourseTemplates, saveCourseTemplates } from "@/lib/admin-api";
 
-const createNode = (name: string, type: "folder" | "template"): AdminTemplateNode => ({
+
+const templateObjectToNodes = (
+    template: Record<string, unknown>,
+    templateTitle?: string
+): AdminTemplateNode[] => {
+    const entries = Object.entries(template);
+    if (entries.length === 1 && entries[0][0].startsWith("/")) {
+        const [, value] = entries[0];
+        const childrenObject = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+        const children = templateObjectToNodes(childrenObject as Record<string, unknown>);
+        return [
+            {
+                id: crypto.randomUUID(),
+                name: "/",
+                type: "folder",
+                children
+            }
+        ];
+    }
+
+    return entries.map(([key, value]) => {
+        const childrenObject = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+        const children = templateObjectToNodes(childrenObject as Record<string, unknown>);
+        return {
+            id: crypto.randomUUID(),
+            name: key === `/$${templateTitle}$` ? "/" : key,
+            type: "folder",
+            children
+        };
+    });
+};
+
+const createNode = (name: string): AdminTemplateNode => ({
     id: crypto.randomUUID(),
     name,
-    type,
-    children: type === "folder" ? [] : undefined
+    type: "folder",
+    children: []
 });
 
 const updateNode = (
@@ -53,13 +87,44 @@ const moveNode = (nodes: AdminTemplateNode[], id: string, direction: "up" | "dow
     return moveInList(nodes);
 };
 
+const nodesToTemplateObject = (
+    nodes: AdminTemplateNode[],
+    templateTitle: string
+): Record<string, unknown> => {
+    return nodes.reduce<Record<string, unknown>>((acc, node) => {
+        const children = node.children ? nodesToTemplateObject(node.children, templateTitle) : {};
+        const key = node.name === "/" ? `/$${templateTitle}$` : node.name;
+        acc[key] = children;
+        return acc;
+    }, {});
+};
+
+const countTemplateFolders = (template: Record<string, unknown>): number => {
+    const entries = Object.entries(template);
+    if (!entries.length) return 0;
+    return entries.reduce((total, [, value]) => {
+        const childrenObject = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+        return total + 1 + countTemplateFolders(childrenObject as Record<string, unknown>);
+    }, 0);
+};
+
+
 export default function AdminCourseTemplates() {
     const [nodes, setNodes] = useState<AdminTemplateNode[]>([]);
+    const [templates, setTemplates] = useState<CourseTemplatePayload[]>([]);
+    const [selectedTemplateIndex, setSelectedTemplateIndex] = useState<number | null>(null);
+    const [title, setTitle] = useState("");
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [expanded, setExpanded] = useState<Record<string, boolean>>({});
     const [filter, setFilter] = useState("");
     const [isDirty, setIsDirty] = useState(false);
+    const [isEditingNewTemplate, setIsEditingNewTemplate] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [dialogName, setDialogName] = useState("");
+    const [dialogMode, setDialogMode] = useState<"add-child" | "rename">("add-child");
+    const [dialogTargetId, setDialogTargetId] = useState<string | null>(null);
+    const hasRoot = nodes.length > 0;
 
     useEffect(() => {
         document.title = "Course Templates - Ivy League Associates";
@@ -71,16 +136,31 @@ export default function AdminCourseTemplates() {
                 setLoading(true);
                 const data = await fetchCourseTemplates();
                 if (Array.isArray(data) && data.length) {
-                    setNodes(data);
+                    setTemplates(data);
+                    setSelectedTemplateIndex(0);
+                    const initial = data[0];
+                    setTitle(initial.title ?? "");
+                    const template = initial.template && typeof initial.template === "object" ? initial.template : {};
+                    const mapped = templateObjectToNodes(template as Record<string, unknown>, initial.title ?? "");
+                    setNodes(mapped);
+                    setIsEditingNewTemplate(false);
+                    setIsDirty(false);
                 } else {
-                    setNodes([
-                        createNode("Courses", "folder"),
-                        createNode("Templates", "folder")
-                    ]);
+                    setTemplates([]);
+                    setSelectedTemplateIndex(null);
+                    setTitle("");
+                    setNodes([]);
+                    setIsEditingNewTemplate(false);
+                    setIsDirty(false);
                 }
             } catch (error) {
                 console.error("Failed to fetch templates:", error);
-                setNodes([createNode("Courses", "folder")]);
+                setTemplates([]);
+                setSelectedTemplateIndex(null);
+                setTitle("");
+                setNodes([]);
+                setIsEditingNewTemplate(false);
+                setIsDirty(false);
             } finally {
                 setLoading(false);
             }
@@ -88,54 +168,101 @@ export default function AdminCourseTemplates() {
         loadTemplates();
     }, []);
 
-    const handleAddRoot = (type: "folder" | "template") => {
-        const name = window.prompt(`Name the new ${type}`);
-        if (!name) return;
-        setNodes((prev) => [...prev, createNode(name, type)]);
+    const handleCreateTemplate = () => {
+        setSelectedTemplateIndex(null);
+        setTitle("");
+        setNodes([createNode("/")]);
+        setExpanded({});
+        setFilter("");
         setIsDirty(true);
+        setIsEditingNewTemplate(true);
     };
 
-    const handleAddChild = (parentId: string, type: "folder" | "template") => {
-        const name = window.prompt(`Name the new ${type}`);
-        if (!name) return;
-        setNodes((prev) =>
-            updateNode(prev, parentId, (node) => ({
-                ...node,
-                children: [...(node.children ?? []), createNode(name, type)]
-            }))
-        );
-        setExpanded((prev) => ({ ...prev, [parentId]: true }));
-        setIsDirty(true);
+    const openAddChild = (parentId: string) => {
+        if (!isEditingNewTemplate) return;
+        setDialogMode("add-child");
+        setDialogName("");
+        setDialogTargetId(parentId);
+        setDialogOpen(true);
     };
 
-    const handleRename = (nodeId: string, currentName: string) => {
-        const name = window.prompt("Rename item", currentName);
-        if (!name || name === currentName) return;
-        setNodes((prev) => updateNode(prev, nodeId, (node) => ({ ...node, name })));
+    const openRename = (nodeId: string, currentName: string) => {
+        if (!isEditingNewTemplate) return;
+        setDialogMode("rename");
+        setDialogName(currentName);
+        setDialogTargetId(nodeId);
+        setDialogOpen(true);
+    };
+
+    const handleDialogSave = () => {
+        const name = dialogName.trim();
+        if (!name || !dialogTargetId) return;
+        if (dialogMode === "add-child") {
+            setNodes((prev) =>
+                updateNode(prev, dialogTargetId, (node) => ({
+                    ...node,
+                    children: [...(node.children ?? []), createNode(name)]
+                }))
+            );
+            setExpanded((prev) => ({ ...prev, [dialogTargetId]: true }));
+        }
+        if (dialogMode === "rename") {
+            setNodes((prev) => updateNode(prev, dialogTargetId, (node) => ({ ...node, name })));
+        }
         setIsDirty(true);
+        setDialogOpen(false);
     };
 
     const handleDelete = (nodeId: string) => {
+        if (!isEditingNewTemplate) return;
         if (!window.confirm("Delete this item and all children?")) return;
         setNodes((prev) => removeNode(prev, nodeId));
         setIsDirty(true);
     };
 
     const handleMove = (nodeId: string, direction: "up" | "down") => {
+        if (!isEditingNewTemplate) return;
         setNodes((prev) => moveNode(prev, nodeId, direction));
         setIsDirty(true);
     };
 
     const handleSave = async () => {
+        if (!isEditingNewTemplate) return;
+        const trimmedTitle = title.trim();
+        if (!trimmedTitle) return;
+        if (!nodes.length) return;
         try {
             setSaving(true);
-            await saveCourseTemplates(nodes);
+            const payload: CourseTemplatePayload = {
+                title: trimmedTitle,
+                template: nodesToTemplateObject(nodes, trimmedTitle)
+            };
+            await saveCourseTemplates(payload);
+            setTemplates((prev) => {
+                const next = [...prev, payload];
+                setSelectedTemplateIndex(next.length - 1);
+                return next;
+            });
+            setTitle(trimmedTitle);
             setIsDirty(false);
+            setIsEditingNewTemplate(false);
         } catch (error) {
             console.error("Failed to save templates:", error);
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleSelectTemplate = (value: string) => {
+        const index = templates.findIndex((item) => item.title === value);
+        if (index === -1) return;
+        setSelectedTemplateIndex(index);
+        setIsEditingNewTemplate(false);
+        setIsDirty(false);
+        const selected = templates[index];
+        setTitle(selected.title ?? "");
+        const template = selected.template && typeof selected.template === "object" ? selected.template : {};
+        setNodes(templateObjectToNodes(template as Record<string, unknown>, selected.title ?? ""));
     };
 
     const filteredNodes = useMemo(() => {
@@ -158,7 +285,7 @@ export default function AdminCourseTemplates() {
         return filterTree(nodes);
     }, [filter, nodes]);
 
-    const renderNodes = (items: AdminTemplateNode[], level = 0) => {
+    const renderNodes = (items: AdminTemplateNode[]) => {
         if (!items.length) {
             return (
                 <div className="text-sm text-muted-foreground">No templates yet.</div>
@@ -167,52 +294,52 @@ export default function AdminCourseTemplates() {
 
         return items.map((node) => {
             const isExpanded = expanded[node.id] ?? true;
+            const isRoot = node.name === "/";
             return (
-                <div key={node.id} className="space-y-2">
-                    <div
-                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-white dark:bg-gray-900 p-3"
-                        style={{ paddingLeft: level * 16 + 12 }}
-                    >
-                        <div className="flex items-center gap-2">
-                            {node.type === "folder" && (
-                                <button
-                                    type="button"
-                                    className="text-muted-foreground"
-                                    onClick={() => setExpanded((prev) => ({ ...prev, [node.id]: !isExpanded }))}
-                                >
-                                    {isExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-                                </button>
-                            )}
-                            <span className="font-medium">{node.name}</span>
-                            <span className="text-xs uppercase text-muted-foreground">{node.type}</span>
+                <div key={node.id} className="rounded-xl border bg-muted/20 p-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-background p-3">
+                        <div className="flex items-center gap-3">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-100 text-cyan-700">
+                                <Folder className="size-4" />
+                            </span>
+                            <button
+                                type="button"
+                                className="text-muted-foreground"
+                                onClick={() => setExpanded((prev) => ({ ...prev, [node.id]: !isExpanded }))}
+                            >
+                                {isExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                            </button>
+                            <div>
+                                <div className="text-sm font-semibold">{node.name}</div>
+                                <div className="text-[10px] uppercase text-muted-foreground">Folder</div>
+                            </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            {node.type === "folder" && (
-                                <>
-                                    <Button size="sm" variant="outline" onClick={() => handleAddChild(node.id, "folder")}>
-                                        <FolderPlus className="mr-1 size-4" /> Folder
-                                    </Button>
-                                    <Button size="sm" variant="outline" onClick={() => handleAddChild(node.id, "template")}>
-                                        <FilePlus className="mr-1 size-4" /> Template
-                                    </Button>
-                                </>
-                            )}
-                            <Button size="sm" variant="ghost" onClick={() => handleMove(node.id, "up")}>
-                                <ArrowUp className="size-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => handleMove(node.id, "down")}>
-                                <ArrowDown className="size-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => handleRename(node.id, node.name)}>
-                                <Pencil className="size-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => handleDelete(node.id)}>
-                                <Trash2 className="size-4 text-red-600" />
-                            </Button>
-                        </div>
+                        {isEditingNewTemplate ? (
+                            <div className="flex flex-wrap items-center gap-1">
+                                <Button size="sm" variant="outline" onClick={() => openAddChild(node.id)}>
+                                    <FolderPlus className="mr-1 size-4" /> Folder
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => handleMove(node.id, "up")}>
+                                    <ArrowUp className="size-4" />
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => handleMove(node.id, "down")}>
+                                    <ArrowDown className="size-4" />
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => openRename(node.id, node.name)} disabled={isRoot}>
+                                    <Pencil className="size-4" />
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => handleDelete(node.id)} disabled={isRoot}>
+                                    <Trash2 className="size-4 text-red-600" />
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="text-xs text-muted-foreground">Read-only</div>
+                        )}
                     </div>
                     {node.children && node.children.length > 0 && isExpanded && (
-                        <div className="space-y-2">{renderNodes(node.children, level + 1)}</div>
+                        <div className="mt-3 space-y-3 border-l border-dashed border-cyan-200/70 pl-4">
+                            {renderNodes(node.children)}
+                        </div>
                     )}
                 </div>
             );
@@ -227,33 +354,143 @@ export default function AdminCourseTemplates() {
                     <CardDescription>Create custom folder structures for courses and templates.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Button onClick={() => handleAddRoot("folder")}>
-                            <FolderPlus className="mr-2 size-4" /> Add Folder
-                        </Button>
-                        <Button variant="outline" onClick={() => handleAddRoot("template")}>
-                            <FilePlus className="mr-2 size-4" /> Add Template
-                        </Button>
-                        <div className="ml-auto flex items-center gap-2">
-                            <Input
-                                placeholder="Filter templates..."
-                                value={filter}
-                                onChange={(event) => setFilter(event.target.value)}
-                                className="w-56"
-                            />
-                            <Button onClick={handleSave} disabled={!isDirty || saving}>
-                                <Save className="mr-2 size-4" /> Save Changes
-                            </Button>
+                    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div className="text-sm font-medium">Available Templates</div>
+                                <Button size="sm" onClick={handleCreateTemplate} disabled={isEditingNewTemplate}>
+                                    <FolderPlus className="mr-2 size-4" /> Create
+                                </Button>
+                            </div>
+                            {templates.length || isEditingNewTemplate ? (
+                                <div className="space-y-2">
+                                    {templates.map((template) => {
+                                        const isSelected = selectedTemplateIndex !== null
+                                            && templates[selectedTemplateIndex]?.title === template.title;
+                                        const folderCount = countTemplateFolders(
+                                            (template.template ?? {}) as Record<string, unknown>
+                                        );
+                                        return (
+                                            <button
+                                                key={template.title}
+                                                type="button"
+                                                onClick={() => handleSelectTemplate(template.title)}
+                                                className={`w-full rounded-lg border p-3 text-left transition-colors ${
+                                                    isSelected
+                                                        ? "border-cyan-400 bg-cyan-50 text-cyan-900"
+                                                        : "border-border bg-background hover:bg-muted"
+                                                }`}
+                                            >
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <div>
+                                                        <div className="text-sm font-semibold">{template.title}</div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            {folderCount} folder{folderCount === 1 ? "" : "s"}
+                                                        </div>
+                                                    </div>
+                                                    {isSelected && (
+                                                        <span className="rounded-full bg-cyan-100 px-2 py-1 text-[10px] uppercase text-cyan-700">
+                                                            Selected
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                    {isEditingNewTemplate && selectedTemplateIndex === null && (
+                                        <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                                            New template (unsaved)
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                                    No templates available yet.
+                                </div>
+                            )}
+                        </div>
+                        <div className="space-y-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Input
+                                    placeholder="Template title"
+                                    value={title}
+                                    onChange={(event) => {
+                                        if (!isEditingNewTemplate) return;
+                                        setTitle(event.target.value);
+                                        setIsDirty(true);
+                                    }}
+                                    readOnly={!isEditingNewTemplate}
+                                    disabled={!isEditingNewTemplate}
+                                    className="w-64"
+                                />
+                                <Button
+                                    onClick={handleSave}
+                                    disabled={!isEditingNewTemplate || !isDirty || saving || !title.trim()}
+                                >
+                                    <Save className="mr-2 size-4" /> Save Template
+                                </Button>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="text-xs text-muted-foreground">
+                                    {isEditingNewTemplate
+                                        ? "Editing a new template. Save to lock it."
+                                        : "Templates are read-only after creation."}
+                                </div>
+                                <Input
+                                    placeholder="Filter templates..."
+                                    value={filter}
+                                    onChange={(event) => setFilter(event.target.value)}
+                                    className="w-56"
+                                />
+                            </div>
+                            {loading ? (
+                                <div className="text-sm text-muted-foreground">Loading templates...</div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {hasRoot ? renderNodes(filteredNodes) : (
+                                        <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                                            {isEditingNewTemplate
+                                                ? "Add folders to build the template structure."
+                                                : "Select a template to view its folders."}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
-
-                    {loading ? (
-                        <div className="text-sm text-muted-foreground">Loading templates...</div>
-                    ) : (
-                        <div className="space-y-3">{renderNodes(filteredNodes)}</div>
-                    )}
                 </CardContent>
             </Card>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>
+                            {dialogMode === "rename" ? "Rename folder" : "Add folder"}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {dialogMode === "rename"
+                                ? "Update the folder name."
+                                : "Create a new folder inside the selected folder."}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2">
+                        <Label htmlFor="template-folder-name">Name</Label>
+                        <Input
+                            id="template-folder-name"
+                            value={dialogName}
+                            onChange={(event) => setDialogName(event.target.value)}
+                            placeholder="Enter name"
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleDialogSave} disabled={!dialogName.trim()}>
+                            Save
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
