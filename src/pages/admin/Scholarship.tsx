@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
 import { useEffect, useState } from "react";
@@ -157,7 +158,6 @@ export function Scholarship() {
 
 export const ScholarshipCreate = () => {
     const [form, setForm] = useState({
-        email: "",
         scholarships: [
             {
                 paper: "",
@@ -170,12 +170,27 @@ export const ScholarshipCreate = () => {
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
-    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setForm({
-            ...form,
-            email: e.target.value,
-        });
-    };
+    const [criteria, setCriteria] = useState<"reg_no" | "name">("reg_no");
+    const [searchInput, setSearchInput] = useState("");
+    const [searching, setSearching] = useState(false);
+    const [searchResults, setSearchResults] = useState<{
+        blocked: boolean;
+        email: string;
+        firstname: string;
+        lastname: string;
+        profile_pic: string;
+        reg_no: string;
+        title: string;
+    }[]>([]);
+    const [selectedStudent, setSelectedStudent] = useState<{
+        blocked: boolean;
+        email: string;
+        firstname: string;
+        lastname: string;
+        profile_pic: string;
+        reg_no: string;
+        title: string;
+    } | null>(null);
 
     const handleScholarshipChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const updatedScholarships = [...form.scholarships];
@@ -212,6 +227,12 @@ export const ScholarshipCreate = () => {
         setLoading(true);
         setError(null);
 
+        if (!selectedStudent) {
+            setError("Please select a student before creating the scholarship.");
+            setLoading(false);
+            return;
+        }
+
         // Format scholarships for request
         const scholarshipsPayload = form.scholarships.map(s => ({
             paper: s.paper,
@@ -221,7 +242,7 @@ export const ScholarshipCreate = () => {
 
         try {
             await api.post("/award-scholarship", {
-                email: form.email,
+                email: selectedStudent.email,
                 scholarships: scholarshipsPayload,
             });
             navigate("/scholarship");
@@ -236,6 +257,35 @@ export const ScholarshipCreate = () => {
         }
     };
 
+    const handleSearch = async () => {
+        if (!searchInput.trim()) return;
+        setSearching(true);
+        setError(null);
+        try {
+            const response = await api.get("/find-student", {
+                params: {
+                    criteria,
+                    string: searchInput.trim()
+                }
+            });
+            const data = Array.isArray(response.data) ? response.data : [];
+            setSearchResults(data);
+            setSelectedStudent(null);
+
+            if (data.length === 0) {
+                setError("No student found.");
+            }
+        } catch (err) {
+            if (err instanceof AxiosError) {
+                setError(err.response?.data?.message || "Failed to find student.");
+            } else {
+                setError("Failed to find student.");
+            }
+        } finally {
+            setSearching(false);
+        }
+    };
+
     return (
         <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="flex items-center justify-between">
@@ -247,17 +297,70 @@ export const ScholarshipCreate = () => {
                 </div>
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={form.email}
-                    onChange={handleEmailChange}
-                    placeholder="Joh@samp.com"
-                    required
-                />
+            <div className="space-y-3 rounded-lg border p-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold">Find Student</h2>
+                </div>
+                <div className="grid gap-3 md:grid-cols-[200px_1fr_auto] md:items-end">
+                    <div className="space-y-2">
+                        <Label>Search By</Label>
+                        <Select value={criteria} onValueChange={(value) => setCriteria(value as "reg_no" | "name")}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select criteria" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="reg_no">Registration Number</SelectItem>
+                                <SelectItem value="name">Name</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="student-search">Search</Label>
+                        <Input
+                            id="student-search"
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            placeholder={criteria === "reg_no" ? "e.g. ACC-2025-004" : "e.g. Kemi Ogunleye"}
+                        />
+                    </div>
+                    <Button type="button" onClick={handleSearch} disabled={searching}>
+                        {searching ? "Searching..." : "Search"}
+                    </Button>
+                </div>
+                {selectedStudent && (
+                    <div className="rounded-lg border bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                        Selected: {selectedStudent.title} {selectedStudent.firstname} {selectedStudent.lastname} • {selectedStudent.reg_no}
+                    </div>
+                )}
+                {error && (
+                    <div className="text-sm text-red-600">{error}</div>
+                )}
+                {searchResults.length > 0 && (
+                    <div className="space-y-2">
+                        <Label>Results</Label>
+                        <div className="space-y-2">
+                            {searchResults.map((student) => (
+                                <button
+                                    type="button"
+                                    key={student.reg_no}
+                                    onClick={() => setSelectedStudent(student)}
+                                    className={`w-full rounded-lg border px-4 py-3 text-left text-sm transition ${
+                                        selectedStudent?.reg_no === student.reg_no
+                                            ? "border-emerald-500 bg-emerald-50"
+                                            : "border-gray-200 hover:border-cyan-300"
+                                    }`}
+                                >
+                                    <div className="font-medium">
+                                        {student.title} {student.firstname} {student.lastname}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {student.reg_no} • {student.email}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div>
@@ -315,9 +418,6 @@ export const ScholarshipCreate = () => {
                 <Button type="button" variant="outline" onClick={addScholarship}>Add Scholarship</Button>
             </div>
 
-            {error && (
-                <div className="text-sm text-red-600">{error}</div>
-            )}
             <Button type="submit" disabled={loading}>
                 {loading ? "Creating..." : "Create Scholarship"}
             </Button>
@@ -402,6 +502,27 @@ export const ScholarshipEdit: React.FC<ScholarshipEditProps> = ({ sch_code, onSu
         discount: "",
         diet_name: ""
     });
+    const [criteria, setCriteria] = useState<"reg_no" | "name">("reg_no");
+    const [searchInput, setSearchInput] = useState("");
+    const [searching, setSearching] = useState(false);
+    const [searchResults, setSearchResults] = useState<{
+        blocked: boolean;
+        email: string;
+        firstname: string;
+        lastname: string;
+        profile_pic: string;
+        reg_no: string;
+        title: string;
+    }[]>([]);
+    const [selectedStudent, setSelectedStudent] = useState<{
+        blocked: boolean;
+        email: string;
+        firstname: string;
+        lastname: string;
+        profile_pic: string;
+        reg_no: string;
+        title: string;
+    } | null>(null);
     const [id, setId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
@@ -442,6 +563,34 @@ export const ScholarshipEdit: React.FC<ScholarshipEditProps> = ({ sch_code, onSu
         }));
     };
 
+    const handleSearch = async () => {
+        if (!searchInput.trim()) return;
+        setSearching(true);
+        setError(null);
+        try {
+            const response = await api.get("/find-student", {
+                params: {
+                    criteria,
+                    string: searchInput.trim()
+                }
+            });
+            const data = Array.isArray(response.data) ? response.data : [];
+            setSearchResults(data);
+            setSelectedStudent(null);
+            if (data.length === 0) {
+                setError("No student found.");
+            }
+        } catch (err) {
+            if (err instanceof AxiosError) {
+                setError(err.response?.data?.message || "Failed to find student.");
+            } else {
+                setError("Failed to find student.");
+            }
+        } finally {
+            setSearching(false);
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -453,7 +602,7 @@ export const ScholarshipEdit: React.FC<ScholarshipEditProps> = ({ sch_code, onSu
         }
         api.patch(`/edit-scholarship`, {
             id: id,
-            email: form.email,
+            email: selectedStudent?.email ?? form.email,
             paper: form.paper,
             discount: Number(form.discount),
             diet_name: form.diet_name
@@ -471,9 +620,70 @@ export const ScholarshipEdit: React.FC<ScholarshipEditProps> = ({ sch_code, onSu
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <h2 className="text-xl font-bold">Edit Scholarship</h2>
-            <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" value={form.email} onChange={handleChange} placeholder="Email" required />
+            <div className="space-y-3 rounded-lg border p-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Update Student</h3>
+                </div>
+                <div className="grid gap-3 md:grid-cols-[200px_1fr_auto] md:items-end">
+                    <div className="space-y-2">
+                        <Label>Search By</Label>
+                        <Select value={criteria} onValueChange={(value) => setCriteria(value as "reg_no" | "name")}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select criteria" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="reg_no">Registration Number</SelectItem>
+                                <SelectItem value="name">Name</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="student-search-edit">Search</Label>
+                        <Input
+                            id="student-search-edit"
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            placeholder={criteria === "reg_no" ? "e.g. ACC-2025-004" : "e.g. Kemi Ogunleye"}
+                        />
+                    </div>
+                    <Button type="button" onClick={handleSearch} disabled={searching}>
+                        {searching ? "Searching..." : "Search"}
+                    </Button>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                    Current student email: <span className="font-medium text-foreground">{form.email}</span>
+                </div>
+                {selectedStudent && (
+                    <div className="rounded-lg border bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                        Selected: {selectedStudent.title} {selectedStudent.firstname} {selectedStudent.lastname} • {selectedStudent.reg_no}
+                    </div>
+                )}
+                {searchResults.length > 0 && (
+                    <div className="space-y-2">
+                        <Label>Results</Label>
+                        <div className="space-y-2">
+                            {searchResults.map((student) => (
+                                <button
+                                    type="button"
+                                    key={student.reg_no}
+                                    onClick={() => setSelectedStudent(student)}
+                                    className={`w-full rounded-lg border px-4 py-3 text-left text-sm transition ${
+                                        selectedStudent?.reg_no === student.reg_no
+                                            ? "border-emerald-500 bg-emerald-50"
+                                            : "border-gray-200 hover:border-cyan-300"
+                                    }`}
+                                >
+                                    <div className="font-medium">
+                                        {student.title} {student.firstname} {student.lastname}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {student.reg_no} • {student.email}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
             <div className="space-y-2">
                 <Label htmlFor="paper">Paper</Label>

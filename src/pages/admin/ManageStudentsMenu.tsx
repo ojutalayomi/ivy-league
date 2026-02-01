@@ -1,6 +1,23 @@
 import { Link } from "react-router-dom"
 import { useEffect } from "react";
-import { BookOpen, Users, GraduationCap, DollarSign, TrendingUp, TrendingDown, Eye } from "lucide-react";
+import {
+  Award,
+  BookOpen,
+  DollarSign,
+  GraduationCap,
+  Handshake,
+  PencilLine,
+  TrendingDown,
+  TrendingUp,
+  Trash2,
+  UserPlus,
+  Users,
+  Utensils,
+  Wallet
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface MetricData {
     id: string;
@@ -76,95 +93,120 @@ export default function ManageStudentsMenu() {
     {
       title: "View Students",
       description: "See all registered students",
-      path: "/students"
+      path: "/students",
+      icon: Users,
+      tag: "Students"
     },
     {
       title: "Add Student", 
       description: "Create a new student account",
-      path: "/add"
+      path: "/add",
+      icon: UserPlus,
+      tag: "Students"
     },
     {
       title: "Edit Students details",
       description: "Modify existing student accounts", 
-      path: "/edit"
+      path: "/edit",
+      icon: PencilLine,
+      tag: "Students"
     },
     {
       title: "Create Scholarship",
       description: "Create Scholarship for students", 
-      path: "/scholarship/create"
+      path: "/scholarship/create",
+      icon: Award,
+      tag: "Programs"
     },
     {
       title: "Create Sponsorship",
       description: "Create Sponsorship for students", 
-      path: "/sponsorship/create"
+      path: "/sponsorship/create",
+      icon: Handshake,
+      tag: "Programs"
     },
     {
       title: "Delete Students",
       description: "Remove student accounts",
-      path: "/delete"
+      path: "/delete",
+      icon: Trash2,
+      tag: "Students"
     },
     {
       title: "Payments",
       description: "Manage payments",
-      path: "/payments"
+      path: "/payments",
+      icon: Wallet,
+      tag: "Finance"
     },
     {
       title: "Diets",
       description: "Manage diets",
-      path: "/diets"
+      path: "/diets",
+      icon: Utensils,
+      tag: "Programs"
     }
   ]
 
   return (
-    <div className={`h-full`}>
-
-      {/* <div className="flex items-center justify-center gap-2 sm:mx-auto sm:w-full sm:max-w-sm z-10">
-        <span className="bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-3xl drop-shadow-2xl text-transparent animate-gradient-x truncate font-semibold">IVY LEAGUE ASSOCIATES</span>
-      </div> */}
-
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <p className="text-gray-600 mt-1">
-            Today, {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} • Welcome back, Admin
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="space-y-1">
+          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Welcome back</span>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Student Operations</h1>
+          <p className="text-sm text-muted-foreground">
+            {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} • Admin workspace
           </p>
         </div>
-        <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-          <Eye className="h-4 w-4" />
-          View Reports
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link to="/students">View Students</Link>
+          </Button>
+          <Button asChild>
+            <Link to="/payments">Payments</Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link to="/admin">Admin Tools</Link>
+          </Button>
+        </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {metrics.map((metric) => (
           <MetricCard key={metric.id} data={metric} />
         ))}
       </div>
 
-      <div className="text-xl font-bold mb-2">Quick Links</div>
-      <ul className="flex flex-col gap-2 py-2 w-full max-[639px]:px-4 list-none">
-        {menuItems.map((item, index) => (
-          <li key={index} className="w-full px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex flex-col">
-            <h3 className="text-lg font-semibold mb-1">
-              <Link 
-                to={item.path}
-                className="text-cyan-500 hover:text-cyan-600 no-underline"
-              >
-                {item.title}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-xl font-semibold">Quick Actions</h2>
+          <span className="text-sm text-muted-foreground">Jump into daily tasks</span>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link key={item.title} to={item.path}>
+                <Card className="h-full transition-shadow hover:shadow-md">
+                  <CardHeader className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="rounded-full bg-cyan-100 text-cyan-700 p-2">
+                        <Icon className="size-4" />
+                      </div>
+                      <Badge variant="secondary">{item.tag}</Badge>
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">{item.title}</CardTitle>
+                      <CardDescription>{item.description}</CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="text-sm text-cyan-600">Open →</CardContent>
+                </Card>
               </Link>
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-1">{item.description}</p>
-            <Link 
-              to={item.path}
-              className="text-sm text-cyan-500 hover:text-cyan-600"
-            >
-              Visit →
-            </Link>
-          </li>
-        ))}
-      </ul>
+            );
+          })}
+        </div>
+      </div>
     </div>
   )
 }
@@ -174,27 +216,22 @@ const MetricCard: React.FC<{ data: MetricData }> = ({ data }) => {
   const TrendIcon = data.changeType === 'positive' ? TrendingUp : TrendingDown;
   
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-      <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 rounded-xl ${data.iconColor}`}>
-          <Icon className="h-8 w-8 text-white" />
+    <Card className="border border-gray-100 dark:border-gray-800">
+      <CardContent className="pt-6 space-y-4">
+        <div className={`w-fit rounded-xl p-2 ${data.iconColor}`}>
+          <Icon className="h-6 w-6 text-white" />
         </div>
-      </div>
-      
-      <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-        {data.value}
-      </div>
-      
-      <div className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-        {data.title}
-      </div>
-      
-      <div className={`flex items-center gap-1 text-xs font-semibold ${
-        data.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-      }`}>
-        <TrendIcon className="h-3 w-3" />
-        {data.change}
-      </div>
-    </div>
+        <div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">{data.value}</div>
+          <div className="text-sm text-muted-foreground">{data.title}</div>
+        </div>
+        <div className={`flex items-center gap-1 text-xs font-semibold ${
+          data.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
+        }`}>
+          <TrendIcon className="h-3 w-3" />
+          {data.change}
+        </div>
+      </CardContent>
+    </Card>
   );
 };

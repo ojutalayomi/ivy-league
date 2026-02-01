@@ -1,0 +1,113 @@
+{
+    "title": "templateName",
+    "template":  {
+        "root": {
+            "system": {
+                "bin": {},
+                "lib": {
+                    "python": {
+                    "site-packages": {
+                        "numpy": {},
+                        "pandas": {},
+                        "scipy": {}
+                    }
+                    },
+                    "node": {
+                    "modules": {
+                        "express": {},
+                        "react": {
+                        "hooks": {},
+                        "components": {}
+                        }
+                    }
+                    }
+                },
+                "etc": {
+                    "nginx": {
+                        "conf.d": {}
+                    },
+                    "ssh": {}
+                }
+                },
+                "users": {
+                    "alice": {
+                        "desktop": {},
+                        "documents": {
+                        "work": {
+                            "2023": {
+                                "q1": {},
+                                "q2": {},
+                                "q3": {}
+                                },
+                                "2024": {
+                                "q1": {},
+                                "q2": {
+                                    "drafts": {},
+                                    "final": {}
+                                }
+                            }
+                        },
+                        "personal": {
+                            "finance": {
+                            "taxes": {},
+                            "receipts": {}
+                            },
+                            "health": {}
+                        }
+                        },
+                        "media": {
+                        "photos": {
+                            "2019": {},
+                            "2020": {},
+                            "2021": {
+                            "vacation": {
+                                "beach": {},
+                                "mountains": {}
+                            }
+                            }
+                        },
+                        "music": {
+                            "rock": {},
+                            "jazz": {},
+                            "classical": {}
+                        }
+                        }
+                    },
+                    "bob": {
+                        "documents": {
+                        "projects": {
+                            "alpha": {
+                            "design": {},
+                            "implementation": {
+                                "backend": {},
+                                "frontend": {}
+                            }
+                            },
+                            "beta": {}
+                        }
+                        },
+                        "downloads": {}
+                    }
+                    },
+                    "var": {
+                    "log": {
+                        "nginx": {},
+                        "system": {}
+                    },
+                    "tmp": {}
+                    },
+                    "backups": {
+                    "daily": {
+                        "monday": {},
+                        "tuesday": {},
+                        "wednesday": {}
+                    },
+                    "weekly": {},
+                    "monthly": {
+                        "2023": {},
+                        "2024": {}
+                    }
+                    }
+            }
+    }
+}

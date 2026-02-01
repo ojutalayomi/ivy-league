@@ -278,9 +278,14 @@ export const PapersView = ({ paper_code: paperCodeProp }: { paper_code?: string 
     const paper_code = paperCodeProp || params.paper_code
     const [paper, setPaper] = useState<APIPaper | null>(null)
     const [loading, setLoading] = useState(true)
-
     useEffect(() => {
         let isMounted = true;
+        if (!paper_code) {
+            setLoading(false);
+            return () => {
+                isMounted = false;
+            };
+        }
         const fetchPaper = async () => {
             try {
                 setLoading(true);
@@ -544,6 +549,12 @@ export const PapersEdit = (props?: { paper_code?: string }) => {
 
     useEffect(() => {
         let isMounted = true;
+        if (!paper_code) {
+            setLoading(false);
+            return () => {
+                isMounted = false;
+            };
+        }
         const fetchPaper = async () => {
             try {
                 setLoading(true);

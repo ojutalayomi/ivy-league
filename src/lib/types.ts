@@ -17,6 +17,7 @@ export type User = {
 export type UserType = 'all' | 'intensive' | 'standard'
 
 export type Diet = {
+    diet_template: string;
     available: boolean;
     title: string;
     diet_name?: string;
@@ -144,3 +145,42 @@ export const formSchema = z.object({
   
   export type FormSchemaType = z.infer<typeof formSchema>;
   export type FormStep = 1 | 2 | 3;
+
+export type AdminPayment = {
+    id: string;
+    reg_no: string;
+    amount: number;
+    currency: string;
+    paid_at: string;
+    courses: string[];
+    method?: string;
+    status?: string;
+};
+
+export type AdminActivity = {
+    id: string;
+    actor: string;
+    action: string;
+    target?: string;
+    created_at: string;
+    type?: string;
+};
+
+export type AdminResource = {
+    id: string;
+    title: string;
+    course?: string;
+    visibility?: "public" | "private" | "students" | "staff";
+    filename: string;
+    size: number;
+    mime_type: string;
+    url?: string;
+    uploaded_at: string;
+};
+
+export type AdminTemplateNode = {
+    id: string;
+    name: string;
+    type: "folder" | "template";
+    children?: AdminTemplateNode[];
+};

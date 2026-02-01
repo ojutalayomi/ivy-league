@@ -4,9 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
-    "staff": "vite --host --port 5174",
+    "dev": "export VITE_Is_Staff=student && vite --host",
+    "staff": "export VITE_Is_Staff=staff && vite --host --port 5174",
     "build": "tsc -b && vite build",
+    "build:student": "export VITE_Is_Staff=student && tsc -b && vite build",
+    "build:staff": "export VITE_Is_Staff=staff && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -59,7 +61,7 @@
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.15.0",
     "eslint-plugin-react-hooks": "^5.0.0",

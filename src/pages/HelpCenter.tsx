@@ -47,7 +47,7 @@ export default function HelpCenter() {
   );
 
   return (
-    <div className="flex min-h-full flex-1 flex-col items-center justify-center px-6 py-12 lg:px-8 bg-gradient-to-br from-cyan-50 to-white dark:from-gray-900 dark:to-gray-950">
+    <div className="flex min-h-full flex-1 flex-col items-center justify-center px-6 py-12 lg:px-8">
       <Card className="w-full max-w-2xl mx-auto shadow-lg border-none bg-white/90 dark:bg-gray-900/90">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold text-cyan-500">Help Center</CardTitle>

@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation } from "react-router-dom";
+import { fetchCourseTemplates } from "@/lib/admin-api";
 
 
 export const DietPage = ({ all }: { all?: boolean }) => {
@@ -40,6 +41,7 @@ export const DietPage = ({ all }: { all?: boolean }) => {
         (async () => {
             await fetchDiets();
         })();
+        return () => undefined;
     }, []);
 
     const featuredDiets = all ? diets : diets.slice(0, 3); // Show first 3 diets
@@ -108,6 +110,7 @@ export const DietCreate = ({ diet, edit }: { diet?: Diet, edit?: boolean }) => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [availablePapers, setAvailablePapers] = useState<PaperData[]>([]);
+    const [availableTemplates, setAvailableTemplates] = useState<string[]>([]);
     const [loadingPapers, setLoadingPapers] = useState(false);
     const [showPaperDialog, setShowPaperDialog] = useState(false);
     const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -115,6 +118,7 @@ export const DietCreate = ({ diet, edit }: { diet?: Diet, edit?: boolean }) => {
     const [formData, setFormData] = useState<Diet>({
         title: '',
         description: '',
+        diet_template: '',
         exam_month: '',
         exam_year: '',
         diet_ends: '',
@@ -126,19 +130,42 @@ export const DietCreate = ({ diet, edit }: { diet?: Diet, edit?: boolean }) => {
         papers: []
     });
 
+    const toLocalInputValue = (value?: string) => {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        const offset = date.getTimezoneOffset() * 60000;
+        return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+    };
+
+    const toUtcIsoString = (value: string) => {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return value;
+        return date.toISOString();
+    };
+
+    useEffect(()=>{
+        const fetchData = async () => {
+            const data = await fetchCourseTemplates({ purpose: 'diet' });
+            setAvailableTemplates(data?.map(template => template.title) || []);
+        }
+        if (!edit) fetchData();
+    },[edit])
+
     useEffect(() => {
         if (diet) {
             const [year, month] = diet.diet_name?.split('_') || [];
             setFormData({
                 title: diet?.title || '',
                 description: diet?.description || '',
+                diet_template: diet?.diet_template || '',
                 exam_month: month || '',
                 exam_year: year || '',
-                diet_ends: new Date(diet?.diet_ends).toISOString().slice(0, -1) || '',
-                reg_starts: new Date(diet?.reg_starts).toISOString().slice(0, -1) || '',
-                reg_ends: new Date(diet?.reg_ends).toISOString().slice(0, -1) || '',
-                revision_starts: new Date(diet?.revision_starts).toISOString().slice(0, -1) || '',
-                revision_ends: diet?.revision_deadline ? new Date(diet?.revision_deadline).toISOString().slice(0, -1) : new Date(diet?.revision_ends).toISOString().slice(0, -1) || '',
+                diet_ends: toLocalInputValue(diet?.diet_ends),
+                reg_starts: toLocalInputValue(diet?.reg_starts),
+                reg_ends: toLocalInputValue(diet?.reg_ends),
+                revision_starts: toLocalInputValue(diet?.revision_starts),
+                revision_ends: toLocalInputValue(diet?.revision_deadline || diet?.revision_ends),
                 available: true,
                 papers: diet?.papers || []
             });
@@ -148,7 +175,7 @@ export const DietCreate = ({ diet, edit }: { diet?: Diet, edit?: boolean }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!formData.title || !formData.description || !formData.diet_ends || !formData.reg_ends) {
+        if (!formData.title || !formData.description || !formData.diet_ends || !formData.reg_ends || !formData.diet_template) {
             setErrorMessage("Please fill in all required fields");
             setShowErrorDialog(true);
             return;
@@ -156,6 +183,12 @@ export const DietCreate = ({ diet, edit }: { diet?: Diet, edit?: boolean }) => {
 
         if (!formData.papers || formData.papers.length === 0) {
             setErrorMessage("Please select at least one paper for this diet");
+            setShowErrorDialog(true);
+            return;
+        }
+
+        if (!formData.diet_template) {
+            setErrorMessage("Please select a diet template for this diet");
             setShowErrorDialog(true);
             return;
         }
@@ -220,7 +253,15 @@ export const DietCreate = ({ diet, edit }: { diet?: Diet, edit?: boolean }) => {
         try {
             setIsLoading(true);
             formData.diet_name = `${formData.exam_year}_${formData.exam_month}`;
-            const response = edit ? await api.put('/edit-diet', formData) : await api.post('/create-diet', formData);
+            const payload = {
+                ...formData,
+                diet_ends: toUtcIsoString(formData.diet_ends),
+                reg_starts: toUtcIsoString(formData.reg_starts),
+                reg_ends: toUtcIsoString(formData.reg_ends),
+                revision_starts: toUtcIsoString(formData.revision_starts),
+                revision_ends: toUtcIsoString(formData.revision_ends),
+            };
+            const response = edit ? await api.put('/edit-diet', payload) : await api.post('/create-diet', payload);
             
             if (response.status === 200 || response.status === 201) {
                 toast.success(edit ? "Diet updated successfully!" : "Diet created successfully!");
@@ -229,6 +270,7 @@ export const DietCreate = ({ diet, edit }: { diet?: Diet, edit?: boolean }) => {
                 } else {
                     setFormData({
                         title: '',
+                        diet_template: '',
                         exam_month: '',
                         exam_year: '',
                         description: '',
@@ -629,6 +671,28 @@ export const DietCreate = ({ diet, edit }: { diet?: Diet, edit?: boolean }) => {
                             )}
                         </div>
 
+                        {/** Diet Template Selection Section */}
+                        {!edit && (
+                            <div className="space-y-4">
+                                <Label>Diet Template *</Label>
+                                <Select
+                                    value={formData.diet_template}
+                                    onValueChange={(value) => setFormData((prev) => ({ ...prev, diet_template: value }))}
+                                >
+                                    <SelectTrigger id="diet_template" name="diet_template" className="max-w-48">
+                                        <SelectValue placeholder="Select template" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableTemplates.map((template) => (
+                                            <SelectItem key={template} value={template}>
+                                                {template}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
                         <div className="flex gap-4">
                             <Button type="submit" disabled={isLoading} className="flex-1">
                                 {isLoading ? (
@@ -645,6 +709,7 @@ export const DietCreate = ({ diet, edit }: { diet?: Diet, edit?: boolean }) => {
                                 variant="outline" 
                                 onClick={() => setFormData({
                                     title: '',
+                                    diet_template: '',
                                     exam_month: '',
                                     exam_year: '',
                                     description: '',
@@ -763,6 +828,10 @@ export const DietCard = ({index, diet, papers}: {index: number | string, diet: D
                     <div className="flex flex-col">
                         <span className="text-muted-foreground">Diet Ends</span>
                         <span className="font-semibold">{new Date(diet.diet_ends).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-muted-foreground">Registration Starts</span>
+                        <span className="font-semibold">{new Date(diet.reg_starts).toLocaleDateString()}</span>
                     </div>
                     <div className="flex flex-col">
                         <span className="text-muted-foreground">Registration Ends</span>
