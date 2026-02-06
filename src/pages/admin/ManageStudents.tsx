@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { Award, BookOpen, ChevronLeft, ChevronRight, GraduationCap, Handshake, Menu, Settings, Shield, Text, Users, Utensils, Wallet } from 'lucide-react';
+import { Award, BookOpen, ChevronLeft, ChevronRight, GraduationCap, Handshake, Menu, MessageSquare, Settings, Shield, Text, Users, Utensils, Wallet } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { forwardRef, useCallback, useEffect, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -19,6 +19,7 @@ import { SponsorshipRoutesWithModals } from './Sponsorsip';
 import { AdminRoutesWithModals } from './Admin';
 import AdminComplete from './AdminComplete';
 import SettingsPage from './Settings';
+import { ReviewsPage } from './ReviewsPage';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -117,6 +118,11 @@ export default function ManageStudents() {
             title: "Payments",
             icon: <Wallet className={`size-4 ${isFull && 'mr-1'}`} />,
             description: "View payment details"
+        },
+        {
+            title: "Reviews",
+            icon: <MessageSquare className={`size-4 ${isFull && 'mr-1'}`} />,
+            description: "View paper reviews"
         },
         {
             title: "Admin",
@@ -332,6 +338,11 @@ export default function ManageStudents() {
                                 <Route path="payments" element={
                                     <TabsContent value="payments">
                                         <PaymentsPage />
+                                    </TabsContent>
+                                } />
+                                <Route path="reviews" element={
+                                    <TabsContent value="reviews">
+                                        <ReviewsPage />
                                     </TabsContent>
                                 } />
                                 <Route path="settings" element={

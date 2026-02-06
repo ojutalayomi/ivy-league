@@ -58,8 +58,7 @@ export default function SignIn() {
 
       if (response.status >= 200 && response.status < 300) {
         const data = response.data;
-        const correctPermission = CheckForIncorrectPermission(data, toast, Mode, dispatch, navigate)
-        console.log(correctPermission)
+        const correctPermission = CheckForIncorrectPermission(data, toast, Mode, dispatch, navigate);
         if (correctPermission === 1) return;
         localStorage.setItem('ivy_user_token', JSON.stringify({token: data.email, timestamp: Date.now()}))
         dispatch(setUser({...data, signed_in: true}))
@@ -97,7 +96,7 @@ export default function SignIn() {
   return (
     <AccountsLayout>
       <div className="space-y-2">
-        <div className="text-2xl/9 font-bold tracking-tight text-center text-cyan-500">Sign in to your account</div>
+        <div className="text-2xl/9 font-bold tracking-tight text-center text-cyan-500">Sign in to your {Mode} account</div>
         <div className="text-center text-muted-foreground">Enter your credentials to access your account</div>
       </div>
       <form

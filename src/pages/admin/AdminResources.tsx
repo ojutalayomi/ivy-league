@@ -219,7 +219,11 @@ export default function AdminResources() {
     const handlePathSelect = useCallback((path: string) => {
         if (pathDialogFor === "video") setVideoPath(path);
         if (pathDialogFor === "file") setFilePath(path);
-        if (pathDialogFor === "test") setTestPath(path);
+        if (pathDialogFor === "test") {
+            setTestPath(path);
+            setTestPaper(path.split("/")[1].split(" ")[0]);
+            setTestDiet(path.split("/")[1].split(" ")[1]);
+        }
         setPathDialogFor(null);
     }, [pathDialogFor]);
 
@@ -239,9 +243,9 @@ export default function AdminResources() {
         }
     };
 
-    useEffect(() => {
-        loadResources();
-    }, []);
+    // useEffect(() => {
+    //     loadResources();
+    // }, []);
 
     const handleVideoUpload = async () => {
         if (!videoLink || !videoPath || !videoName) {
@@ -316,7 +320,7 @@ export default function AdminResources() {
             formData.append("gateway", String(testGateway));
             formData.append("high_score", testHighScore);
             formData.append("pass", testPassMark);
-            formData.append("duration", testDuration);
+            formData.append("duration", String(Math.round(Number(testDuration) * 60)));
             await api.post("/upload-mcq", formData, {
                 headers: { "Content-Type": "multipart/form-data" }
             });
@@ -482,7 +486,11 @@ export default function AdminResources() {
                                             <FolderOpen className="mr-1 size-4" /> Select
                                         </Button>
                                         {testPath && (
-                                            <Button type="button" variant="ghost" size="sm" onClick={() => setTestPath("")}>
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => {
+                                                setTestPath("");
+                                                setTestPaper("");
+                                                setTestDiet("");
+                                            }}>
                                                 Clear
                                             </Button>
                                         )}
@@ -491,19 +499,19 @@ export default function AdminResources() {
                                 <div className="space-y-2">
                                     <Label htmlFor="test-paper">Paper</Label>
                                     <Input
+                                        readOnly
                                         id="test-paper"
                                         placeholder="e.g. FA"
                                         value={testPaper}
-                                        onChange={(event) => setTestPaper(event.target.value)}
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="test-diet">Diet</Label>
                                     <Input
+                                        readOnly
                                         id="test-diet"
                                         placeholder="e.g. 2025_December"
                                         value={testDiet}
-                                        onChange={(event) => setTestDiet(event.target.value)}
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -525,20 +533,23 @@ export default function AdminResources() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="test-duration">Duration (seconds)</Label>
+                                    <Label htmlFor="test-duration">Duration (minutes)</Label>
                                     <Input
                                         id="test-duration"
                                         type="number"
+                                        min={1}
+                                        placeholder="e.g. 30"
                                         value={testDuration}
-                                        onChange={(event) => setTestDuration(event.target.value)}
+                                        onChange={(e) => setTestDuration(e.target.value)}
                                     />
+                                    <p className="text-xs text-muted-foreground">How long the student has to complete the test</p>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="test-file">Test File (CSV/XLSX)</Label>
+                                    <Label htmlFor="test-file">Test File (XLSX)</Label>
                                     <Input
                                         id="test-file"
                                         type="file"
-                                        accept=".csv,.xlsx"
+                                        accept=".xlsx"
                                         onChange={(event) => setTestFile(event.target.files?.[0] ?? null)}
                                     />
                                 </div>
@@ -563,7 +574,7 @@ export default function AdminResources() {
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card className="hidden">
                 <CardHeader>
                     <CardTitle>Uploaded Resources</CardTitle>
                     <CardDescription>Manage existing resources and downloads.</CardDescription>
