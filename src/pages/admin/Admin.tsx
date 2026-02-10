@@ -19,7 +19,7 @@ export function AdminRoutesWithModals() {
                 <Route path="course-templates" element={<AdminCourseTemplates />} />
                 <Route path="resources" element={<AdminResources />} />
                 <Route path="activities" element={<AdminActivities />} />
-                <Route path="*" element={<Error404Page title="Admin" />} />
+                <Route path="*" element={<Error404Page title="Admin page" />} />
             </Routes>
         </>
     );

@@ -3,10 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { api } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { RootState } from "@/redux/store";
 
 const MCQ_RESERVED_KEYS = ["Answer", "No", "Question"];
@@ -38,6 +39,12 @@ type McqResponse = {
   questions: Record<string, McqQuestion>;
 };
 
+type SubmitMcqResponse = {
+  [questionNo: string]: [string, string] | number | string;
+  score: number;
+  status: string;
+};
+
 function getApiPathFromPathname(pathname: string): string | null {
   const raw = pathname.replace(/^\/test\/?/, "").trim();
   if (!raw) return null;
@@ -64,6 +71,9 @@ export default function Test() {
   const [submitting, setSubmitting] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
   const [submitDueToTime, setSubmitDueToTime] = useState(false);
+  const [questionResults, setQuestionResults] = useState<Record<string, [string, string]>>({});
+  const [testStatus, setTestStatus] = useState<string | null>(null);
+  const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -128,15 +138,19 @@ export default function Test() {
     let cancelled = false;
     setSubmitting(true);
     api
-      .post("/submit-mcq", payload)
-      .then(() => {
+      .post<SubmitMcqResponse>("/submit-mcq", payload)
+      .then((res) => {
         if (cancelled) return;
-        const entries = Object.entries(questions);
-        let correct = 0;
-        entries.forEach(([no, q]) => {
-          if (answers[no] === q.Answer) correct += 1;
+        const response = res.data;
+        const results: Record<string, [string, string]> = {};
+        Object.entries(response).forEach(([key, value]) => {
+          if (key !== "score" && key !== "status" && Array.isArray(value) && value.length === 2) {
+            results[key] = value as [string, string];
+          }
         });
-        setScore(correct);
+        setQuestionResults(results);
+        setScore(response.score ?? 0);
+        setTestStatus(response.status ?? null);
         setSubmitted(true);
         setSubmitDueToTime(false);
       })
@@ -185,19 +199,25 @@ export default function Test() {
     };
   }, [metadata?.duration, submitted]);
 
-  const handleSubmit = useCallback(() => {
+  const doSubmit = useCallback(() => {
     const entries = Object.entries(questions);
     if (entries.length === 0 || !metadata || !apiPath) return;
+    setConfirmSubmitOpen(false);
     setSubmitting(true);
     const payload = buildPayload(metadata, questions, answers);
     api
-      .post("/submit-mcq", payload)
-      .then(() => {
-        let correct = 0;
-        entries.forEach(([no, q]) => {
-          if (answers[no] === q.Answer) correct += 1;
+      .post<SubmitMcqResponse>("/submit-mcq", payload)
+      .then((res) => {
+        const response = res.data;
+        const results: Record<string, [string, string]> = {};
+        Object.entries(response).forEach(([key, value]) => {
+          if (key !== "score" && key !== "status" && Array.isArray(value) && value.length === 2) {
+            results[key] = value as [string, string];
+          }
         });
-        setScore(correct);
+        setQuestionResults(results);
+        setScore(response.score ?? 0);
+        setTestStatus(response.status ?? null);
         setSubmitted(true);
       })
       .catch(() => {
@@ -290,7 +310,7 @@ export default function Test() {
         </div>
         <div className="flex flex-row gap-4 items-start">
             <div className="space-y-6">
-                <header className="flex flex-wrap justify-between items-start gap-4 border-b pb-4">
+                <header className="flex flex-wrap justify-between items-start gap-4 border-b pb-4 sticky top-0 bg-white/90 pt-1">
                     <div className="space-y-1">
                         <h1 className="text-xl font-semibold">{metadata.test_name}</h1>
                         <p className="text-sm text-muted-foreground">
@@ -308,20 +328,86 @@ export default function Test() {
                 </header>
 
                 {submitted ? (
-                    <Card>
-                    <CardContent className="pt-6">
-                        <p className="font-medium">
-                        You scored {score ?? 0} out of {metadata.high_score}.
-                        </p>
-                        <Button
-                        variant="outline"
-                        className="mt-4"
-                        onClick={() => navigate("/my-study")}
-                        >
-                        Back to My Study
-                        </Button>
-                    </CardContent>
-                    </Card>
+                    <div className="space-y-6">
+                        <Card>
+                            <CardContent className="pt-6">
+                                <div className="space-y-2">
+                                    <p className="font-medium text-lg">
+                                        You scored {score ?? 0} out of {metadata.high_score}.
+                                    </p>
+                                    {testStatus && (
+                                        <p className={`text-sm font-medium ${
+                                            testStatus === "passed" ? "text-green-600" : "text-destructive"
+                                        }`}>
+                                            Status: {testStatus.charAt(0).toUpperCase() + testStatus.slice(1)}
+                                        </p>
+                                    )}
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    className="mt-4"
+                                    onClick={() => navigate("/my-study")}
+                                >
+                                    Back to My Study
+                                </Button>
+                            </CardContent>
+                        </Card>
+                        <div className="space-y-4">
+                            <h2 className="text-lg font-semibold">Review Answers</h2>
+                            {questionList.map(([no, q]) => {
+                                const result = questionResults[String(q.No)];
+                                const userAnswer = result?.[0] ?? "";
+                                const correctAnswer = result?.[1] ?? "";
+                                const isCorrect = userAnswer === correctAnswer && userAnswer !== "";
+                                const optionKeys = getOptionKeys(q);
+                                return (
+                                    <Card key={no} className={isCorrect ? "border-green-500" : "border-destructive"}>
+                                        <CardContent className="pt-6 space-y-4">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <p className="font-medium flex-1">
+                                                    {q.No}. {q.Question}
+                                                </p>
+                                                {isCorrect ? (
+                                                    <div className="flex items-center gap-1 text-green-600 font-medium shrink-0">
+                                                        <CheckCircle className="w-4 h-4" />
+                                                        Correct
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-1 text-destructive font-medium shrink-0">
+                                                        <XCircle className="w-4 h-4" />
+                                                        Incorrect
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="space-y-2">
+                                                {optionKeys.map((key) => {
+                                                    const isSelected = userAnswer === key;
+                                                    const isCorrectOption = correctAnswer === key;
+                                                    let optionClass = "rounded-md border px-3 py-2 text-sm ";
+                                                    if (isSelected && isCorrectOption) {
+                                                        optionClass += "border-green-500 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 font-medium";
+                                                    } else if (isSelected) {
+                                                        optionClass += "border-destructive bg-destructive/10 text-destructive font-medium";
+                                                    } else if (isCorrectOption) {
+                                                        optionClass += "border-green-500 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 font-medium";
+                                                    } else {
+                                                        optionClass += "border-muted bg-muted/30 text-muted-foreground";
+                                                    }
+                                                    return (
+                                                        <div key={key} className={optionClass}>
+                                                            <span className="font-medium">{key}.</span> {String(q[key])}
+                                                            {isSelected && <span className="ml-2 text-xs">(your answer)</span>}
+                                                            {isCorrectOption && !isSelected && <span className="ml-2 text-xs text-green-600 dark:text-green-400">(correct)</span>}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    </div>
                 ) : (
                     <>
                         <div className="space-y-6">
@@ -370,9 +456,27 @@ export default function Test() {
                                 );
                             })}
                         </div>
-                        <Button onClick={handleSubmit} className="w-full" disabled={submitting}>
+                        <Button onClick={() => setConfirmSubmitOpen(true)} className="w-full" disabled={submitting}>
                             {submitting ? "Submitting…" : "Submit"}
                         </Button>
+                        <Dialog open={confirmSubmitOpen} onOpenChange={setConfirmSubmitOpen}>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Submit test?</DialogTitle>
+                                </DialogHeader>
+                                <p className="text-sm text-muted-foreground">
+                                    Are you sure you want to submit? You will not be able to change your answers after submitting.
+                                </p>
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setConfirmSubmitOpen(false)}>
+                                        Cancel
+                                    </Button>
+                                    <Button onClick={doSubmit}>
+                                        Yes, submit
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </>
                 )}
             </div>

@@ -558,7 +558,6 @@ export const PapersEdit = (props?: { paper_code?: string }) => {
         const fetchPaper = async () => {
             try {
                 setLoading(true);
-                console.log("Paper Code: ",paper_code)
                 const response = await api.get(`/view-paper?paper_code=${paper_code}`);
                 if (response.status !== 200) {
                     throw new Error(`Error: ${response.status} ${response.statusText}`);

@@ -47,6 +47,42 @@ type CoursePageItems = {
   path: string;
 }[]
 
+const HomePageItems = [
+  {
+    title: "Papers", 
+    description: "Visit the papers page",
+    path: "/papers"
+  },
+  {
+    title: "Payments",
+    description: "Visit the payments page",
+    path: "/payments"
+  }
+]
+
+const CoursePageItems = [
+  {
+    title: "Register",
+    description: "Register for a paper",
+    path: "/papers/register"
+  },
+  {
+    title: "My Papers", 
+    description: "View your registered papers",
+    path: "/papers/view"
+  },
+  {
+    title: "View",
+    description: "View available papers",
+    path: "/papers/available"
+  },
+  {
+    title: "Print Papers",
+    description: "Print paper materials",
+    path: "/papers/print"
+  }
+]
+
 const Av = forwardRef<HTMLSpanElement, AvProps>(({ active, className, children }, ref) => (
   <span 
   ref={ref} 
@@ -57,348 +93,314 @@ const Av = forwardRef<HTMLSpanElement, AvProps>(({ active, className, children }
 ))
 
 export default function Dashboard() {
-    const location = useLocation()
-    const navigate = useNavigate()
-    const isMyStudyRoute = location.pathname.includes('/my-study')
-    const type = isMyStudyRoute ? 'my-study' : location.pathname.split('/').pop()
-    const [isFull, setIsFull] = useState(false)
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-    const user = useSelector((state: RootState) => state.user)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const isMyStudyRoute = location.pathname.includes('/my-study')
+  const type = isMyStudyRoute ? 'my-study' : location.pathname.split('/').pop()
+  const [isFull, setIsFull] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const user = useSelector((state: RootState) => state.user)
+  
+  useEffect(() => {
+    document.title = "Students - Ivy League Associates";
+  }, []);
+  
 
-    const HomePageItems = [
+  const toggleSidebar = useCallback((value: boolean) => {
+    localStorage.setItem('sidebar', JSON.stringify(value))
+    setIsFull(value)
+  }, [])
+
+  const toggleMobileSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen)
+  }
+
+  useEffect(() => {
+    const sidebar = localStorage.getItem('sidebar')
+    if (sidebar) toggleSidebar(JSON.parse(sidebar))
+  })
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
+        (event.metaKey || event.ctrlKey)
+      ) {
+        event.preventDefault()
+        toggleSidebar(!isFull)
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isFull, toggleSidebar])
+
+  const sideItems = useMemo(() => [
+    {
+      title: "Home",
+      icon: <Home className={`size-4 ${isFull && 'mr-1'}`} />,
+      path: "/home"
+    },
     {
       title: "My Study",
-      description: "Visit the my study page",
-      path: "/my-study"
+      icon: <BookOpen className={`size-4 ${isFull && 'mr-1'}`} />,
+      path: "/my-study",
+      description: "Visit the my study page"
     },
     {
       title: "Papers", 
-      description: "Visit the papers page",
-      path: "/papers"
+      icon: <BookOpen className={`size-4 ${isFull && 'mr-1'}`} />,
+      path: "/papers",
+      description: "Visit the papers page"
     },
     {
-      title: "Payments",
-      description: "Visit the payments page",
-      path: "/payments"
+      title: "Payments", 
+      icon: <CreditCard className={`size-4 ${isFull && 'mr-1'}`} />,
+      path: "/payments",
+      description: "Visit the payments page"
     },
-    // {
-    //   title: "Additional Info",
-    //   description: "Visit the additional info page",
-    //   path: "/accounts/additional-info"
-    // }
-    ]
-
-    const CoursePageItems = [
-      {
-        title: "Register",
-        description: "Register for a paper",
-        path: "/papers/register"
-      },
-      {
-        title: "My Papers", 
-        description: "View your registered papers",
-        path: "/papers/view"
-      },
-      {
-        title: "View",
-        description: "View available papers",
-        path: "/papers/available"
-      },
-      {
-        title: "Print Papers",
-        description: "Print paper materials",
-        path: "/papers/print"
-      }
-    ]
-    
-    useEffect(() => {
-      document.title = "Students - Ivy League Associates";
-    }, []);
-    
-
-    const toggleSidebar = useCallback((value: boolean) => {
-      localStorage.setItem('sidebar', JSON.stringify(value))
-      setIsFull(value)
-    }, [])
-
-    const toggleMobileSidebar = () => {
-      setIsSidebarOpen(!isSidebarOpen)
+    {
+      title: "Profile",
+      icon: <User className={`size-4 ${isFull && 'mr-1'}`} />,
+      path: "/profile",
+      description: "Visit the profile page"
+    },
+    {
+      title: "Resources",
+      icon: <Library className={`size-4 ${isFull && 'mr-1'}`} />,
+      path: "/resources",
+      description: "Visit the resources page"
     }
+  ], [isFull])
+  
+  return (
+    <div className='flex'>
 
-    useEffect(() => {
-      const sidebar = localStorage.getItem('sidebar')
-      if (sidebar) toggleSidebar(JSON.parse(sidebar))
-    })
+      {/* Sidebar */}
+      <div
+        className={`flex flex-col gap-2 m-2 h-[calc(100vh-16px)] overflow-y-auto fixed sm:relative sm:flex sm:translate-x-0 transition-transform duration-200 ease-in-out z-40 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-[200%]'
+        }`}
+        onClick={toggleMobileSidebar}
+      >
 
-    useEffect(() => {
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (
-          event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
-          (event.metaKey || event.ctrlKey)
-        ) {
-          event.preventDefault()
-          toggleSidebar(!isFull)
-        }
-      }
-
-      window.addEventListener("keydown", handleKeyDown)
-      return () => window.removeEventListener("keydown", handleKeyDown)
-    }, [isFull, toggleSidebar])
-
-    const sideItems = [
-      {
-        title: "Home",
-        icon: <Home className={`size-4 ${isFull && 'mr-1'}`} />
-      },
-      {
-        title: "Papers", 
-        icon: <BookOpen className={`size-4 ${isFull && 'mr-1'}`} />
-      },
-      {
-        title: "Payments", 
-        icon: <CreditCard className={`size-4 ${isFull && 'mr-1'}`} />
-      },
-      // {
-      //   title: "Assignments",
-      //   icon: <EditIcon className={`size-4 ${isFull && 'mr-1'}`} />
-      // },
-      {
-        title: "Profile",
-        icon: <User className={`size-4 ${isFull && 'mr-1'}`} />
-      },
-      {
-        title: "Resources",
-        icon: <Library className={`size-4 ${isFull && 'mr-1'}`} />
-      }
-    ]
-    
-    return (
-        <div className='flex'>
-
-            {/* Sidebar */}
-            <div
-                className={`flex flex-col gap-2 m-2 h-[calc(100vh-16px)] overflow-y-auto fixed sm:relative sm:flex sm:translate-x-0 transition-transform duration-200 ease-in-out z-40 ${
-                  isSidebarOpen ? 'translate-x-0' : '-translate-x-[200%]'
-                }`}
-                onClick={toggleMobileSidebar}
-            >
-
-                <Link to="/menu">
-                  <div className={`flex flex-col items-center space-y-1.5 ${isFull ? 'p-4' : 'p-3'} rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow`}>
-                      {isFull ? 
-                        <div className={`font-semibold leading-none tracking-tight ${!isFull && 'overflow-hidden'}`}>
-                          Ivy League Associates
-                        </div> : 
-                        <GraduationCap className='size-6'/>
-                      }
-                  </div>
-                </Link>
-
-                <div className={`flex flex-col flex-1 items-center gap-2 ${isFull ? 'p-2 rounded-3xl' : 'px-1 py-2 rounded-[2rem]'} text-sm border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground relative shadow`}>
-
-                    
-                    {sideItems && sideItems.map(item => (
-                      <div 
-                      key={item.title} 
-                      className={`flex ${type === item.title.toLowerCase() && isFull && 'bg-gray-200 dark:bg-gray-800'} ${isFull ? 'justify-start hover:bg-gray-200 dark:hover:bg-gray-800 p-2' : 'justify-center'} p-1 overflow-hidden rounded-full cursor-pointer relative w-full transition-colors ${(item.title === 'Papers' && !user.email_verified) || (item.title === 'Payments' && user.user_status === 'signee') ? 'opacity-50 pointer-events-none' : ''}`}
-                      onClick={() => {
-                        if (item.title === 'Papers') {
-                          if (!user.email_verified) {
-                            return;
-                          }
-                        }
-                        navigate('/' + item.title.toLowerCase());
-                      }}
-                      >
-                        <TooltipProvider>
-                          <Tooltip>
-                              <TooltipTrigger>
-                                {isFull ? item.icon : <Av active={type === item.title.toLowerCase()}>{item.icon}</Av>}
-                              </TooltipTrigger>
-                              <TooltipContent side='right' sideOffset={8}>
-                                Visit {item.title}
-                              </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        {isFull && <span className="ml-2">{item.title}</span>}
-                      </div>
-                    ))}
-
-                    <div 
-                    className={`p-2 rounded-full cursor-pointer flex items-center 
-                      ${type === 'settings' && (isFull ? 'bg-gray-200 dark:bg-gray-800' : '!border-cyan-500')} 
-                      ${isFull ? 'hover:bg-gray-200 dark:hover:bg-gray-800 w-full justify-start' : 'justify-center group hover:!border-cyan-500 border border-slate-200 dark:border-slate-700'} 
-                      ${type === "settings" && "border-cyan-500"} 
-                      space-x-3`
-                    }
-                    onClick={() => navigate('/settings')}
-                    >
-                      <Settings className={`w-5 h-5 group-hover:text-cyan-500 ${type === 'settings' && !isFull && '!text-cyan-500'} ${type === "settings" && "text-cyan-500"}`} />
-                      {isFull && <span className='dark:text-white'>Settings</span>}
-                    </div>
-
-                    <div className="absolute bottom-3 space-y-2">
-                      <ModeToggle align='start' className='rounded-full hover:bg-gray-200 dark:hover:bg-gray-800' label={isFull}/>
-
-                      <div className='p-2 rounded-full cursor-pointer flex items-center justify-center border hover:bg-gray-200 dark:hover:bg-gray-800' onClick={(e) => {e.stopPropagation();toggleSidebar(!isFull)}}>
-                        {isFull && "Collapse"}
-                        {isFull ? <ChevronLeft className="cursor-pointer size-4 ml-1"  /> : <ChevronRight className="cursor-pointer size-4 ml-1" />}
-                      </div>
-                    </div>
-                </div>
-                
-                <div className="flex flex-col items-center space-y-1.5 p-4 rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow">
-                  <div className="font-semibold leading-none tracking-tight text-xs text-gray-400">© {isFull && 'Copyright ' + new Date().getFullYear()}</div>
-                </div>
+          <Link to="/menu">
+            <div className={`flex flex-col items-center space-y-1.5 ${isFull ? 'p-4' : 'p-3'} rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow`}>
+                {isFull ? 
+                  <div className={`font-semibold leading-none tracking-tight ${!isFull && 'overflow-hidden'}`}>
+                    Ivy League Associates
+                  </div> : 
+                  <GraduationCap className='size-6'/>
+                }
             </div>
+          </Link>
 
-            {/* Overlay for Mobile */}
-            {isSidebarOpen && (
-              <div
-                className="sm:hidden fixed inset-0 bg-black/50 backdrop-blur-lg z-30"
-                onClick={toggleMobileSidebar}
-              />
-            )}
+          <div className={`flex flex-col flex-1 items-center gap-2 ${isFull ? 'p-2 rounded-3xl' : 'px-1 py-2 rounded-[2rem]'} text-sm border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground relative shadow`}>
 
-            {/* Main Content */}
-            <div className="flex flex-1 flex-col items-start gap-2 m-2 h-[calc(100vh-16px)] overflow-y-auto">
-              <div className="flex flex-row items-center gap-2 max-w-[calc(100vw-16px)]">
-                {/* Mobile Sidebar Toggle Button */}
-                <div
-                  onClick={toggleMobileSidebar}
-                  className="sm:hidden p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+              
+              {sideItems && sideItems.map(item => (
+                <div 
+                key={item.title} 
+                className={`flex ${type === item.title.toLowerCase() && isFull && 'bg-gray-200 dark:bg-gray-800'} ${isFull ? 'justify-start hover:bg-gray-200 dark:hover:bg-gray-800 p-2' : 'justify-center'} p-1 overflow-hidden rounded-full cursor-pointer relative w-full transition-colors ${(item.title === 'Papers' && !user.email_verified) || (item.title === 'Payments' && user.user_status === 'signee') ? 'opacity-50 pointer-events-none' : ''}`}
+                onClick={() => {
+                  if (item.title === 'Papers') {
+                    if (!user.email_verified) {
+                      return;
+                    }
+                  }
+                  navigate(item.path);
+                }}
                 >
-                  <Menu className="size-6" />
+                  <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger>
+                          {isFull ? item.icon : <Av active={type === item.title.toLowerCase()}>{item.icon}</Av>}
+                        </TooltipTrigger>
+                        <TooltipContent side='right' sideOffset={8}>
+                          {item.description}
+                        </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  {isFull && <span className="ml-2">{item.title}</span>}
                 </div>
-                <div className="flex flex-col items-center space-y-1.5 p-3 max-w-[calc(100vw-68px)] rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow">
-                  <BreadcrumbNav/>
+              ))}
+
+              <div 
+              className={`p-2 rounded-full cursor-pointer flex items-center 
+                ${type === 'settings' && (isFull ? 'bg-gray-200 dark:bg-gray-800' : '!border-cyan-500')} 
+                ${isFull ? 'hover:bg-gray-200 dark:hover:bg-gray-800 w-full justify-start' : 'justify-center group hover:!border-cyan-500 border border-slate-200 dark:border-slate-700'} 
+                ${type === "settings" && "border-cyan-500"} 
+                space-x-3`
+              }
+              onClick={() => navigate('/settings')}
+              >
+                <Settings className={`w-5 h-5 group-hover:text-cyan-500 ${type === 'settings' && !isFull && '!text-cyan-500'} ${type === "settings" && "text-cyan-500"}`} />
+                {isFull && <span className='dark:text-white'>Settings</span>}
+              </div>
+
+              <div className="absolute bottom-3 space-y-2">
+                <ModeToggle align='start' className='rounded-full hover:bg-gray-200 dark:hover:bg-gray-800' label={isFull}/>
+
+                <div className='p-2 rounded-full cursor-pointer flex items-center justify-center border hover:bg-gray-200 dark:hover:bg-gray-800' onClick={(e) => {e.stopPropagation();toggleSidebar(!isFull)}}>
+                  {isFull && "Collapse"}
+                  {isFull ? <ChevronLeft className="cursor-pointer size-4 ml-1"  /> : <ChevronRight className="cursor-pointer size-4 ml-1" />}
                 </div>
               </div>
-              
-              <Card className="p-2 flex-1 overflow-y-auto w-full">
-                <CardContent className='px-2 py-2 space-y-4'>
+          </div>
+          
+          <div className="flex flex-col items-center space-y-1.5 p-4 rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow">
+            <div className="font-semibold leading-none tracking-tight text-xs text-gray-400">© {isFull && 'Copyright ' + new Date().getFullYear()}</div>
+          </div>
+      </div>
 
-                  {!location.pathname.includes('profile') && (
-                    <div className="block space-y-4 p-6 max-[639px]:text-center hover:border-cyan-500 bg-cyan-100/30 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-cyan-100/30 transition-all duration-200 rounded-xl shadow-sm hover:shadow-md border">
-                      <div className="flex flex-col sm:flex-row items-center gap-4">
-                        {user.profile_pic && (
-                          <div className="w-24 h-24 rounded-full overflow-hidden">
-                            <img src={user.profile_pic} alt="Profile" className="w-full h-full object-cover" />
-                          </div>
-                        )}
-                        <div className="space-y-2">
-                          <h5 className="text-xl font-bold tracking-tight dark:text-white">{user.firstname} {user.lastname}</h5>
-                          <p className="font-normal dark:text-white">Registration Number: <b>{user.reg_no || 'N/A'}</b></p>
-                          <p className="font-normal dark:text-white flex items-center gap-2">
-                            Email: <b>{user.email || 'N/A'}</b> 
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  {user.email_verified ? <CheckCircle className="size-4 text-green-500" /> : <XCircle className="size-4 text-red-500" />}
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {user.email_verified ? 'Email verified' : 'Email not verified'}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </p>
-                          {!user.email_verified && (
-                            <div className="flex items-center gap-2 p-2 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
-                              <AlertCircle className="size-4" />
-                              <p className="text-sm">Your email is not verified. Please verify your email to continue.</p>
-                              <Button variant="outline" size="sm" onClick={() => navigate('/accounts/confirm-email')}>Verify Email</Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+      {/* Overlay for Mobile */}
+      {isSidebarOpen && (
+        <div
+          className="sm:hidden fixed inset-0 bg-black/50 backdrop-blur-lg z-30"
+          onClick={toggleMobileSidebar}
+        />
+      )}
+
+      {/* Main Content */}
+      <div className="flex flex-1 flex-col items-start gap-2 m-2 h-[calc(100vh-16px)] overflow-y-auto">
+        <div className="flex flex-row items-center gap-2 max-w-[calc(100vw-16px)]">
+          {/* Mobile Sidebar Toggle Button */}
+          <div
+            onClick={toggleMobileSidebar}
+            className="sm:hidden p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+          >
+            <Menu className="size-6" />
+          </div>
+          <div className="flex flex-col items-center space-y-1.5 p-3 max-w-[calc(100vw-68px)] rounded-xl border bg-card dark:bg-gray-900 dark:border-gray-700 text-card-foreground shadow">
+            <BreadcrumbNav/>
+          </div>
+        </div>
+        
+        <Card className="p-2 flex-1 overflow-y-auto w-full">
+          <CardContent className='px-2 py-2 space-y-4'>
+
+            {!location.pathname.includes('profile') && (
+              <div className="block space-y-4 p-6 max-[639px]:text-center hover:border-cyan-500 bg-cyan-100/30 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-cyan-100/30 transition-all duration-200 rounded-xl shadow-sm hover:shadow-md border">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {user.profile_pic && (
+                    <div className="w-24 h-24 rounded-full overflow-hidden">
+                      <img src={user.profile_pic} alt="Profile" className="w-full h-full object-cover" />
                     </div>
                   )}
-
-                  <Tabs defaultValue={'home'} value={type} onValueChange={(value) => navigate(`/${value}`)}>
-                    <Routes>
-                      <Route path="/" element={<Navigate to="/home" replace />} />
-                      <Route path="home" element={
-                        <TabsContent value="home">
-                          <PapersPage menuItems={HomePageItems}/>
-                        </TabsContent>
-                      } />
-                      <Route path="payments" element={
-                        <TabsContent value="payments">
-                      <PaymentHistoryPage />
-                        </TabsContent>
-                      } />
-                      <Route path="profile" element={
-                        <TabsContent value="profile">
-                          <ProfilePage />
-                        </TabsContent>
-                      } />
-                      <Route path="my-study/*" element={
-                        <TabsContent value="my-study">
-                          <Routes>
-                            <Route path="/" element={<MyStudyPage />} />
-                            <Route path=":dietName" element={<MyStudyPageForDiet />} />
-                            <Route path=":dietName/:paperCode/*" element={<StudyFolderPage />} />
-                          </Routes>
-                        </TabsContent>
-                      } />
-                      <Route path="papers/*" element={
-                        <Routes>
-                          <Route path="/" element={<PapersPage menuItems={CoursePageItems}/>} />
-                          <Route path="register" element={
-                            <TabsContent value="register">
-                              <PapersRegistration/>
-                            </TabsContent>
-                          } />
-                          <Route path="view" element={
-                            <TabsContent value="view">
-                              <PapersList/>
-                            </TabsContent>
-                          } />
-                          <Route path="available" element={
-                            <TabsContent value="available">
-                              <AvailablePapers/>
-                            </TabsContent>
-                          } />
-                          <Route path="print" element={
-                            <TabsContent value="print">
-                              <PapersPage menuItems={CoursePageItems}/>
-                            </TabsContent>
-                          } />
-                          <Route path="payment-status" element={
-                            <TabsContent value="payment-status">
-                              <PaymentStatus/>
-                            </TabsContent>
-                          } />
-                        </Routes>
-                      } />
-                      <Route path="*" element={
-                        <Error404Page/>
-                      } />
-                      <Route path="settings" element={
-                        <TabsContent value="settings">
-                          {user.reg_no && <SettingsPage />}
-                        </TabsContent>
-                      } />
-                    </Routes>
-                  </Tabs>
-                  
-                  {/* <section>
-                    <details className="bg-white dark:bg-gray-800 border border-blue-500 p-6 rounded-lg">
-                      <summary className="cursor-pointer text-lg font-medium">
-                        Announcements
-                      </summary>
-                      <div className="mt-4 space-y-2">
-                        <p className="text-gray-700 dark:text-gray-300">Welcome to the new student dashboard! We're excited to have you here.</p>
-                        <p className="text-gray-700 dark:text-gray-300">Registration for the next semester opens on January 15th, 2025.</p>
-                        <p className="text-gray-700 dark:text-gray-300">Check out our new paper materials in the Resources section.</p>
+                  <div className="space-y-2">
+                    <h5 className="text-xl font-bold tracking-tight dark:text-white">{user.firstname} {user.lastname}</h5>
+                    <p className="font-normal dark:text-white">Registration Number: <b>{user.reg_no || 'N/A'}</b></p>
+                    <p className="font-normal dark:text-white flex items-center gap-2">
+                      Email: <b>{user.email || 'N/A'}</b> 
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            {user.email_verified ? <CheckCircle className="size-4 text-green-500" /> : <XCircle className="size-4 text-red-500" />}
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {user.email_verified ? 'Email verified' : 'Email not verified'}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </p>
+                    {!user.email_verified && (
+                      <div className="flex items-center gap-2 p-2 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                        <AlertCircle className="size-4" />
+                        <p className="text-sm">Your email is not verified. Please verify your email to continue.</p>
+                        <Button variant="outline" size="sm" onClick={() => navigate('/accounts/confirm-email')}>Verify Email</Button>
                       </div>
-                    </details>
-                  </section> */}
-                </CardContent>
-              </Card>
-            </div>
-        </div>
-    )
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Tabs defaultValue={'home'} value={type} onValueChange={(value) => navigate(`/${value}`)}>
+              <Routes>
+                <Route path="/" element={<Navigate to="/home" replace />} />
+                <Route path="home" element={
+                  <TabsContent value="home">
+                    <PapersPage menuItems={HomePageItems}/>
+                  </TabsContent>
+                } />
+                <Route path="payments" element={
+                  <TabsContent value="payments">
+                    <PaymentHistoryPage />
+                  </TabsContent>
+                } />
+                <Route path="profile" element={
+                  <TabsContent value="profile">
+                    <ProfilePage />
+                  </TabsContent>
+                } />
+                <Route path="my-study/*" element={
+                  <TabsContent value="my-study">
+                    <Routes>
+                      <Route path="/" element={<MyStudyPage />} />
+                      <Route path=":dietName" element={<MyStudyPageForDiet />} />
+                      <Route path=":dietName/:paperCode/*" element={<StudyFolderPage />} />
+                      <Route path="*" element={<Error404Page title='My Study page' />} />
+                    </Routes>
+                  </TabsContent>
+                } />
+                <Route path="papers/*" element={
+                  <Routes>
+                    <Route path="/" element={<PapersPage menuItems={CoursePageItems}/>} />
+                    <Route path="register" element={
+                      <TabsContent value="register">
+                        <PapersRegistration/>
+                      </TabsContent>
+                    } />
+                    <Route path="view" element={
+                      <TabsContent value="view">
+                        <PapersList/>
+                      </TabsContent>
+                    } />
+                    <Route path="available" element={
+                      <TabsContent value="available">
+                        <AvailablePapers/>
+                      </TabsContent>
+                    } />
+                    <Route path="print" element={
+                      <TabsContent value="print">
+                        <PapersPage menuItems={CoursePageItems}/>
+                      </TabsContent>
+                    } />
+                    <Route path="payment-status" element={
+                      <TabsContent value="payment-status">
+                        <PaymentStatus/>
+                      </TabsContent>
+                    } />
+                  </Routes>
+                } />
+                <Route path="settings" element={
+                  <TabsContent value="settings">
+                    {user.email_verified && <SettingsPage />}
+                  </TabsContent>
+                } />
+                <Route path="*" element={
+                  <Error404Page title='Dashboard' />
+                } />
+              </Routes>
+            </Tabs>
+            
+            {/* <section>
+              <details className="bg-white dark:bg-gray-800 border border-blue-500 p-6 rounded-lg">
+                <summary className="cursor-pointer text-lg font-medium">
+                  Announcements
+                </summary>
+                <div className="mt-4 space-y-2">
+                  <p className="text-gray-700 dark:text-gray-300">Welcome to the new student dashboard! We're excited to have you here.</p>
+                  <p className="text-gray-700 dark:text-gray-300">Registration for the next semester opens on January 15th, 2025.</p>
+                  <p className="text-gray-700 dark:text-gray-300">Check out our new paper materials in the Resources section.</p>
+                </div>
+              </details>
+            </section> */}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
 }
 
 type StudyPaperItem = {
@@ -417,8 +419,6 @@ type StudyDirItem = {
 const MyStudyPage = () => {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user)
-  
-  console.log(user.papers);
 
   const groupedPapers = useMemo(() => {
     const grouped: Record<string, StudyPaperItem[]> = {};
@@ -691,13 +691,13 @@ const StudyFolderPage = () => {
         setItems(response.data || []);
       } catch (error) {
         if (error instanceof Error) {
-          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+          const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data
           if (message && typeof message !== 'object') {
             setError(message)
             return;
           }
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+          const [_, description] = Object.entries(message as unknown as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
           setError(description)
         } else if (error && typeof error === 'object' && 'response' in error) {
           const axiosError = error as { response: { data: { error: string } } }

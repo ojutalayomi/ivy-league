@@ -46,6 +46,12 @@ export default function PapersRegistration() {
     const storedDiet = localStorage.getItem('selectedDiet') || '';
     setDietName(storedDiet);
     setDietSelected(Boolean(storedDiet));
+
+    return () => {
+      setDietName('');
+      setDietSelected(false);
+      localStorage.removeItem('selectedDiet');
+    }
   }, []);
 
   useEffect(() => {
@@ -211,16 +217,19 @@ export default function PapersRegistration() {
         <Loader2 className="w-10 h-10 animate-spin" />
       </div>
     )
-  } else if (error && !isSponsor) {
-    content = (
-      <div className="flex flex-col justify-center items-center gap-2 h-[50vh]">
-        <div className='flex flex-col items-center gap-2'>
-          <AlertCircle className="w-10 h-10 text-red-500" />
-          <p className="text-red-500">{error}</p>
+  } else if (error) {
+    if (!isSponsor) {
+      content = (
+        <div className="flex flex-col justify-center items-center gap-2 h-[50vh]">
+          <div className='flex flex-col items-center gap-2'>
+            <AlertCircle className="w-10 h-10 text-red-500" />
+            <p className="text-red-500">{error}</p>
+          </div>
         </div>
-        {/* <Button onClick={() => navigate(-1)} className='bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full max-w-md'>Go Back</Button> */}
-      </div>
-    )
+      )
+    } else {
+      content = null;
+    }
   } else {
     content = !isSponsor ? (
       <div className="max-w-6xl mx-auto rounded-lg">
@@ -584,7 +593,7 @@ export default function PapersRegistration() {
           </Button>
         </div>
       </div>
-      <div className="space-y-4" data-loading={isLoading} data-isSponsor={isSponsor}>
+      <div className="space-y-4" data-loading={isLoading}>
         {
           (!isSponsor && !isLoading) && (
             <DietCard

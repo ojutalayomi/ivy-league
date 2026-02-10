@@ -89,7 +89,7 @@ export const DietPage = ({ all }: { all?: boolean }) => {
                             </div>
                         )}
                         
-                        {diets.length > 3 && (
+                        {(diets.length > 3 && !all) && (
                             <div className="flex justify-center pt-4">
                                 <Link to="/diets/all">
                                     <Button variant="outline">

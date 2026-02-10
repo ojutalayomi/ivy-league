@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { api } from "@/lib/api";
 import { UserState } from "@/redux/userSlice";
-import { APIPaper } from "@/lib/types";
 import { PaymentHistoryPage } from "../student/Dashboard";
 import { StudentState } from "@/redux/studentSlice";
 import { toast } from "sonner";
@@ -596,15 +595,16 @@ export const EditStudent = () => {
     const { reg_no } = useParams()
     const navigate = useNavigate()
     const id = reg_no
+    const [loading, setLoading] = useState(true)
     const [is1Expanded, setIs1Expanded] = useState(false)
     const [is2Expanded, setIs2Expanded] = useState(true)
-    const [is3Expanded, setIs3Expanded] = useState(false)
     const [student, setStudent] = useState<StudentState | undefined>(undefined)
     const [initialStudent, setInitialStudent] = useState<StudentState | undefined>(undefined)
 
     useEffect(() => {
         const fetchStudent = async () => {
             try {
+                setLoading(true);
                 const response = await api.get(`/view-student?reg_no=${id}`);
                 if (response.status !== 200) {
                     throw new Error(`Error: ${response.status} ${response.statusText}`);
@@ -632,6 +632,8 @@ export const EditStudent = () => {
                 setInitialStudent(mapped);
             } catch (error) {
                 console.error("Failed to fetch students:", error);
+            } finally {
+                setLoading(false);
             }
         };
         (async () => {
@@ -647,8 +649,45 @@ export const EditStudent = () => {
         document.title = (student?.firstname || '') + " " + (student?.lastname || '') + " - Ivy League Associates";
     }, [student?.firstname, student?.lastname]);
 
-    const handleSave = () => {
-        console.log(student)
+    const handleSave = async () => {
+        if (!student || !initialStudent) return;
+
+        const changes: string[] = [];
+        const payload: Partial<StudentState> = {};
+
+        if (student.firstname !== initialStudent.firstname) {
+            changes.push("name");
+            payload.firstname = student.firstname;
+        }
+        if (student.lastname !== initialStudent.lastname) {
+            changes.push("name");
+            payload.lastname = student.lastname;
+        }
+        if (student.acca_reg !== initialStudent.acca_reg) {
+            changes.push("acca_reg");
+            payload.acca_reg = student.acca_reg;
+        }
+        if (student.partial_payment !== initialStudent.partial_payment) {
+            changes.push("partial_payment");
+            payload.partial_payment = student.partial_payment;
+        }
+
+        if (changes.length === 0) {
+            return;
+        }
+
+        try {
+            const changesParam = `${changes.map((f) => `${f}`).join(" ")}`;
+            await api.patch(
+                `/edit-student?reg_no=${encodeURIComponent(student.reg_no)}&changes=${encodeURIComponent(changesParam)}`,
+                payload
+            );
+            setInitialStudent(student);
+            // Optionally stay on page; for now, navigate back to students list
+            navigate('/students');
+        } catch (error) {
+            console.error("Failed to update student:", error);
+        }
     }
 
     const handleCancel = () => {
@@ -658,6 +697,12 @@ export const EditStudent = () => {
     const handleReset = () => {
         if (initialStudent) setStudent(initialStudent)
     }
+
+    if(loading) return (
+        <div className="flex items-center justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+    )
 
     if(!student) return <Error404Page title='Student'/>
 
@@ -674,39 +719,40 @@ export const EditStudent = () => {
                     <CardDescription>Update the student's personal and academic details.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form className="space-y-8">
+                    <div className="space-y-8">
                         <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                            <div className="h-8 w-1 bg-blue-600 rounded-full" />
-                            <h3 className="text-lg font-semibold">Personal Details</h3>
-                            {is1Expanded ? <ChevronUp className="cursor-pointer size-4 text-muted-foreground ml-1" onClick={() => setIs1Expanded(false)} /> : <ChevronDown className="cursor-pointer size-4 text-muted-foreground ml-1" onClick={() => setIs1Expanded(true)} />}
-                        </div>
+                            <div className="flex items-center space-x-2">
+                                <div className="h-8 w-1 bg-blue-600 rounded-full" />
+                                <h3 className="text-lg font-semibold">Personal Details</h3>
+                                {is1Expanded ? <ChevronUp className="cursor-pointer size-4 text-muted-foreground ml-1" onClick={() => setIs1Expanded(false)} /> : <ChevronDown className="cursor-pointer size-4 text-muted-foreground ml-1" onClick={() => setIs1Expanded(true)} />}
+                            </div>
                             {is1Expanded && (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="name">Name</Label>
-                                        <Input id="name" defaultValue={(student?.firstname || '') + " " + (student?.lastname || '')} placeholder="Enter full name" />
+                                        <Label htmlFor="firstname">First name</Label>
+                                        <Input
+                                            id="firstname"
+                                            value={student?.firstname ?? ''}
+                                            onChange={(e) =>
+                                                setStudent((prev) =>
+                                                    prev ? { ...prev, firstname: e.target.value } : prev
+                                                )
+                                            }
+                                            placeholder="Enter first name"
+                                        />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="email">Email</Label>
-                                        <Input id="email" type="email" defaultValue={student?.email} placeholder="Enter email" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                                        <Input id="dateOfBirth" type="date" defaultValue={student?.dob ? format(new Date(student.dob), 'yyyy-MM-dd') : undefined} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="gender">Gender</Label>
-                                        <Select defaultValue={student?.gender}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select gender" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="Male">Male</SelectItem>
-                                                <SelectItem value="Female">Female</SelectItem>
-                                                <SelectItem value="Other">Other</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                        <Label htmlFor="lastname">Last name</Label>
+                                        <Input
+                                            id="lastname"
+                                            value={student?.lastname ?? ''}
+                                            onChange={(e) =>
+                                                setStudent((prev) =>
+                                                    prev ? { ...prev, lastname: e.target.value } : prev
+                                                )
+                                            }
+                                            placeholder="Enter last name"
+                                        />
                                     </div>
                                 </div>
                             )}
@@ -721,33 +767,40 @@ export const EditStudent = () => {
                             {is2Expanded && (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="registrationNumber">Registration Number</Label>
-                                        <Input id="registrationNumber" defaultValue={student?.reg_no} placeholder="Enter registration number" />
+                                        <Label htmlFor="acca_reg">ACCA Reg No</Label>
+                                        <Input
+                                            id="acca_reg"
+                                            value={student?.acca_reg ?? ''}
+                                            onChange={(e) =>
+                                                setStudent((prev) =>
+                                                    prev ? { ...prev, acca_reg: e.target.value } : prev
+                                                )
+                                            }
+                                            placeholder="Enter ACCA registration number"
+                                        />
                                     </div>
-                                    <div className="col-span-2 space-y-2">
-                                        <Label>Papers</Label>
-                                        <div className="grid grid-cols-2 gap-2 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                                            {(student?.papers as unknown as APIPaper[] | undefined)?.map((paper) => (
-                                                <div className="flex items-center space-x-2" key={paper.name}>
-                                                    <Checkbox id={paper.name} defaultChecked />
-                                                    <Label htmlFor={paper.name}>{paper.name}</Label>
-                                                </div>
-                                            ))}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="partial_payment">Partial payment</Label>
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id="partial_payment"
+                                                checked={!!student?.partial_payment}
+                                                onCheckedChange={(checked) =>
+                                                    setStudent((prev) =>
+                                                        prev
+                                                            ? {
+                                                                  ...prev,
+                                                                  partial_payment: Boolean(checked),
+                                                              }
+                                                            : prev
+                                                    )
+                                                }
+                                            />
+                                            <Label htmlFor="partial_payment" className="text-sm">
+                                                This student is on partial payment
+                                            </Label>
                                         </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="flex items-center space-x-2">
-                                <div className="h-8 w-1 bg-purple-600 rounded-full" />
-                                <h3 className="text-lg font-semibold">Payment Details</h3>
-                                {is3Expanded ? <ChevronUp className="cursor-pointer size-4 text-muted-foreground ml-1" onClick={() => setIs3Expanded(false)} /> : <ChevronDown className="cursor-pointer size-4 text-muted-foreground ml-1" onClick={() => setIs3Expanded(true)} />}
-                            </div>
-                            {is3Expanded && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    
                                 </div>
                             )}
                         </div>
@@ -756,7 +809,7 @@ export const EditStudent = () => {
                             <Button variant="outline" onClick={handleReset}>Reset</Button>
                             <Button onClick={handleSave}>Save Changes</Button>
                         </div>
-                    </form>
+                    </div>
                 </CardContent>
             </Card>
         </div>

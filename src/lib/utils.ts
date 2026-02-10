@@ -13,7 +13,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function ResetUser(dispatch: Dispatch, navigate: NavigateFunction, location?: Location, path?: string, whiteList?: string[]) {
+function ResetUser(dispatch: Dispatch, navigate: NavigateFunction, location?: Location, path?: string, whiteList?: string[]) {
   localStorage.removeItem('ivy_user_token');
   dispatch(clearUser());
   if (!whiteList || !whiteList.includes(location?.pathname ?? '')) {
@@ -23,14 +23,14 @@ export function ResetUser(dispatch: Dispatch, navigate: NavigateFunction, locati
 
 export function CheckForIncorrectPermission(data: UserState, t: typeof toast, Mode: ModeEnum | null, dispatch: Dispatch, navigate: NavigateFunction, location?: Location, path?: string, whiteList?: string[]){
     if (data.user_status === 'student' && Mode === ModeEnum.staff) {
-        t.error("You are not authorized to sign in as a student.",{
-            description: "Please sign in as a staff member."
+        t.error("This is the staff portal.", {
+            description: "Please use the student portal to sign in."
         })
         ResetUser(dispatch, navigate, location, path, whiteList);
         return 1;
     } else if (data.user_status === 'staff' && Mode === ModeEnum.student) {
-        t.error("You are not authorized to sign in as a staff member.",{
-            description: "Please sign in as a student."
+        t.error("This is the student portal.", {
+            description: "Please use the staff portal to sign in."
         })
         ResetUser(dispatch, navigate, location, path, whiteList);
         return 1;
