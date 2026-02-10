@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Award,
   BookOpen,
@@ -18,55 +18,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { AdminMetric } from "@/lib/admin-api";
+import { fetchAdminMetrics } from "@/lib/admin-api";
 
 interface MetricData {
-    id: string;
-    title: string;
-    value: string;
-    change: string;
-    changeType: 'positive' | 'negative';
-    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-    iconColor: string;
+  id: string;
+  title: string;
+  value: string;
+  change: string;
+  changeType: 'positive' | 'negative';
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  iconColor: string;
 }
-
-const metrics: MetricData[] = [
-    {
-      id: '1',
-      title: 'Total Students',
-      value: '1,247',
-      change: '+12% from last month',
-      changeType: 'positive',
-      icon: Users,
-      iconColor: 'bg-gradient-to-br from-blue-500 to-blue-600'
-    },
-    {
-      id: '2',
-      title: 'Active Courses',
-      value: '42',
-      change: '+3 new courses',
-      changeType: 'positive',
-      icon: BookOpen,
-      iconColor: 'bg-gradient-to-br from-green-500 to-green-600'
-    },
-    {
-      id: '3',
-      title: 'Active Instructors',
-      value: '28',
-      change: '+2 this month',
-      changeType: 'positive',
-      icon: GraduationCap,
-      iconColor: 'bg-gradient-to-br from-amber-500 to-amber-600'
-    },
-    {
-      id: '4',
-      title: 'Monthly Revenue',
-      value: '$24.7K',
-      change: '+18% from last month',
-      changeType: 'positive',
-      icon: DollarSign,
-      iconColor: 'bg-gradient-to-br from-purple-500 to-purple-600'
-    }
-];
 
 /**
  * ManageStudentsMenu Component
@@ -85,8 +48,84 @@ const metrics: MetricData[] = [
  * - Delete Students: Remove student accounts from the system
  */
 export default function ManageStudentsMenu() {
+  const [metrics, setMetrics] = useState<MetricData[]>([]);
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState<boolean>(false);
+  const [metricsError, setMetricsError] = useState<string | null>(null);
+
   useEffect(() => {
     document.title = "Manage Students Menu - Ivy League Associates";
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const mapAdminMetricToUI = (metric: AdminMetric): MetricData | null => {
+      const base: Omit<MetricData, "icon" | "iconColor"> = {
+        id: metric.id,
+        title: metric.title,
+        value: metric.value.toLocaleString("en-US"),
+        change: metric.change ?? "",
+        changeType: metric.changeType ?? "positive",
+      };
+
+      switch (metric.id) {
+        case "total_students":
+          return {
+            ...base,
+            icon: Users,
+            iconColor: "bg-gradient-to-br from-blue-500 to-blue-600",
+          };
+        case "active_courses":
+          return {
+            ...base,
+            icon: BookOpen,
+            iconColor: "bg-gradient-to-br from-green-500 to-green-600",
+          };
+        case "active_instructors":
+          return {
+            ...base,
+            icon: GraduationCap,
+            iconColor: "bg-gradient-to-br from-amber-500 to-amber-600",
+          };
+        case "monthly_revenue":
+          return {
+            ...base,
+            icon: DollarSign,
+            iconColor: "bg-gradient-to-br from-purple-500 to-purple-600",
+          };
+        default:
+          return null;
+      }
+    };
+
+    const loadMetrics = async () => {
+      try {
+        setIsLoadingMetrics(true);
+        setMetricsError(null);
+        const response = await fetchAdminMetrics();
+        if (cancelled) return;
+
+        const mapped = response
+          .map(mapAdminMetricToUI)
+          .filter((m): m is MetricData => m !== null);
+
+        setMetrics(mapped);
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Failed to load admin metrics", error);
+        setMetricsError("Unable to load metrics right now.");
+      } finally {
+        if (!cancelled) {
+          setIsLoadingMetrics(false);
+        }
+      }
+    };
+
+    loadMetrics();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const menuItems = [
@@ -171,10 +210,32 @@ export default function ManageStudentsMenu() {
         </div>
       </div>
 
+      {metricsError && (
+        <p className="text-sm text-red-600 dark:text-red-400">
+          {metricsError}
+        </p>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {metrics.map((metric) => (
-          <MetricCard key={metric.id} data={metric} />
-        ))}
+        {(isLoadingMetrics && metrics.length === 0
+          ? Array.from({ length: 4 }).map((_, index) => (
+              <Card
+                key={index}
+                className="border border-gray-100 dark:border-gray-800 animate-pulse"
+              >
+                <CardContent className="pt-6 space-y-4">
+                  <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-800" />
+                  <div className="space-y-2">
+                    <div className="h-6 w-20 bg-gray-200 dark:bg-gray-800 rounded" />
+                    <div className="h-4 w-32 bg-gray-200 dark:bg-gray-800 rounded" />
+                  </div>
+                  <div className="h-3 w-24 bg-gray-200 dark:bg-gray-800 rounded" />
+                </CardContent>
+              </Card>
+            ))
+          : metrics.map((metric) => (
+              <MetricCard key={metric.id} data={metric} />
+            )))}
       </div>
 
       <div className="space-y-3">

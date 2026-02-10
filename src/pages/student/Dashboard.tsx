@@ -49,11 +49,6 @@ type CoursePageItems = {
 
 const HomePageItems = [
   {
-    title: "My Study",
-    description: "Visit the my study page",
-    path: "/my-study"
-  },
-  {
     title: "Papers", 
     description: "Visit the papers page",
     path: "/papers"
@@ -330,7 +325,7 @@ export default function Dashboard() {
                 } />
                 <Route path="payments" element={
                   <TabsContent value="payments">
-                <PaymentHistoryPage />
+                    <PaymentHistoryPage />
                   </TabsContent>
                 } />
                 <Route path="profile" element={
@@ -344,6 +339,7 @@ export default function Dashboard() {
                       <Route path="/" element={<MyStudyPage />} />
                       <Route path=":dietName" element={<MyStudyPageForDiet />} />
                       <Route path=":dietName/:paperCode/*" element={<StudyFolderPage />} />
+                      <Route path="*" element={<Error404Page title='My Study page' />} />
                     </Routes>
                   </TabsContent>
                 } />
@@ -377,13 +373,13 @@ export default function Dashboard() {
                     } />
                   </Routes>
                 } />
-                <Route path="*" element={
-                  <Error404Page/>
-                } />
                 <Route path="settings" element={
                   <TabsContent value="settings">
-                    {user.reg_no && <SettingsPage />}
+                    {user.email_verified && <SettingsPage />}
                   </TabsContent>
+                } />
+                <Route path="*" element={
+                  <Error404Page title='Dashboard' />
                 } />
               </Routes>
             </Tabs>
@@ -701,7 +697,7 @@ const StudyFolderPage = () => {
             return;
           }
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const [_, description] = Object.entries(message as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
+          const [_, description] = Object.entries(message as unknown as {[x: string]: string})[0] || ['Error', 'An unexpected error occurred']
           setError(description)
         } else if (error && typeof error === 'object' && 'response' in error) {
           const axiosError = error as { response: { data: { error: string } } }

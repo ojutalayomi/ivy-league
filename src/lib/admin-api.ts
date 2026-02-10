@@ -52,7 +52,7 @@ export const fetchAdminActivities = async (params?: {
     to?: string;
     type?: string;
 }) => {
-    const response = await api.get("/activities", { params });
+    const response = await api.get("/staff-activities", { params });
     return (response.data?.activities ?? response.data ?? []) as AdminActivity[];
 };
 
@@ -86,4 +86,90 @@ export const uploadAdminResources = async (formData: FormData) => {
 
 export const deleteAdminResource = async (resourceId: string) => {
     await api.delete(`/resources/${resourceId}`);
+};
+
+/**
+ * Admin dashboard metrics
+ */
+export type AdminMetric = {
+    id: string;
+    title: string;
+    value: number;
+    change?: string;
+    changeType?: "positive" | "negative";
+};
+
+export const fetchAdminMetrics = async (): Promise<AdminMetric[]> => {
+    // Fetch core datasets in parallel using existing endpoints
+    const [studentsResponse, coursesResponse, payments, activities] = await Promise.all([
+        api.get("/list-students", { params: { criteria: "all" } }),
+        api.get("/courses", { params: { reg: false, user_status: "staff" } }),
+        fetchAdminPayments(),
+        fetchAdminActivities(),
+    ]);
+
+    const students = Array.isArray(studentsResponse.data)
+        ? studentsResponse.data
+        : (studentsResponse.data?.students ?? []);
+
+    const courses = Array.isArray(coursesResponse.data)
+        ? coursesResponse.data
+        : (coursesResponse.data?.courses ?? []);
+
+    const totalStudents = students.length;
+    const activeCourses = courses.length;
+
+    const uniqueInstructors = new Set(
+        activities
+            .map((activity) => activity.actor)
+            .filter((actor) => typeof actor === "string" && actor.trim().length > 0)
+    );
+    const activeInstructors = uniqueInstructors.size;
+
+    // Compute revenue over the last 30 days
+    const now = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(now.getDate() - 30);
+
+    const monthlyRevenue = payments.reduce((sum, payment) => {
+        const date = new Date(payment.date);
+        if (Number.isNaN(date.getTime())) return sum;
+        if (date >= thirtyDaysAgo && date <= now) {
+            return sum + payment.amount;
+        }
+        return sum;
+    }, 0);
+
+    const metrics: AdminMetric[] = [
+        {
+            id: "total_students",
+            title: "Total Students",
+            value: totalStudents,
+            change: "All-time total",
+            changeType: "positive",
+        },
+        {
+            id: "active_courses",
+            title: "Active Courses",
+            value: activeCourses,
+            change: "All-time active courses",
+            changeType: "positive",
+        },
+        {
+            id: "active_instructors",
+            title: "Active Instructors",
+            value: activeInstructors,
+            change: "Distinct instructors with recorded activity",
+            changeType: "positive",
+        },
+        {
+            id: "monthly_revenue",
+            title: "Monthly Revenue",
+            value: monthlyRevenue,
+            change: "Revenue from the last 30 days",
+            changeType: "positive",
+        },
+    ];
+
+    return metrics;
 };

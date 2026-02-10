@@ -3,10 +3,8 @@ import LogoDark from "@/assets/ivyDark.png";
 import LogoMobile from "@/assets/logo_white.png";
 import LogoDarkMobile from "@/assets/logo_black.png";
 import { LoaderCircle } from "lucide-react";
-import {useUser} from "@/providers/user-provider.tsx";
 
 export default function AccountsLayout({ children }: { children?: React.ReactNode }) {
-    const Mode = useUser().Mode;
   
   return (
     <div className={`flex min-h-full flex-1 gap-2 items-center justify-center sm:p-6`}>
