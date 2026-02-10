@@ -16,7 +16,7 @@ import {
     // console.log(pathSegments)
     
     // If no segments (just '/'), return empty breadcrumb
-    if (pathSegments.length === 0) return null
+    if (pathSegments.length === 0) return <div>/</div>
   
     const breadcrumbItems = pathSegments.map((segment, index) => {
       const path = `/${pathSegments.slice(0, index + 1).join('/')}`
@@ -39,10 +39,10 @@ import {
               <BreadcrumbItem className={`cursor-pointer ${index !== breadcrumbItems.length - 1 && 'truncate'}`}>
                 {item.path ? (
                   <BreadcrumbLink asChild>
-                    <Link to={item.path} className="truncate" replace>{item.label}</Link>
+                    <Link to={item.path} className="truncate" replace>{decodeURIComponent(item.label)}</Link>
                   </BreadcrumbLink>
                 ) : (
-                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                  <BreadcrumbPage>{decodeURIComponent(item.label)}</BreadcrumbPage>
                 )}
               </BreadcrumbItem>
             </React.Fragment>

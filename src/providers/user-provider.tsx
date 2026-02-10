@@ -1,15 +1,39 @@
 import { createContext, useContext, ReactNode, useEffect, useRef, useState, useCallback } from 'react';
-import { useDispatch } from 'react-redux';
-import { clearUser, setUser } from '@/redux/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { clearUser, initialState, setUser, UserState } from '@/redux/userSlice';
 import { api } from '@/lib/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
+import { RootState } from '@/redux/store';
+import { toast } from 'sonner';
+import { CheckForIncorrectPermission } from '@/lib/utils';
 
 interface UserProviderProps {
   children: ReactNode;
 }
 
-const UserContext = createContext<{ isLoading: boolean, error: string }>({ isLoading: true, error: '' });
+export enum ModeEnum {
+  staff = "staff",
+  student = "student"
+}
+
+export enum AdminModeEnum {
+  admin = "admin",
+  tutor = "tutor",
+  liteAdmin = "lite_admin",
+  proAdmin = "pro_admin",
+  superAdmin = "super_admin",
+  boardMember = "board_member"
+}
+
+export enum EmployeeEnum {
+  Intern = "Intern",
+  PartTime = "Part-Time",
+  FullTime = "Full-Time"
+}
+
+type UserContextType = { isLoading: boolean, error: string, Mode: ModeEnum | null, user: UserState }
+const UserContext = createContext<UserContextType>({ isLoading: true, error: '', Mode: null, user: initialState });
 
 export function UserProvider({ children }: UserProviderProps) {
   const dispatch = useDispatch();
@@ -17,16 +41,19 @@ export function UserProvider({ children }: UserProviderProps) {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const user = useSelector((state: RootState) => state.user)
   const refreshStatus = useRef(false);
-  const whiteList = useRef(['/accounts/signin', '/accounts/signup', '/accounts/reset-password', '/accounts/confirm-email', '/accounts/additional-info']);
+  const whiteList = useRef(['/a','/accounts/signin', '/accounts/signup', '/accounts/reset-password', '/accounts/confirm-email', '/accounts/additional-info']);
   const path = location.pathname + location.search;
   const count = useRef(0)
+  const Mode = import.meta.env.VITE_Is_Staff && ModeEnum[import.meta.env.VITE_Is_Staff as keyof typeof ModeEnum] ? ModeEnum[import.meta.env.VITE_Is_Staff as keyof typeof ModeEnum] : null;
 
   const refreshUser = useCallback(async (email: string) => {
     try {
       if (refreshStatus.current && count.current === 0) return;
       count.current += 1;
       const response = await api.get(`/refresh?email=${email}`);
+      if (CheckForIncorrectPermission(response.data, toast, Mode, dispatch, navigate, location, path, whiteList.current) === 1) return;
       const now = Date.now();
       dispatch(setUser({
         ...response.data,
@@ -39,9 +66,14 @@ export function UserProvider({ children }: UserProviderProps) {
       }));
       refreshStatus.current = true;
     } catch (error) {
-      console.error('Error refreshing user data:', error);
+      const err = (error as AxiosError).response?.data || null;
+      if (err && typeof err === 'object' && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
+        console.error('Error refreshing user data:', err.message);
+        setError((err as { message: string }).message);
+        return;
+      }
       if (error instanceof Error) {
-        const message = (error as AxiosError<{error: {[x: string]: string} }>).response?.data?.error
+        const message = (error as AxiosError<{ error: { [x: string]: string } }>).response?.data?.error;
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const [_, description] = Object.entries(message as { [x: string]: string })[0] || { 'Error': 'An unexpected error occurred' };
         setError(description);
@@ -60,40 +92,41 @@ export function UserProvider({ children }: UserProviderProps) {
         setError('An unexpected error occurred');
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [dispatch, navigate, path, location.pathname])
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const storedToken = JSON.parse(localStorage.getItem('ivy_user_token') || '{}');    
-      if (storedToken.token) {
-        const now = Date.now();
-        const storedTime = storedToken.timestamp;
-        
-        // Check if stored data is less than 24 hours old
-        if (now - storedTime < 24 * 60 * 60 * 1000) {
-          // Refresh user data from server
-          await refreshUser(storedToken.token);
-        } else {
-          // Clear expired data
-          localStorage.removeItem('ivy_user_token');
-          dispatch(clearUser());
-          if (!whiteList.current.includes(location.pathname)) {
-            navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
-          }
-        }
+  const fetchUser = useCallback(async () => {
+    const storedToken = JSON.parse(localStorage.getItem('ivy_user_token') || '{}');    
+    if (storedToken.token) {
+      const now = Date.now();
+      const storedTime = storedToken.timestamp;
+      
+      // Check if stored data is less than 24 hours old
+      if (now - storedTime < 24 * 60 * 60 * 1000) {
+        // Refresh user data from server
+        await refreshUser(storedToken.token);
       } else {
+        // Clear expired data
+        localStorage.removeItem('ivy_user_token');
+        dispatch(clearUser());
         if (!whiteList.current.includes(location.pathname)) {
           navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
         }
       }
-      setIsLoading(false);
+    } else {
+      if (!whiteList.current.includes(location.pathname)) {
+        navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
+      }
     }
+    setIsLoading(false);
+  }, [dispatch, navigate, location.pathname, path, refreshUser])
+
+  useEffect(() => {
     fetchUser();
-  }, [isLoading]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <UserContext.Provider value={{ isLoading, error }}>
+    <UserContext.Provider value={{ isLoading, error, Mode, user }}>
       {children}
     </UserContext.Provider>
   );

@@ -1,11 +1,41 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import moment from "moment"
+import { Dispatch } from "@reduxjs/toolkit";
+import { Location, NavigateFunction } from "react-router-dom";
+import { clearUser, UserState } from "@/redux/userSlice";
+import { toast } from "sonner";
+import { ModeEnum } from "@/providers/user-provider";
 
 export type ResponseType = "countdown" | "getlivetime" | "chat-time";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+function ResetUser(dispatch: Dispatch, navigate: NavigateFunction, location?: Location, path?: string, whiteList?: string[]) {
+  localStorage.removeItem('ivy_user_token');
+  dispatch(clearUser());
+  if (!whiteList || !whiteList.includes(location?.pathname ?? '')) {
+    navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
+  }
+}
+
+export function CheckForIncorrectPermission(data: UserState, t: typeof toast, Mode: ModeEnum | null, dispatch: Dispatch, navigate: NavigateFunction, location?: Location, path?: string, whiteList?: string[]){
+    if (data.user_status === 'student' && Mode === ModeEnum.staff) {
+        t.error("This is the staff portal.", {
+            description: "Please use the student portal to sign in."
+        })
+        ResetUser(dispatch, navigate, location, path, whiteList);
+        return 1;
+    } else if (data.user_status === 'staff' && Mode === ModeEnum.student) {
+        t.error("This is the student portal.", {
+            description: "Please use the staff portal to sign in."
+        })
+        ResetUser(dispatch, navigate, location, path, whiteList);
+        return 1;
+    }
+    return 0;
 }
 
 export class Time {

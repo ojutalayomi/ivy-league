@@ -23,7 +23,7 @@
             "name": "Open Dashboard",
             "short_name": "Dashboard",
             "description": "View your dashboard",
-            "url": "/dashboard/home?utm_source=homescreen",
+            "url": "/?utm_source=homescreen",
             "icons": [{ "src": "/dashboard.png", "sizes": "192x192" }]
         },
         {

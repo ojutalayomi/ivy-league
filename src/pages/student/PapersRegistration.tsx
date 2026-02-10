@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Paper } from '@/lib/data';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Table, TableCaption, TableHeader, TableRow, TableHead, TableBody, TableCell, TableFooter } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { AlertCircle, Check, Loader2 } from 'lucide-react';
@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { AxiosError } from 'axios';
 import SponsorCard from './Sponsored';
+import DietCard from './DietCard';
 import { setAllowPaperRegistration } from '@/redux/utilsSlice';
 
 export default function PapersRegistration() {
@@ -34,23 +35,32 @@ export default function PapersRegistration() {
     reason: string;
   }[]>([]);
   const [partialPayment, setPartialPayment] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSponsor, setIsSponsor] = useState(false);
   const dispatch = useDispatch();
-  const dietName = useRef("");
+  const [dietName, setDietName] = useState('');
+  const [dietSelected, setDietSelected] = useState(false);
 
   useEffect(() => {
-    dietName.current = localStorage.getItem('selectedDiet') || '';
-  }, [localStorage.getItem('selectedDiet')]);
+    const storedDiet = localStorage.getItem('selectedDiet') || '';
+    setDietName(storedDiet);
+    setDietSelected(Boolean(storedDiet));
+
+    return () => {
+      setDietName('');
+      setDietSelected(false);
+      localStorage.removeItem('selectedDiet');
+    }
+  }, []);
 
   useEffect(() => {
-    if (isLoading) {
+    if (dietSelected && dietName) {
       (async () => {
         try {
           setIsLoading(true);
           // if(user.user_status === 'signee') return;
-          const response = await api.get(`/courses?reg=true&${user.user_status === 'student' ? '' : "acca_reg=" + (user.acca_reg || '001')}&user_status=${user.user_status}&email=${email}&diet_name=${dietName.current}`);
+          const response = await api.get(`/courses?reg=true&${user.user_status === 'student' ? '' : "acca_reg=" + (user.acca_reg || '001')}&user_status=${user.user_status}&email=${email}&diet_name=${dietName}`);
           setCurrentPapers(response.data.current_papers);
           setCoursesLimit(response.data.course_limit);
           setScholarships(response.data.scholarships);
@@ -82,8 +92,7 @@ export default function PapersRegistration() {
       })();
     };
    
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dietName, dietSelected, email, user.acca_reg, user.user_status]);
 
   // useEffect(() => {
   //   console.log('Mounted');
@@ -168,7 +177,7 @@ export default function PapersRegistration() {
         window.location.href = response.data.data.authorization_url;
         
         dispatch(setAllowPaperRegistration(false));
-        navigate('/student-dashboard/papers/payment-status');
+        navigate('/papers/payment-status');
       }
     } catch (error) {
       console.error('Error initializing payment:', error);
@@ -200,22 +209,27 @@ export default function PapersRegistration() {
 
   let content = null;
 
-  if (isLoading)  {
+  if (!dietSelected) {
+    content = null;
+  } else if (isLoading)  {
     content = (
       <div className="flex justify-center items-center h-[50vh]">
         <Loader2 className="w-10 h-10 animate-spin" />
       </div>
     )
-  } else if (error && !isSponsor) {
-    content = (
-      <div className="flex flex-col justify-center items-center gap-2 h-[50vh]">
-        <div className='flex flex-col items-center gap-2'>
-          <AlertCircle className="w-10 h-10 text-red-500" />
-          <p className="text-red-500">{error}</p>
+  } else if (error) {
+    if (!isSponsor) {
+      content = (
+        <div className="flex flex-col justify-center items-center gap-2 h-[50vh]">
+          <div className='flex flex-col items-center gap-2'>
+            <AlertCircle className="w-10 h-10 text-red-500" />
+            <p className="text-red-500">{error}</p>
+          </div>
         </div>
-        {/* <Button onClick={() => navigate(-1)} className='bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full max-w-md'>Go Back</Button> */}
-      </div>
-    )
+      )
+    } else {
+      content = null;
+    }
   } else {
     content = !isSponsor ? (
       <div className="max-w-6xl mx-auto rounded-lg">
@@ -579,8 +593,24 @@ export default function PapersRegistration() {
           </Button>
         </div>
       </div>
-      <div className="space-y-4">
-        <SponsorCard hideBackButton={true} hideSponsor={!isSponsor} />
+      <div className="space-y-4" data-loading={isLoading}>
+        {
+          (!isSponsor && !isLoading) && (
+            <DietCard
+              className="max-w-6xl"
+              onDietChange={(selectedDietName, isSelected) => {
+                setDietSelected(isSelected);
+                setDietName(selectedDietName || '');
+              }}
+            />
+          )
+        }
+        {isSponsor && (
+          <SponsorCard
+          hideBackButton={true}
+          className='max-w-6xl'
+          />
+        )}
         {content}
       </div>
       <Dialog open={user.user_status === 'signee' && !allowPaperRegistration} onOpenChange={() => {}}>

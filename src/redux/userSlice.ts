@@ -1,12 +1,15 @@
+import { AdminModeEnum } from '@/providers/user-provider';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export type UserState = {
+    blocked: boolean;
+    role: AdminModeEnum | null;
     email: string;
     firstname: string;
     gender: string;
     lastname: string;
     title: string;
-    user_status: 'signee' | 'student' | '';
+    user_status: 'signee' | 'student' | 'staff';
     reg_no: string;
     acca_reg: string;
     dob: string;
@@ -20,12 +23,27 @@ export type UserState = {
         reason: string;
     }[];
     scholarship: [][],
+    /**
+     * Example:
+     * ```json
+     * [
+     *  {
+     *      "BT": ["Business And Technology", "2026 September Diet"]
+     *  },
+     *  {
+     *      "MA": ["Management Accounting", "2026 July Diet"]
+     *  }
+     * ]
+     * ```
+     */
     papers: {
-        [name: string]: string;
+        [code: string]: string[];
     }[]
 }
 
-const initialState: UserState = {
+export const initialState: UserState = {
+    blocked: false,
+    role: null,
     email: "",
     firstname: "",
     gender: "",

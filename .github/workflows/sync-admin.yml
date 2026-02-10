@@ -28,6 +28,3 @@ jobs:
         run: |
           git remote set-url origin https://x-access-token:${{ secrets.Ivy_league_PAT }}@github.com/${{ github.repository }}
           git push origin main:admin --force
-
-      - name: Deploy to Vercel
-        run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
