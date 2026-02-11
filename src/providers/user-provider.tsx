@@ -122,8 +122,7 @@ export function UserProvider({ children }: UserProviderProps) {
 
   useEffect(() => {
     fetchUser();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchUser]);
 
   return (
     <UserContext.Provider value={{ isLoading, error, Mode, user }}>
