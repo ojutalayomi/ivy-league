@@ -8,16 +8,18 @@ import { api } from "@/lib/api";
 import { AxiosError } from "axios";
 import { useTheme } from "@/providers/theme-provider";
 import AccountsLayout from "@/components/AccountsLayout";
+import { useUser } from "@/providers/user-provider";
 
 export default function ResetPassword() {
     const dispatch = useDispatch()
     useTheme();
+    const { user } = useUser()
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const token = searchParams.get('token')
     const redirect = searchParams.get('redirect')
     const [error, setError] = useState<string>('')
-    const [email, setEmail] = useState<string>('')
+    const [email, setEmail] = useState<string>(user.email)
     const [password, setPassword] = useState<string>('')
     const [confirmPassword, setConfirmPassword] = useState<string>('')
     const [loading, setLoading] = useState<boolean>(false)
@@ -103,14 +105,14 @@ export default function ResetPassword() {
     return (
       <AccountsLayout>
         {success ? (
-          <div className="flex flex-col gap-2 justify-center items-center py-20 max-[640px]:px-10 bg-cyan-500 rounded-lg">
-            <CheckCircle className="text-white size-16" />
-            <p className="text-white text-sm">{successMessage}</p>
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+            <CheckCircle className="size-16" />
+            <p className="text-muted-foreground text-sm">{successMessage}</p>
           </div>
         ) : loading2 ? (
-          <div className="flex flex-col gap-2 justify-center items-center py-20 max-[640px]:px-10 bg-cyan-500 rounded-lg">
-            <LoaderCircle className="animate-spin text-white size-16" />
-            <p className="text-white text-sm">Please wait while we reset your password...</p>
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+            <LoaderCircle className="animate-spin size-16" />
+            <p className="text-muted-foreground text-sm">Please wait while we reset your password...</p>
           </div>
         ) : (
           <>
