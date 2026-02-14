@@ -64,7 +64,7 @@ export default function SignIn() {
         dispatch(setUser({...data, signed_in: true}))
         dispatch(setBearerToken(data.bearer_token))
         toast.success("You have signed in succesfully.",{
-          description: "Thank you for signing in to your account. We look forward to helping you achieve your academic goals."
+          description: data.role === "student" ? "Thank you for signing in to your account. We look forward to helping you achieve your academic goals." : "Welcome to the staff portal. We look forward to helping you manage your students."
         })
         
         navigate(redirect ? redirect : '/');

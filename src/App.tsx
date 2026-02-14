@@ -45,7 +45,7 @@ function Router() {
 
   return (
     <>
-      <div className="w-screen h-screen bg-gradient-to-br from-white via-white to-cyan-100 dark:from-neutral-800 dark:to-neutral-900">
+      <div className="w-screen h-screen bg-gradient-to-br from-white via-white to-cyan-100 dark:from-slate-950 dark:via-slate-900 dark:to-cyan-950">
         <div className="relative backdrop-blur-sm z-10 w-full 2xl:max-w-6xl mx-auto h-full overflow-y-auto">
           {!isLoading && (
             <reactRouterDom.Routes location={backgroundLocation || location}>
