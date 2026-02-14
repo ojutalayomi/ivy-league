@@ -1,7 +1,7 @@
 import { Card, CardContent, } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Settings, User, Menu, Loader2, AlertCircle, CheckCircle, XCircle, Download, Folder, FileText, Link2 } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, CreditCard, GraduationCap, Home, Library, Settings, User, Menu, Loader2, AlertCircle, CheckCircle, XCircle, Download, Folder, FileText, Link2, Mail, Phone, MapPin, Calendar, Badge, DollarSign, Award } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -18,6 +18,7 @@ import { api } from '@/lib/api';
 import { updateUserProfile, UserState } from '@/redux/userSlice';
 import { ModeToggle } from '@/components/mode-toggle';
 import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -1399,86 +1400,136 @@ const ReceiptsCard = () => {
 const ProfilePage = () => {
   const user = useSelector((state: RootState) => state.user)
     return (
-        <div className="space-y-8">
-            <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100/30 dark:from-gray-800 dark:to-gray-900">
-                <CardContent className="p-8">
+        <div className="space-y-6">
+            <Card className="overflow-hidden">
+                <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700 h-32"></div>
+                <CardContent className="p-4 -mt-16">
                   <div className="space-y-6">
-                      <div>
-                          <h2 className="text-2xl font-semibold">{user.firstname} {user.lastname}</h2>
-                          <p className="text-muted-foreground">{user.reg_no}</p>
+                      <div className="flex items-center gap-4">
+                          <div className="w-24 h-24 rounded-full bg-white dark:bg-gray-800 border-4 border-white dark:border-gray-900 flex items-center justify-center shadow-lg">
+                              <Avatar>
+                                <AvatarImage src={user.profile_pic} />
+                                <AvatarFallback>
+                                  {(user.firstname || '').split(' ')[0]?.[0] || ''}
+                                  {(user.lastname || '').split(' ')[0]?.[0] || ''}
+                                </AvatarFallback>
+                              </Avatar>
+                          </div>
+                          <div className="flex-1 pb-2">
+                              <h2 className="text-2xl font-bold text-white">{user.firstname} {user.lastname}</h2>
+                              <p className="text-muted-foreground">{user.reg_no}</p>
+                          </div>
                       </div>
 
-                      <div className="space-y-4">
-                          <div className="space-y-2">
-                              <h3 className="text-lg font-medium">Personal Information</h3>
-                              <div className="grid gap-2">
-                                  <div className="flex items-center gap-2">
-                                      <span className="font-medium min-w-24">Email:</span>
-                                      <span className="text-muted-foreground">{user.email}</span>
-                                      {user.email_verified ? (
-                                          <CheckCircle className="w-4 h-4 text-green-500" />
-                                      ) : (
-                                          <XCircle className="w-4 h-4 text-red-500" />
-                                      )}
+                      <div className="grid md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                              <div className="flex items-center gap-2 pb-2 border-b">
+                                  <User className="w-5 h-5 text-cyan-500" />
+                                  <h3 className="text-lg font-semibold">Personal Information</h3>
+                              </div>
+                              <div className="space-y-3">
+                                  <div className="flex items-start gap-3">
+                                      <Mail className="w-4 h-4 text-muted-foreground mt-1" />
+                                      <div className="flex-1">
+                                          <p className="text-sm text-muted-foreground">Email</p>
+                                          <div className="flex items-center gap-2">
+                                              <p className="font-medium">{user.email}</p>
+                                              {user.email_verified ? (
+                                                  <CheckCircle className="w-4 h-4 text-green-500" />
+                                              ) : (
+                                                  <XCircle className="w-4 h-4 text-red-500" />
+                                              )}
+                                          </div>
+                                      </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                      <span className="font-medium min-w-24">Date of Birth:</span>
-                                      <span className="text-muted-foreground">
-                                          {new Date(user.dob).toLocaleDateString()}
-                                      </span>
+                                  <div className="flex items-start gap-3">
+                                      <Calendar className="w-4 h-4 text-muted-foreground mt-1" />
+                                      <div className="flex-1">
+                                          <p className="text-sm text-muted-foreground">Date of Birth</p>
+                                          <p className="font-medium">
+                                              {new Date(user.dob).toLocaleDateString('en-US', { 
+                                                  year: 'numeric', 
+                                                  month: 'long', 
+                                                  day: 'numeric' 
+                                              })}
+                                          </p>
+                                      </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                      <span className="font-medium min-w-24">Gender:</span>
-                                      <span className="text-muted-foreground capitalize">
-                                          {user.gender}
-                                      </span>
+                                  <div className="flex items-start gap-3">
+                                      <User className="w-4 h-4 text-muted-foreground mt-1" />
+                                      <div className="flex-1">
+                                          <p className="text-sm text-muted-foreground">Gender</p>
+                                          <p className="font-medium capitalize">{user.gender}</p>
+                                      </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                      <span className="font-medium min-w-24">Phone:</span>
-                                      <span className="text-muted-foreground">
-                                          {user.phone_no}
-                                      </span>
+                                  <div className="flex items-start gap-3">
+                                      <Phone className="w-4 h-4 text-muted-foreground mt-1" />
+                                      <div className="flex-1">
+                                          <p className="text-sm text-muted-foreground">Phone</p>
+                                          <p className="font-medium">{user.phone_no}</p>
+                                      </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                      <span className="font-medium min-w-24">Address:</span>
-                                      <span className="text-muted-foreground">
-                                          {user.address}
-                                      </span>
+                                  <div className="flex items-start gap-3">
+                                      <MapPin className="w-4 h-4 text-muted-foreground mt-1" />
+                                      <div className="flex-1">
+                                          <p className="text-sm text-muted-foreground">Address</p>
+                                          <p className="font-medium">{user.address}</p>
+                                      </div>
                                   </div>
                               </div>
                           </div>
 
-                          <div className="space-y-2">
-                              <h3 className="text-lg font-medium">Academic Details</h3>
-                              <div className="grid gap-2">
-                                  <div className="flex items-center gap-2">
-                                      <span className="font-medium min-w-24">User Status:</span>
-                                      <span className="text-muted-foreground capitalize">
-                                          {user.user_status}
-                                      </span>
+                          <div className="space-y-4">
+                              <div className="flex items-center gap-2 pb-2 border-b">
+                                  <GraduationCap className="w-5 h-5 text-cyan-500" />
+                                  <h3 className="text-lg font-semibold">Academic Details</h3>
+                              </div>
+                              <div className="space-y-3">
+                                  <div className="flex items-start gap-3">
+                                      <Badge className="w-4 h-4 text-muted-foreground mt-1" />
+                                      <div className="flex-1">
+                                          <p className="text-sm text-muted-foreground">User Status</p>
+                                          <p className="font-medium capitalize">{user.user_status}</p>
+                                      </div>
                                   </div>
                                   {user.acca_reg && (
-                                      <div className="flex items-center gap-2">
-                                          <span className="font-medium min-w-24">ACCA Reg:</span>
-                                          <span className="text-muted-foreground">
-                                              {user.acca_reg}
-                                          </span>
+                                      <div className="flex items-start gap-3">
+                                          <FileText className="w-4 h-4 text-muted-foreground mt-1" />
+                                          <div className="flex-1">
+                                              <p className="text-sm text-muted-foreground">ACCA Registration</p>
+                                              <p className="font-medium">{user.acca_reg}</p>
+                                          </div>
                                       </div>
                                   )}
-                                  {user.scholarship?.length > 0 && (
-                                      <div className="flex items-center gap-2">
-                                          <span className="font-medium min-w-24">Scholarship:</span>
-                                          <span className="text-muted-foreground">
-                                              {user.scholarship.join(', ')}
-                                          </span>
+                                  {user.scholarship && user.scholarship.length > 0 && (
+                                      <div className="flex items-start gap-3">
+                                          <Award className="w-4 h-4 text-muted-foreground mt-1" />
+                                          <div className="flex-1">
+                                              <p className="text-sm text-muted-foreground">Scholarship</p>
+                                              <div className="flex flex-wrap gap-1 mt-1">
+                                                  {user.scholarship.map((s, idx) => (
+                                                      <span key={idx} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200">
+                                                          {s}
+                                                      </span>
+                                                  ))}
+                                              </div>
+                                          </div>
                                       </div>
                                   )}
-                                  {user.fee?.length > 0 && (
-                                      <div className="flex items-center gap-2">
-                                          <span className="font-medium min-w-24">Fees:</span>
-                                          <span className="text-muted-foreground">
-                                              {user.fee.map(f => `₦${f.amount.toLocaleString()} (${f.reason})`).join(', ')}
-                                          </span>
+                                  {user.fee && user.fee.length > 0 && (
+                                      <div className="flex items-start gap-3">
+                                          <DollarSign className="w-4 h-4 text-muted-foreground mt-1" />
+                                          <div className="flex-1">
+                                              <p className="text-sm text-muted-foreground">Fees</p>
+                                              <div className="space-y-1 mt-1">
+                                                  {user.fee.map((f, idx) => (
+                                                      <div key={idx} className="flex items-center justify-between text-sm">
+                                                          <span className="text-muted-foreground">{f.reason}</span>
+                                                          <span className="font-medium">₦{f.amount.toLocaleString()}</span>
+                                                      </div>
+                                                  ))}
+                                              </div>
+                                          </div>
                                       </div>
                                   )}
                               </div>

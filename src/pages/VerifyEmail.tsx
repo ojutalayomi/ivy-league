@@ -62,11 +62,13 @@ export default function VerifyEmail() {
             if(getCode) {
               return;
             } else {
-              if (user.signed_in) navigate("/home")
+              if (user.signed_in) {
+                dispatch(updateUserProfile({email_verified: true}))
+                navigate("/")
+              }
               else navigate("/accounts/signin")
             }
-            dispatch(updateUserProfile({email_verified: true}))
-          }, 3000)
+          }, 1000)
         }
 
       } catch (error: unknown) {
