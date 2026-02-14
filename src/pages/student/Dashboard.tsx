@@ -100,6 +100,11 @@ export default function Dashboard() {
   const [isFull, setIsFull] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const user = useSelector((state: RootState) => state.user)
+
+  useEffect(() => {
+    const sidebar = localStorage.getItem('sidebar')
+    if (sidebar) toggleSidebar(JSON.parse(sidebar))
+  })
   
   useEffect(() => {
     document.title = "Students - Ivy League Associates";
@@ -114,11 +119,6 @@ export default function Dashboard() {
   const toggleMobileSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen)
   }
-
-  useEffect(() => {
-    const sidebar = localStorage.getItem('sidebar')
-    if (sidebar) toggleSidebar(JSON.parse(sidebar))
-  })
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -276,8 +276,8 @@ export default function Dashboard() {
           </div>
         </div>
         
-        <Card className="p-2 flex-1 overflow-y-auto w-full">
-          <CardContent className='px-2 py-2 space-y-4'>
+        <Card className="p-2 max-[640px]:p-0 max-[640px]:border-none max-[640px]:rounded-none max-[640px]:bg-transparent flex-1 overflow-y-auto w-full">
+          <CardContent className='p-0 space-y-4'>
 
             {!location.pathname.includes('profile') && (
               <div className="block space-y-4 p-6 max-[639px]:text-center hover:border-cyan-500 bg-cyan-100/30 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-cyan-100/30 transition-all duration-200 rounded-xl shadow-sm hover:shadow-md border">

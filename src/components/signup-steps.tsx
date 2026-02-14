@@ -117,17 +117,16 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
             allowClear
             style={{
               width: "100%",
-              backgroundColor: typeof window !== "undefined" && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#00000000' : 'white',
-              color: typeof window !== "undefined" && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#fff' : '#000',
-              borderColor: typeof window !== "undefined" && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#334155' : undefined
+              backgroundColor: typeof window !== "undefined" && (window.document.documentElement.classList.contains('dark') || window.matchMedia('(prefers-color-scheme: dark)').matches) ? '#00000000' : 'white',
+              color: typeof window !== "undefined" && (window.document.documentElement.classList.contains('dark') || window.matchMedia('(prefers-color-scheme: dark)').matches) ? '#fff' : '#000',
+              borderColor: typeof window !== "undefined" && (window.document.documentElement.classList.contains('dark') || window.matchMedia('(prefers-color-scheme: dark)').matches) ? '#334155' : undefined
             }}
-            minDate={dayjs('1980-01-01')}
+            minDate={dayjs('1960-01-01')}
             maxDate={dayjs('2010-12-31')}
             disabledDate={current =>
               current && (dayjs(current).isAfter(dayjs('2010-12-31')) || dayjs(current).isBefore(dayjs('1980-01-01')))
             }
             inputReadOnly
-            popupClassName={typeof window !== "undefined" && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'antd-datepicker-dark' : ''}
           />
           {errors.dob && (
             <p className="text-sm text-red-500 mt-1">{errors.dob.message}</p>
