@@ -92,7 +92,7 @@ export function UserProvider({ children }: UserProviderProps) {
         setError('An unexpected error occurred');
       }
     }
-  }, [dispatch, navigate, path, location.pathname])
+  }, [Mode, dispatch, location, navigate, path])
 
   const fetchUser = useCallback(async () => {
     const storedToken = JSON.parse(localStorage.getItem('ivy_user_token') || '{}');    
@@ -122,7 +122,14 @@ export function UserProvider({ children }: UserProviderProps) {
 
   useEffect(() => {
     fetchUser();
-  }, [fetchUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && !whiteList.current.includes(location.pathname) && !user.signed_in) {
+      navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
+    }
+  }, [isLoading, location.pathname, navigate, path, user.signed_in]);
 
   return (
     <UserContext.Provider value={{ isLoading, error, Mode, user }}>
