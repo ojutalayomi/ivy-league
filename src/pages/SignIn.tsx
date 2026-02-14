@@ -14,7 +14,7 @@ import AccountsLayout from "@/components/AccountsLayout";
 import { CheckForIncorrectPermission } from "@/lib/utils";
 
 export default function SignIn() {
-  const { Mode } = useUser();
+  const { Mode, user } = useUser();
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams();
@@ -212,6 +212,14 @@ export default function SignIn() {
             Don't have an account?{' '}
             <Link to={`/accounts/signup${redirect ? `?redirect=${redirect}` : ''}`} className="font-semibold text-sidebar-primary/60 hover:text-sidebar-primary/50  dark:text-gray-200 dark:hover:text-gray-300">
               Sign up
+            </Link>
+          </p>
+        )}
+        {user.signed_in && (
+          <p className="mt-2 text-center text-sm/6 sm:text-gray-500">
+            You are signed in.{' '}
+          <Link to="/" className="font-semibold text-cyan-500 hover:text-cyan-400 hover:underline">
+              Go to Dashboard
             </Link>
           </p>
         )}

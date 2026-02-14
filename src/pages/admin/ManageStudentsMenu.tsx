@@ -9,8 +9,6 @@ import {
   PencilLine,
   TrendingDown,
   TrendingUp,
-  Trash2,
-  UserPlus,
   Users,
   Utensils,
   Wallet
@@ -137,16 +135,9 @@ export default function ManageStudentsMenu() {
       tag: "Students"
     },
     {
-      title: "Add Student", 
-      description: "Create a new student account",
-      path: "/add",
-      icon: UserPlus,
-      tag: "Students"
-    },
-    {
       title: "Edit Students details",
       description: "Modify existing student accounts", 
-      path: "/edit",
+      path: "/students",
       icon: PencilLine,
       tag: "Students"
     },
@@ -163,13 +154,6 @@ export default function ManageStudentsMenu() {
       path: "/sponsorship/create",
       icon: Handshake,
       tag: "Programs"
-    },
-    {
-      title: "Delete Students",
-      description: "Remove student accounts",
-      path: "/delete",
-      icon: Trash2,
-      tag: "Students"
     },
     {
       title: "Payments",

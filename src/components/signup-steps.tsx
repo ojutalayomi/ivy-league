@@ -15,23 +15,7 @@ interface StepProps {
   setValue: UseFormSetValue<FormSchemaType>;
 }
 
-export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }) => {
-  const [showPassword, setShowPassword] = useState<boolean>(false)
-  const [showPassword1, setShowPassword1] = useState<boolean>(false)
-
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .ant-picker-input input {
-        color: #000;
-      }
-    `;
-    document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    }
-  }, []);
-
+export const StepPersonal: React.FC<StepProps> = ({ register, errors }) => {
   return (
     <div className="space-y-2.5">
       <div className='space-y-1'>
@@ -76,6 +60,26 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
           )}
         </div>
       </div>
+    </div>
+  );
+};
+
+export const StepContact: React.FC<StepProps> = ({ register, errors, watch, setValue }) => {
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .ant-picker-input input {
+        color: #000;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    }
+  }, []);
+
+  return (
+    <div className="space-y-2.5">
       <div className='space-y-1'>
         <Label className='sm:text-cyan-500' htmlFor="email">Email</Label>
         <Input
@@ -117,23 +121,32 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
             allowClear
             style={{
               width: "100%",
-              backgroundColor: typeof window !== "undefined" && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#00000000' : 'white',
-              color: typeof window !== "undefined" && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#fff' : '#000',
-              borderColor: typeof window !== "undefined" && window.matchMedia('(prefers-color-scheme: dark)').matches ? '#334155' : undefined
+              backgroundColor: typeof window !== "undefined" && window.document.documentElement.classList.contains('dark') ? '#00000000' : 'white',
+              color: typeof window !== "undefined" && window.document.documentElement.classList.contains('dark') ? '#fff' : '#000',
+              borderColor: typeof window !== "undefined" && window.document.documentElement.classList.contains('dark') ? '#334155' : undefined
             }}
-            minDate={dayjs('1980-01-01')}
+            minDate={dayjs('1960-01-01')}
             maxDate={dayjs('2010-12-31')}
             disabledDate={current =>
               current && (dayjs(current).isAfter(dayjs('2010-12-31')) || dayjs(current).isBefore(dayjs('1980-01-01')))
             }
             inputReadOnly
-            popupClassName={typeof window !== "undefined" && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'antd-datepicker-dark' : ''}
           />
           {errors.dob && (
             <p className="text-sm text-red-500 mt-1">{errors.dob.message}</p>
           )}
         </div>
       </div>
+    </div>
+  );
+};
+
+export const StepSecurity: React.FC<StepProps> = ({ register, errors }) => {
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showPassword1, setShowPassword1] = useState<boolean>(false);
+
+  return (
+    <div className="space-y-2.5">
       <div className='space-y-1'>
         <Label className='sm:text-cyan-500' htmlFor="password">Password</Label>
         <div className='relative'>
@@ -163,11 +176,11 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
         <Label className='sm:text-cyan-500' htmlFor="confirmPassword">Confirm Password</Label>
         <div className='relative'>
           <Input
-          id="confirmPassword"
-          type={showPassword1 ? "text" : "password"}
-          {...register('confirmPassword')}
-          className="sm:text-primary sm:placeholder:text-primary/50 dark:border-slate-700"
-          placeholder="Confirm Password"
+            id="confirmPassword"
+            type={showPassword1 ? "text" : "password"}
+            {...register('confirmPassword')}
+            className="sm:text-primary sm:placeholder:text-primary/50 dark:border-slate-700"
+            placeholder="Confirm Password"
           />
           <button
             type="button"
@@ -186,5 +199,5 @@ export const Step1: React.FC<StepProps> = ({ register, errors, watch, setValue }
         )}
       </div>
     </div>
-  )
+  );
 };

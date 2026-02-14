@@ -36,6 +36,7 @@ export default function PapersRegistration() {
   }[]>([]);
   const [partialPayment, setPartialPayment] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCoursesLoading, setIsCoursesLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSponsor, setIsSponsor] = useState(false);
   const dispatch = useDispatch();
@@ -58,7 +59,7 @@ export default function PapersRegistration() {
     if (dietSelected && dietName) {
       (async () => {
         try {
-          setIsLoading(true);
+          setIsCoursesLoading(true);
           // if(user.user_status === 'signee') return;
           const response = await api.get(`/courses?reg=true&${user.user_status === 'student' ? '' : "acca_reg=" + (user.acca_reg || '001')}&user_status=${user.user_status}&email=${email}&diet_name=${dietName}`);
           setCurrentPapers(response.data.current_papers);
@@ -87,7 +88,7 @@ export default function PapersRegistration() {
             setError('An unexpected error occurred');
           }
         } finally {
-          setIsLoading(false);
+          setIsCoursesLoading(false);
         }
       })();
     };
@@ -211,7 +212,7 @@ export default function PapersRegistration() {
 
   if (!dietSelected) {
     content = null;
-  } else if (isLoading)  {
+  } else if (isCoursesLoading)  {
     content = (
       <div className="flex justify-center items-center h-[50vh]">
         <Loader2 className="w-10 h-10 animate-spin" />
@@ -558,7 +559,7 @@ export default function PapersRegistration() {
   return (
     <>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-semibold text-gray-700 dark:text-gray-200">
+        <h1 className="font-semibold text-gray-700 dark:text-gray-200">
           Do you have a sponsor code?
         </h1>
         <div className="flex justify-between items-center gap-2 bg-gray-100 dark:bg-zinc-900 dark:text-gray-200 p-1 rounded-full">
