@@ -2,7 +2,7 @@ import { createContext, useContext, ReactNode, useEffect, useRef, useState, useC
 import { useDispatch, useSelector } from 'react-redux';
 import { clearUser, initialState, setUser, UserState } from '@/redux/userSlice';
 import { api } from '@/lib/api';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { RootState } from '@/redux/store';
 import { toast } from 'sonner';
@@ -34,6 +34,10 @@ export enum EmployeeEnum {
 
 type UserContextType = { isLoading: boolean, error: string, Mode: ModeEnum | null, user: UserState }
 const UserContext = createContext<UserContextType>({ isLoading: true, error: '', Mode: null, user: initialState });
+
+export function navigateToLogin(navigate: NavigateFunction, path: string) {
+  navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
+}
 
 export function UserProvider({ children }: UserProviderProps) {
   const dispatch = useDispatch();
@@ -81,7 +85,7 @@ export function UserProvider({ children }: UserProviderProps) {
         localStorage.removeItem('ivy_user_token');
         dispatch(clearUser());
         if (!whiteList.current.includes(location.pathname)) {
-          navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
+          navigateToLogin(navigate, path);
         }
       } else if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response: { data: { error: string } } }
@@ -109,25 +113,25 @@ export function UserProvider({ children }: UserProviderProps) {
         localStorage.removeItem('ivy_user_token');
         dispatch(clearUser());
         if (!whiteList.current.includes(location.pathname)) {
-          navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
+          navigateToLogin(navigate, path);
         }
       }
     } else {
       if (!whiteList.current.includes(location.pathname)) {
-        navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
+        navigateToLogin(navigate, path);
       }
     }
-    setIsLoading(false);
   }, [dispatch, navigate, location.pathname, path, refreshUser])
 
   useEffect(() => {
-    fetchUser();
+    setIsLoading(true);
+    fetchUser().finally(() => setIsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!isLoading && !whiteList.current.includes(location.pathname) && !user.signed_in) {
-      navigate('/accounts/signin' + (path ? `?redirect=${path}` : ''));
+      navigateToLogin(navigate, path);
     }
   }, [isLoading, location.pathname, navigate, path, user.signed_in]);
 

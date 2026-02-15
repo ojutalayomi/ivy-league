@@ -277,40 +277,84 @@ export default function Dashboard() {
           </div>
         </div>
         
-        <Card className="p-2 max-[640px]:p-0 max-[640px]:border-none max-[640px]:rounded-none max-[640px]:bg-transparent flex-1 overflow-y-auto w-full">
+        <Card className="p-2 max-[640px]:p-0 border-none rounded-none bg-transparent dark:bg-transparent flex-1 overflow-y-auto w-full">
           <CardContent className='p-0 space-y-4'>
 
             {!location.pathname.includes('profile') && (
-              <div className="block space-y-4 p-6 max-[639px]:text-center hover:border-cyan-500 bg-cyan-100/30 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-cyan-100/30 transition-all duration-200 rounded-xl shadow-sm hover:shadow-md border">
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  {user.profile_pic && (
-                    <div className="w-24 h-24 rounded-full overflow-hidden">
-                      <img src={user.profile_pic} alt="Profile" className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    <h5 className="text-xl font-bold tracking-tight dark:text-white">{user.firstname} {user.lastname}</h5>
-                    <p className="font-normal dark:text-white">Registration Number: <b>{user.reg_no || 'N/A'}</b></p>
-                    <p className="font-normal dark:text-white flex items-center gap-2">
-                      Email: <b>{user.email || 'N/A'}</b> 
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            {user.email_verified ? <CheckCircle className="size-4 text-green-500" /> : <XCircle className="size-4 text-red-500" />}
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {user.email_verified ? 'Email verified' : 'Email not verified'}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </p>
-                    {!user.email_verified && (
-                      <div className="flex items-center gap-2 p-2 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
-                        <AlertCircle className="size-4" />
-                        <p className="text-sm">Your email is not verified. Please verify your email to continue.</p>
-                        <Button variant="outline" size="sm" onClick={() => navigate('/accounts/confirm-email')}>Verify Email</Button>
+              <div className="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-white via-white to-cyan-50 dark:from-gray-800 dark:to-gray-900 shadow-sm hover:shadow-md transition-all duration-200">
+                <div className="p-6">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                    <div className="relative">
+                      <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-white dark:ring-gray-700 shadow-lg">
+                        {user.profile_pic ? (
+                          <img src={user.profile_pic} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white text-2xl font-bold">
+                            {(user.firstname || '').charAt(0)}{(user.lastname || '').charAt(0)}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
+                    
+                    <div className="flex-1 space-y-3 text-center sm:text-left">
+                      <div>
+                        <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                          {user.firstname} {user.lastname}
+                        </h5>
+                        <p className="text-sm text-muted-foreground mt-1">Student Profile</p>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-4 text-sm">
+                        <div className="flex items-center gap-2 justify-center sm:justify-start">
+                          <div className="p-1.5 rounded-md bg-cyan-100 dark:bg-cyan-900/30">
+                            <User className="size-3.5 text-cyan-600 dark:text-cyan-400" />
+                          </div>
+                          <span className="text-muted-foreground">Reg No:</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{user.reg_no || 'N/A'}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 justify-center sm:justify-start">
+                          <div className="p-1.5 rounded-md bg-cyan-100 dark:bg-cyan-900/30">
+                            <Mail className="size-3.5 text-cyan-600 dark:text-cyan-400" />
+                          </div>
+                          <span className="text-muted-foreground">Email:</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{user.email || 'N/A'}</span>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                {user.email_verified ? (
+                                  <CheckCircle className="size-4 text-green-500" />
+                                ) : (
+                                  <XCircle className="size-4 text-red-500" />
+                                )}
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {user.email_verified ? 'Email verified' : 'Email not verified'}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </div>
+                      
+                      {!user.email_verified && (
+                        <div className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                          <div className="flex items-center gap-2 flex-1">
+                            <AlertCircle className="size-4 text-red-600 dark:text-red-400 shrink-0" />
+                            <p className="text-sm text-red-700 dark:text-red-300">
+                              Your email is not verified. Please verify to access all features.
+                            </p>
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => navigate('/accounts/confirm-email')}
+                            className="shrink-0 border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/40"
+                          >
+                            Verify Email
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -865,7 +909,6 @@ const AvailablePapers = () => {
         count.current += 1;
         setIsLoading(true);
         const response = await api.get('/courses?reg=false' + (user.user_status === 'student' ? '' : "&acca_reg=" + (user.acca_reg || '001')) + '&user_status=' + user.user_status + '&email=' + user.email);
-        console.log(response); 
         setPapers(response.data);
       } catch (error) {
         if (error instanceof Error) {
@@ -946,7 +989,7 @@ const AvailablePapers = () => {
             {!isLoading && !error && (
               <div className="space-y-8">
                 {Object.entries(groupedPapers ?? {}).map(([category, papers]) => (
-                  <div key={category} className="space-y-4">
+                  <div key={category+papers.length} className="space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-1 bg-cyan-500 rounded-full" />
                       <div>
@@ -957,7 +1000,7 @@ const AvailablePapers = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {papers.map((paper) => (
                         <div 
-                          key={paper.code[0]} 
+                          key={paper.code[0]+paper.name} 
                           className="group p-5 border rounded-xl bg-white dark:bg-gray-800/50 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/5 transition-all duration-200"
                         >
                           <div className="flex items-start justify-between gap-2 mb-3">
@@ -1407,7 +1450,7 @@ const ProfilePage = () => {
                   <div className="space-y-6">
                       <div className="flex items-center gap-4">
                           <div className="w-24 h-24 rounded-full bg-white dark:bg-gray-800 border-4 border-white dark:border-gray-900 flex items-center justify-center shadow-lg">
-                              <Avatar>
+                              <Avatar className="w-full h-full">
                                 <AvatarImage src={user.profile_pic} />
                                 <AvatarFallback>
                                   {(user.firstname || '').split(' ')[0]?.[0] || ''}
@@ -1417,7 +1460,7 @@ const ProfilePage = () => {
                           </div>
                           <div className="flex-1 pb-2">
                               <h2 className="text-2xl font-bold text-white">{user.firstname} {user.lastname}</h2>
-                              <p className="text-muted-foreground">{user.reg_no}</p>
+                              <p className="text-muted-foreground">{user.reg_no || 'N/A'}</p>
                           </div>
                       </div>
 
