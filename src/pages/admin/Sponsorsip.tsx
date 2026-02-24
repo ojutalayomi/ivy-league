@@ -73,7 +73,6 @@ export function SponsorshipRoutesWithModals() {
 
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
-// Shape returned by /sponsorships API
 type APISponsorship = {
     first_name: string;
     last_name: string;
@@ -136,14 +135,14 @@ export function Sponsorship() {
                         <TableBody>
                             {sponsorships.map((sp) => (
                                 <TableRow key={sp.token}>
-                                    <TableCell>{sp.first_name} {sp.last_name}</TableCell>
-                                    <TableCell>{sp.company_name}</TableCell>
-                                    <TableCell>{sp.papers.join(", ")}</TableCell>
-                                    <TableCell>{sp.diet_name}</TableCell>
-                                    <TableCell>{sp.used ? "Used" : "Unused"}</TableCell>
-                                    <TableCell>{sp.created_at ? new Date(sp.created_at).toLocaleDateString() : ""}</TableCell>
+                                    <TableCell className="text-nowrap max-w-[160px] truncate">{sp.first_name} {sp.last_name}</TableCell>
+                                    <TableCell className="text-nowrap max-w-[200px] truncate">{sp.company_name}</TableCell>
+                                    <TableCell className="text-nowrap max-w-[200px] truncate">{sp.papers.join(", ")}</TableCell>
+                                    <TableCell className="text-nowrap max-w-[160px] truncate">{sp.diet_name}</TableCell>
+                                    <TableCell className="text-nowrap">{sp.used ? "Used" : "Unused"}</TableCell>
+                                    <TableCell className="text-nowrap max-w-[160px] truncate">{sp.created_at ? new Date(sp.created_at).toLocaleString() : ""}</TableCell>
                                     <TableCell>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 text-nowrap">
                                             <Button
                                                 variant="secondary"
                                                 size="sm"

@@ -78,7 +78,7 @@ type APIScholarship = {
     paper: string;
     discount: number;
     diet_name: string;
-    createdAt?: string;
+    created_at?: string;
 };
 
 export function Scholarship() {
@@ -123,21 +123,21 @@ export function Scholarship() {
                                 <TableHead>Email</TableHead>
                                 <TableHead>Paper</TableHead>
                                 <TableHead>Diet</TableHead>
-                                <TableHead>Discount (%)</TableHead>
-                                <TableHead>Created</TableHead>
+                                <TableHead className="text-nowrap">Discount (%)</TableHead>
+                                <TableHead className="text-nowrap">Created</TableHead>
                                 <TableHead>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {scholarships.map((sch) => (
                                 <TableRow key={sch.sch_code + sch.email + sch.paper + sch.diet_name}>
-                                    <TableCell>{sch.email}</TableCell>
-                                    <TableCell>{sch.paper}</TableCell>
-                                    <TableCell>{sch.diet_name}</TableCell>
+                                    <TableCell className="text-nowrap">{sch.email}</TableCell>
+                                    <TableCell className="text-nowrap">{sch.paper}</TableCell>
+                                    <TableCell className="text-nowrap">{sch.diet_name}</TableCell>
                                     <TableCell>{sch.discount}</TableCell>
-                                    <TableCell>{sch.createdAt ? new Date(sch.createdAt).toLocaleDateString() : ""}</TableCell>
+                                    <TableCell className="text-nowrap">{sch.created_at ? new Date(sch.created_at).toLocaleString() : ""}</TableCell>
                                     <TableCell>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 text-nowrap">
                                             <Button variant="secondary" size="sm" onClick={() => navigate(`/scholarship/${sch.paper}`)}>
                                                 View
                                             </Button>
@@ -431,7 +431,7 @@ type APIScholarshipFull = {
     paper: string;
     discount: number;
     diet_name: string;
-    createdAt?: string;
+    created_at?: string;
 };
 
 type ScholarshipViewProps = {
@@ -470,7 +470,7 @@ export const ScholarshipView: React.FC<ScholarshipViewProps> = ({ sch_code }) =>
 
     return (
         <div className="space-y-4">
-            <h2 className="text-xl font-bold">Scholarship Details</h2>
+            <h2 className="text-xl font-bold tracking-tight">Scholarship Details</h2>
             <div>
                 <strong>Email:</strong> {scholarship.email}
             </div>
@@ -484,7 +484,7 @@ export const ScholarshipView: React.FC<ScholarshipViewProps> = ({ sch_code }) =>
                 <strong>Discount:</strong> {scholarship.discount}%
             </div>
             <div>
-                <strong>Created At:</strong> {scholarship.createdAt ? new Date(scholarship.createdAt).toLocaleString() : "--"}
+                <strong>Created At:</strong> {scholarship.created_at ? new Date(scholarship.created_at).toLocaleString() : "--"}
             </div>
         </div>
     );

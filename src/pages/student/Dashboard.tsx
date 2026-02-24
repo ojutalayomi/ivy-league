@@ -1278,10 +1278,10 @@ export const PaymentHistoryPage = ({ student }: { student?: UserState }) => {
                 <tbody>
                   {payments.map((payment, idx) => (
                     <tr key={payment.ref_id + idx} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="py-2 px-4">{new Date(payment.date).toLocaleString()}</td>
-                      <td className="py-2 px-4">{payment.ref_id}</td>
-                      <td className="py-2 px-4">{payment.papers.join(', ')}.</td>
-                      <td className="py-2 px-4">₦{payment.amount.toLocaleString()}</td>
+                      <td className="py-2 px-4 text-nowrap">{new Date(payment.date).toLocaleString()}</td>
+                      <td className="py-2 px-4 text-nowrap">{payment.ref_id}</td>
+                      <td className="py-2 px-4 text-nowrap">{payment.papers.join(', ')}.</td>
+                      <td className="py-2 px-4 text-nowrap">₦{payment.amount.toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1291,7 +1291,7 @@ export const PaymentHistoryPage = ({ student }: { student?: UserState }) => {
         </CardContent>
       </Card>
 
-      <ReceiptsCard />
+      <ReceiptsCard student={student} />
 
       <div className="text-center text-sm text-muted-foreground">
         Note: Payments are processed through our secure payment gateway. If you have any issues, please contact support.
@@ -1300,8 +1300,9 @@ export const PaymentHistoryPage = ({ student }: { student?: UserState }) => {
   )
 }
 
-const ReceiptsCard = () => {
+const ReceiptsCard = ({ student }: { student?: UserState }) => {
   const user = useSelector((state: RootState) => state.user)
+  const effectiveUser = student || user;
   const [receipts, setReceipts] = useState<{ receipt_no: string; papers: string[]; amount: number; date: string }[]>([])
   const [isLoading, setIsLoading] = useState(true);
   const [isReceiptLoading, setIsReceiptLoading] = useState('');
@@ -1314,7 +1315,7 @@ const ReceiptsCard = () => {
         count.current += 1
         setIsLoading(true)
         const response = await api.get('/receipts', {
-          params: { reg_no: user.reg_no }
+          params: { reg_no: effectiveUser.reg_no }
         })
         setReceipts(response.data)
       } catch (error) {
@@ -1337,8 +1338,8 @@ const ReceiptsCard = () => {
         setIsLoading(false)
       }
     }
-    if (user.reg_no && count.current === 0) fetchReceipts()
-  }, [user.reg_no])
+    if (effectiveUser.reg_no && count.current === 0) fetchReceipts()
+  }, [effectiveUser.reg_no])
 
   const getReceipt = async (receipt: typeof receipts[0]) => {
     try {
@@ -1408,11 +1409,11 @@ const ReceiptsCard = () => {
               <tbody>
                 {receipts.map((receipt, idx) => (
                   <tr key={receipt.receipt_no + idx} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <td className="py-2 px-4">{new Date(receipt.date).toLocaleString()}</td>
-                    <td className="py-2 px-4">{receipt.receipt_no}</td>
-                    <td className="py-2 px-4">{receipt.papers.join(', ')}.</td>
-                    <td className="py-2 px-4">₦{receipt.amount.toLocaleString()}</td>
-                    <td className="py-2 px-4">
+                    <td className="py-2 px-4 text-nowrap">{new Date(receipt.date).toLocaleString()}</td>
+                    <td className="py-2 px-4 text-nowrap">{receipt.receipt_no}</td>
+                    <td className="py-2 px-4 text-nowrap">{receipt.papers.join(', ')}.</td>
+                    <td className="py-2 px-4 text-nowrap">₦{receipt.amount.toLocaleString()}</td>
+                    <td className="py-2 px-4 text-nowrap">
                       <Button 
                         variant="outline" 
                         size="sm" 

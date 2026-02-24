@@ -98,7 +98,7 @@ const columns: ColumnDef<APIPaper>[] = [
         cell: ({ row }) => {
             const name = row.original.name;
             return (
-                <div className="text-sm">{name || 'N/A'}</div>
+                <div className="text-sm max-w-[160px] truncate">{name || 'N/A'}</div>
             )
         },
     },
@@ -113,7 +113,7 @@ const columns: ColumnDef<APIPaper>[] = [
         accessorKey: "description",
         header: "Description",
         cell: ({ row }) => (
-            <div className="text-sm min-w-[200px]">{row.original.description || 'N/A'}</div>
+            <div className="text-sm max-w-[200px] truncate">{row.original.description || 'N/A'}</div>
         ),
     },
     {
@@ -222,14 +222,14 @@ export const PapersPage = () => {
 
     return (
         <div className='space-y-6'>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">{getTitle()}</h1>
                     <p className="text-muted-foreground">
                         Manage and view paper information
                     </p>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 w-full sm:w-auto">
                     <Select defaultValue={filter} onValueChange={setFilter}>
                         <SelectTrigger className='w-[180px]'>
                             <SelectValue placeholder="Filter papers" />
@@ -245,14 +245,12 @@ export const PapersPage = () => {
                 </div>
             </div>
 
-            <div className="flex items-center justify-between">
-                <Button variant="outline" asChild>
-                    <Link to="/papers/create">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Paper
-                    </Link>
-                </Button>
-            </div>
+            <Button variant="outline" asChild>
+                <Link to="/papers/create">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Paper
+                </Link>
+            </Button>
             
             <DataTable 
                 loading={loading}

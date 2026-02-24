@@ -101,10 +101,10 @@ export default function AdminActivities() {
                             <TableBody>
                                 {filteredActivities.map((activity, index) => (
                                     <TableRow key={`${activity.code}-${index}`}>
-                                        <TableCell className="font-mono">{activity.code}</TableCell>
-                                        <TableCell>
+                                        <TableCell className="font-mono text-nowrap">{activity.code}</TableCell>
+                                        <TableCell className="min-w-52">
                                             <div className="font-medium">{activity.title}</div>
-                                            <div className="text-xs text-muted-foreground whitespace-pre-line">
+                                            <div className="text-xs text-muted-foreground whitespace-pre-line max-w-[200px] truncate">
                                                 {activity.description}
                                             </div>
                                         </TableCell>

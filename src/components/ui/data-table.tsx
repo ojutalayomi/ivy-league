@@ -182,7 +182,7 @@ export function DataTable<TData, TValue>({
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="text-nowrap">
                 <TableHead className="w-12">
                   <Checkbox
                     checked={table.getIsAllPageRowsSelected()}
