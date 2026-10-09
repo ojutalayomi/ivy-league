@@ -56,13 +56,13 @@ export const PaymentsPage = () => {
                 <TableCaption>A list of recent payments.</TableCaption>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="w-[120px]">Reg. No</TableHead>
-                        <TableHead>Reference</TableHead>
-                        <TableHead>Purpose</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Sponsored</TableHead>
-                        <TableHead className="text-right">Amount (NGN)</TableHead>
-                        <TableHead className="w-[80px]"></TableHead>
+                        <TableHead className="text-nowrap max-w-[160px] truncate">Reg. No</TableHead>
+                        <TableHead className="text-nowrap">Reference</TableHead>
+                        <TableHead className="text-nowrap">Purpose</TableHead>
+                        <TableHead className="text-nowrap">Date</TableHead>
+                        <TableHead className="text-nowrap">Sponsored</TableHead>
+                        <TableHead className="text-right text-nowrap">Amount (NGN)</TableHead>
+                        <TableHead className="text-nowrap"></TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -81,12 +81,12 @@ export const PaymentsPage = () => {
                     ) : (
                         payments.map((p) => (
                             <TableRow key={p.reference}>
-                                <TableCell className="font-medium">{p.reg_no}</TableCell>
-                                <TableCell className="font-mono text-xs">{p.reference}</TableCell>
-                                <TableCell>{p.purpose}</TableCell>
-                                <TableCell>{formatDate(p.date)}</TableCell>
-                                <TableCell>{p.sponsored ? "Yes" : "No"}</TableCell>
-                                <TableCell className="text-right">{p.amount.toLocaleString("en-NG")}</TableCell>
+                                <TableCell className="font-medium text-nowrap max-w-[160px] truncate">{p.reg_no}</TableCell>
+                                <TableCell className="font-mono text-xs text-nowrap max-w-[200px] truncate">{p.reference}</TableCell>
+                                <TableCell className="text-nowrap max-w-[200px] truncate">{p.purpose}</TableCell>
+                                <TableCell className="text-nowrap max-w-[160px] truncate">{formatDate(p.date)}</TableCell>
+                                <TableCell className="text-nowrap max-w-[160px] truncate">{p.sponsored ? "Yes" : "No"}</TableCell>
+                                <TableCell className="text-right text-nowrap max-w-[160px] truncate">{p.amount.toLocaleString("en-NG")}</TableCell>
                                 <TableCell>
                                     <Button variant="ghost" size="sm" onClick={() => setViewReference(p.reference)}>
                                         View
@@ -99,7 +99,7 @@ export const PaymentsPage = () => {
                 <TableFooter>
                     <TableRow>
                         <TableCell colSpan={5}>Total (NGN)</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right text-nowrap max-w-[160px] truncate">
                             {payments.reduce((sum, p) => sum + p.amount, 0).toLocaleString("en-NG")}
                         </TableCell>
                         <TableCell />

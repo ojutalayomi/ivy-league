@@ -233,7 +233,7 @@ export default function ManageStudents() {
                         <BreadcrumbNav/>
                     </div>
                 </div>
-                <Card className="p-2 max-[640px]:p-0 max-[640px]:border-none max-[640px]:rounded-none max-[640px]:bg-transparent flex-1 overflow-y-auto w-full bg-gradient-to-br from-white via-white to-cyan-50 dark:from-gray-800 dark:to-gray-900">
+                <Card className="p-2 max-[640px]:p-0 border-none rounded-none bg-transparent dark:bg-transparent flex-1 overflow-y-auto w-full">
                     <CardContent className='p-0 space-y-4'>
                         <Tabs defaultValue={''} value={type} onValueChange={(value) => navigate(`/${value}`)}>
                             <Routes>

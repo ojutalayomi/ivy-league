@@ -396,7 +396,7 @@ export default function PapersRegistration() {
                   </TableCaption>
                   <TableHeader>
                     <TableRow className='hover:bg-transparent'>
-                      <TableHead className='font-semibold'>Paper Code</TableHead>
+                      <TableHead className='font-semibold text-nowrap'>Paper Code</TableHead>
                       <TableHead className='font-semibold'>Paper Name</TableHead>
                       <TableHead className='font-semibold'>Type</TableHead>
                       <TableHead className='font-semibold'>Discount</TableHead>
@@ -412,9 +412,9 @@ export default function PapersRegistration() {
                         const discount = scholarships.length ? scholarships.find(s => s.paper === paper?.code[type.index]) : false;
                         return (
                           <TableRow key={name} className='hover:bg-gray-100 dark:hover:bg-gray-800/50'>
-                            <TableCell className='font-medium'>{paper?.code[type.index]}</TableCell>
-                            <TableCell>{paper?.name}</TableCell>
-                            <TableCell>
+                            <TableCell className='font-medium text-nowrap'>{paper?.code[type.index]}</TableCell>
+                            <TableCell className='text-nowrap'>{paper?.name}</TableCell>
+                            <TableCell className='text-nowrap'>
                               <span className={cn(
                                 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
                                   types.includes('Intensive')
@@ -424,7 +424,7 @@ export default function PapersRegistration() {
                                 {type.name}
                               </span>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className='text-nowrap'>
                               {discount ? (
                                 <span className="text-green-600 dark:text-green-400 font-semibold">
                                   {discount.percentage}%
@@ -433,7 +433,7 @@ export default function PapersRegistration() {
                                 "-"
                               )}
                             </TableCell>
-                            <TableCell className='text-right font-medium'>
+                            <TableCell className='text-right font-medium text-nowrap'>
                               {(() => {
                                 const prices = Array.isArray(paper?.price) ? paper.price : [];
                                 const idx = types.findIndex((t: string) => t.toLowerCase() === (type?.name?.toLowerCase?.() ?? ''));
@@ -453,7 +453,7 @@ export default function PapersRegistration() {
                   <TableHeader>
                     <TableRow className='hover:bg-transparent'>
                       <TableHead colSpan={4} className='font-semibold'>Additional Fees</TableHead>
-                      <TableHead className='font-semibold text-right'>Amount (₦)</TableHead>
+                      <TableHead className='font-semibold text-right text-nowrap'>Amount (₦)</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

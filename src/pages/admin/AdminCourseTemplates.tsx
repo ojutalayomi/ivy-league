@@ -328,7 +328,7 @@ export default function AdminCourseTemplates() {
                                 <Button size="sm" variant="ghost" onClick={() => openRename(node.id, node.name)} disabled={isRoot}>
                                     <Pencil className="size-4" />
                                 </Button>
-                                <Button size="sm" variant="ghost" onClick={() => handleDelete(node.id)} disabled={isRoot}>
+                                <Button size="sm" variant="ghost" onClick={() => isRoot ? handleDelete(node.id) : null} disabled={isRoot}>
                                     <Trash2 className="size-4 text-red-600" />
                                 </Button>
                             </div>
